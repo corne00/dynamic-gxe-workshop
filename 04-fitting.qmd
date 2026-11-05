@@ -8,15 +8,61 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
+```r
+source("R/pipeline.R")
+```
+
+## Python
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from dgxe import *
+
+wx = pd.read_csv("data/narrabri_weather.csv")
+traj = pd.read_csv("data/narrabri_biomass.csv.gz")
+drv = make_drivers(wx)
+Theta = make_library(drv)
+tr = make_trajectories(traj, drv)
+```
+
+:::
+
+
 Every method maps the design matrix $\mathbf{X}$ and the increments $\Delta\mathbf{y}$ of one genotype to a coefficient vector, with the intercept first. A method is therefore a function `fit(X, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 04-1
+#| ref.label: 04-1-run
+#| eval: false
+```
+
+## Python
+
+```python
+d = make_design(Theta, tr, "g001")
+```
+
+:::
+
+```{r}
+#| label: 04-1-run
+#| echo: false
 d <- make_design(Theta, tr, "g001")
 ```
 
 ## Least squares and penalised regression
 
-Ordinary least squares uses `lm.fit`. Ridge, lasso and elastic net are provided by `glmnet`; they differ in the penalty (squared, absolute value, and a mixture of both). The lasso sets coefficients to zero.
+Ordinary least squares uses `lm.fit` (Python: `numpy.linalg.lstsq`). Ridge, lasso and elastic net are provided by `glmnet` (Python: scikit-learn `ElasticNet`, with the penalty scaled as in `glmnet`); they differ in the penalty (squared, absolute value, and a mixture of both). The lasso sets coefficients to zero.
 
 ```{r}
 #| echo: false
@@ -26,7 +72,7 @@ show_fun("fit_ols", "fit_glmnet", "fit_ridge", "fit_lasso", "fit_enet")
 
 ## Subset selection and thresholding
 
-Best-subset selection and backward elimination keep $k$ terms (`leaps`). Sequential thresholded least squares (STLSQ) is the algorithm of the original SINDy method: fit, remove the terms whose scaled coefficient is below a threshold, and refit on the remaining terms.
+Best-subset selection and backward elimination keep $k$ terms (`leaps`; in Python the residual sums of squares are computed directly from the Gram matrix). Sequential thresholded least squares (STLSQ) is the algorithm of the original SINDy method: fit, remove the terms whose scaled coefficient is below a threshold, and refit on the remaining terms.
 
 ```{r}
 #| echo: false
@@ -38,14 +84,70 @@ show_fun("fit_subset", "fit_stlsq")
 
 The methods fitted to the same data:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 04-2
+#| ref.label: 04-2-run
+#| eval: false
+```
+
+## Python
+
+```python
+fits = pd.DataFrame({name: fit(d.X, d.dy)
+                     for name, fit in fit_methods.items()},
+                    index=["1"] + d.terms)
+print(fits.round(3))
+```
+
+:::
+
+```{r}
+#| label: 04-2-run
+#| echo: false
 fits <- sapply(fit_methods, function(fit) fit(d$X, d$dy))
 round(fits, 3)
 ```
 
 Scaled to a common size (coefficient times the standard deviation of the term, relative to that of the increments), the sparsity pattern of each method is visible; empty cells are terms that were removed.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 04-3
+#| ref.label: 04-3-run
+#| eval: false
+```
+
+## Python
+
+```python
+from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
+
+size = d.X.std(axis=0, ddof=1) / d.dy.std(ddof=1)
+effect = fits.iloc[1:].mul(size, axis=0)
+colours = LinearSegmentedColormap.from_list("dgxe", [BURGUNDY, "white", BLUE])
+colours.set_bad("#F3F4F6")                       # removed terms
+
+fig, ax = plt.subplots(figsize=(6, 3.6))
+image = ax.imshow(effect.where(effect != 0), cmap=colours,
+                  norm=TwoSlopeNorm(0), aspect="auto")
+ax.set_xticks(range(effect.shape[1]), effect.columns, rotation=30, ha="right")
+ax.set_yticks(range(effect.shape[0]), effect.index)
+fig.colorbar(image, label="scaled coefficient")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 04-3-run
+#| echo: false
 #| fig-height: 3.6
 size <- apply(d$X, 2, sd) / sd(d$dy)
 effect <- fits[-1, ] * size

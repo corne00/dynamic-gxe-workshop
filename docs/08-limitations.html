@@ -263,25 +263,83 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/pipeline.R"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dgxe <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>wx <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>traj <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(wx)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>Theta <span class="op">=</span> make_library(drv)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>tr <span class="op">=</span> make_trajectories(traj, drv)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
 <section id="choice-of-library" class="level2">
 <h2 class="anchored" data-anchor-id="choice-of-library">Choice of library</h2>
 <p>The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing <code>var = "lai"</code>. Least squares is used for all libraries here.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>trl <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv, <span class="at">var =</span> <span class="st">"lai"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>P_poly <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_lai_poly.rds"</span>, <span class="fu">cross_validate</span>(Theta, trl, fit_ols))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>trl <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv, <span class="at">var =</span> <span class="st">"lai"</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>P_poly <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_lai_poly.rds"</span>, <span class="fu">cross_validate</span>(Theta, trl, fit_ols))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>As an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly:</p>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>trl <span class="op">=</span> make_trajectories(traj, drv, var<span class="op">=</span><span class="st">"lai"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>P_poly <span class="op">=</span> cross_validate(Theta, trl, fit_ols)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<p>As an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly (<code>splines::bs</code> in R, <code>scipy.interpolate.BSpline</code> in Python; the two bases span the same functions and give the same fit):</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>B <span class="ot">&lt;-</span> <span class="fu">bs</span>(<span class="fu">as.vector</span>(drv<span class="sc">$</span>U[, , <span class="st">"TT"</span>]), <span class="at">df =</span> <span class="dv">6</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>others <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U[, , <span class="sc">-</span><span class="dv">1</span>], <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="fu">c</span>(<span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>)))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Theta_spl <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="fu">cbind</span>(B, others), <span class="fu">c</span>(<span class="fu">dim</span>(drv<span class="sc">$</span>U)[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="dv">9</span>),</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="fu">c</span>(<span class="fu">paste0</span>(<span class="st">"B"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>), <span class="fu">colnames</span>(others))))</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>P_spl <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_lai_spline.rds"</span>, <span class="fu">cross_validate</span>(Theta_spl, trl, fit_ols))</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">lookup_trajectory</span>(trl)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(<span class="st">`</span><span class="at">cubic polynomial</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(P_poly, trl),</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">B-spline in TT</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(P_spl, trl),</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">baseline =</span> <span class="fu">evaluate</span>(base, trl)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>B <span class="ot">&lt;-</span> <span class="fu">bs</span>(<span class="fu">as.vector</span>(drv<span class="sc">$</span>U[, , <span class="st">"TT"</span>]), <span class="at">df =</span> <span class="dv">6</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>others <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U[, , <span class="sc">-</span><span class="dv">1</span>], <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="fu">c</span>(<span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>)))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Theta_spl <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="fu">cbind</span>(B, others), <span class="fu">c</span>(<span class="fu">dim</span>(drv<span class="sc">$</span>U)[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="dv">9</span>),</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="fu">c</span>(<span class="fu">paste0</span>(<span class="st">"B"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>), <span class="fu">colnames</span>(others))))</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>P_spl <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_lai_spline.rds"</span>, <span class="fu">cross_validate</span>(Theta_spl, trl, fit_ols))</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">lookup_trajectory</span>(trl)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(<span class="st">`</span><span class="at">cubic polynomial</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(P_poly, trl),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">B-spline in TT</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(P_spl, trl),</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">baseline =</span> <span class="fu">evaluate</span>(base, trl)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.interpolate <span class="im">import</span> BSpline</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>tt <span class="op">=</span> drv.U[:, :, <span class="dv">0</span>].ravel()</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>inner <span class="op">=</span> np.quantile(tt, [<span class="fl">0.25</span>, <span class="fl">0.5</span>, <span class="fl">0.75</span>])</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>knots <span class="op">=</span> np.r_[[tt.<span class="bu">min</span>()] <span class="op">*</span> <span class="dv">4</span>, inner, [tt.<span class="bu">max</span>()] <span class="op">*</span> <span class="dv">4</span>]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> BSpline.design_matrix(tt, knots, <span class="dv">3</span>).toarray()[:, <span class="dv">1</span>:]   <span class="co"># 6 basis functions</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>others <span class="op">=</span> drv.U[:, :, <span class="dv">1</span>:].reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">3</span>)                    <span class="co"># DL, RAW, RAD</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>terms <span class="op">=</span> [<span class="ss">f"B</span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">"</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">7</span>)] <span class="op">+</span> [<span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>]</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>Theta_spl <span class="op">=</span> SimpleNamespace(array<span class="op">=</span>np.column_stack([B, others]).reshape(</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>drv.U.shape[:<span class="dv">2</span>], <span class="dv">9</span>), terms<span class="op">=</span>terms)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>P_spl <span class="op">=</span> cross_validate(Theta_spl, trl, fit_ols)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> lookup_trajectory(trl)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pd.DataFrame({<span class="st">"cubic polynomial"</span>: evaluate(P_poly, trl),</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"B-spline in TT"</span>: evaluate(P_spl, trl),</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"baseline"</span>: evaluate(base, trl)}).T.<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>                 trajectory_rmse fixed_day_rmse maturity_rmse
 cubic polynomial           0.925          1.272         1.039
@@ -289,26 +347,48 @@ B-spline in TT             0.532          0.664         0.562
 baseline                   0.473          0.687         0.637</code></pre>
 </div>
 </div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>models <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"cubic polynomial"</span>, <span class="st">"B-spline in TT"</span>, <span class="st">"baseline"</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">dim</span>(trl<span class="sc">$</span>Y)[<span class="dv">3</span>] <span class="sc">+</span> trl<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(P, model) {</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> days, <span class="at">rmse =</span> <span class="fu">rmse_by_day</span>(P, trl), <span class="at">model =</span> model)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">rmse</span>(P_poly, models[<span class="dv">1</span>]), <span class="fu">rmse</span>(P_spl, models[<span class="dv">2</span>]),</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>           <span class="fu">rmse</span>(base, models[<span class="dv">3</span>]))</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>d<span class="sc">$</span>model <span class="ot">&lt;-</span> <span class="fu">factor</span>(d<span class="sc">$</span>model, models)</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d[d<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">155</span>, ], <span class="fu">aes</span>(das, rmse, <span class="at">colour =</span> model)) <span class="sc">+</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"blue"</span>, <span class="st">"grey"</span>) <span class="sc">+</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"held-out LAI RMSE"</span>) <span class="sc">+</span></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>models <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"cubic polynomial"</span>, <span class="st">"B-spline in TT"</span>, <span class="st">"baseline"</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">dim</span>(trl<span class="sc">$</span>Y)[<span class="dv">3</span>] <span class="sc">+</span> trl<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(P, model) {</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> days, <span class="at">rmse =</span> <span class="fu">rmse_by_day</span>(P, trl), <span class="at">model =</span> model)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">rmse</span>(P_poly, models[<span class="dv">1</span>]), <span class="fu">rmse</span>(P_spl, models[<span class="dv">2</span>]),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>           <span class="fu">rmse</span>(base, models[<span class="dv">3</span>]))</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>d<span class="sc">$</span>model <span class="ot">&lt;-</span> <span class="fu">factor</span>(d<span class="sc">$</span>model, models)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d[d<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">155</span>, ], <span class="fu">aes</span>(das, rmse, <span class="at">colour =</span> model)) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"blue"</span>, <span class="st">"grey"</span>) <span class="sc">+</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"held-out LAI RMSE"</span>) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>days <span class="op">=</span> np.arange(<span class="dv">1</span>, trl.Y.shape[<span class="dv">2</span>]) <span class="op">+</span> trl.das0</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="fl">2.8</span>))</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> P, name, colour <span class="kw">in</span> [(P_poly, <span class="st">"cubic polynomial"</span>, BURGUNDY),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                        (P_spl, <span class="st">"B-spline in TT"</span>, BLUE),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>                        (base, <span class="st">"baseline"</span>, <span class="st">"#9CA3AF"</span>)]:</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    ax.plot(days, rmse_by_day(P, trl), color<span class="op">=</span>colour, label<span class="op">=</span>name)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(right<span class="op">=</span><span class="dv">155</span>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>ax.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"days after sowing"</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"held-out LAI RMSE"</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="08-limitations_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="1036"></p>
+<p><img src="08-limitations_files/figure-html/08-3-run-1.png" class="img-fluid figure-img" width="1036"></p>
 </figure>
 </div>
 </div>
@@ -318,19 +398,42 @@ baseline                   0.473          0.687         0.637</code></pre>
 <section id="collinear-drivers" class="level2">
 <h2 class="anchored" data-anchor-id="collinear-drivers">Collinear drivers</h2>
 <p>Thermal time and day length have a correlation of 0.97. Fitting the same model to the odd and to the even seasons of one genotype gives different coefficients but similar growth rates.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, <span class="st">"g114"</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>odd <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(d<span class="sc">$</span>X[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">1</span>, ], d<span class="sc">$</span>dy[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">1</span>])</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>even <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(d<span class="sc">$</span>X[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>, ], d<span class="sc">$</span>dy[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>])</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(odd, even)[, <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"TT^2"</span>, <span class="st">"DL"</span>, <span class="st">"DL^2"</span>)], <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, <span class="st">"g114"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>odd <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(d<span class="sc">$</span>X[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">1</span>, ], d<span class="sc">$</span>dy[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">1</span>])</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>even <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(d<span class="sc">$</span>X[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>, ], d<span class="sc">$</span>dy[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>])</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(odd, even)[, <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"TT^2"</span>, <span class="st">"DL"</span>, <span class="st">"DL^2"</span>)], <span class="dv">3</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>rate <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, d<span class="sc">$</span>X) <span class="sc">%*%</span> <span class="fu">cbind</span>(odd, even)      <span class="co"># growth rate on all days</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">correlation =</span> <span class="fu">cor</span>(rate[, <span class="dv">1</span>], rate[, <span class="dv">2</span>]),</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_difference =</span> <span class="fu">max</span>(<span class="fu">abs</span>(rate[, <span class="dv">1</span>] <span class="sc">-</span> rate[, <span class="dv">2</span>])))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> make_design(Theta, tr, <span class="st">"g114"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>odd <span class="op">=</span> d.season <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span>                      <span class="co"># seasons 1, 3, 5, ... (0-based)</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>b_odd <span class="op">=</span> fit_ols(d.X[odd], d.dy[odd])</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>b_even <span class="op">=</span> fit_ols(d.X[<span class="op">~</span>odd], d.dy[<span class="op">~</span>odd])</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>cols <span class="op">=</span> [d.terms.index(t) <span class="op">+</span> <span class="dv">1</span> <span class="cf">for</span> t <span class="kw">in</span> [<span class="st">"TT"</span>, <span class="st">"TT^2"</span>, <span class="st">"DL"</span>, <span class="st">"DL^2"</span>]]</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pd.DataFrame([b_odd[cols], b_even[cols]], index<span class="op">=</span>[<span class="st">"odd"</span>, <span class="st">"even"</span>],</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>                   columns<span class="op">=</span>[<span class="st">"TT"</span>, <span class="st">"TT^2"</span>, <span class="st">"DL"</span>, <span class="st">"DL^2"</span>]).<span class="bu">round</span>(<span class="dv">3</span>))</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>rate <span class="op">=</span> d.X <span class="op">@</span> np.c_[b_odd[<span class="dv">1</span>:], b_even[<span class="dv">1</span>:]] <span class="op">+</span> np.r_[b_odd[<span class="dv">0</span>], b_even[<span class="dv">0</span>]]</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({<span class="st">"correlation"</span>: np.corrcoef(rate.T)[<span class="dv">0</span>, <span class="dv">1</span>],</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>       <span class="st">"max_difference"</span>: np.<span class="bu">abs</span>(rate[:, <span class="dv">0</span>] <span class="op">-</span> rate[:, <span class="dv">1</span>]).<span class="bu">max</span>()})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>         TT   TT^2    DL   DL^2
 odd  -0.067 -0.037 0.039 -0.065
 even -0.025 -0.033 0.006 -0.055</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>rate <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, d<span class="sc">$</span>X) <span class="sc">%*%</span> <span class="fu">cbind</span>(odd, even)      <span class="co"># growth rate on all days</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">correlation =</span> <span class="fu">cor</span>(rate[, <span class="dv">1</span>], rate[, <span class="dv">2</span>]),</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_difference =</span> <span class="fu">max</span>(<span class="fu">abs</span>(rate[, <span class="dv">1</span>] <span class="sc">-</span> rate[, <span class="dv">2</span>])))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   correlation max_difference 
     0.98748717     0.03865562 </code></pre>
@@ -341,12 +444,27 @@ even -0.025 -0.033 0.006 -0.055</code></pre>
 <section id="accumulation-of-error" class="level2">
 <h2 class="anchored" data-anchor-id="accumulation-of-error">Accumulation of error</h2>
 <p>The regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_stlsq.rds"</span>, <span class="fu">cross_validate</span>(Theta, tr, fit_stlsq))</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>step_error <span class="ot">&lt;-</span> P[, , <span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> P[, , <span class="sc">-</span><span class="fu">dim</span>(P)[<span class="dv">3</span>]]           <span class="co"># predicted increments</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>step_error <span class="ot">&lt;-</span> step_error <span class="sc">-</span> (tr<span class="sc">$</span>Y[, , <span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> tr<span class="sc">$</span>Y[, , <span class="sc">-</span><span class="fu">dim</span>(tr<span class="sc">$</span>Y)[<span class="dv">3</span>]])</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">daily_increment_rmse =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(step_error<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">trajectory_rmse =</span> <span class="fu">evaluate</span>(P, tr)[[<span class="dv">1</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_stlsq.rds"</span>, <span class="fu">cross_validate</span>(Theta, tr, fit_stlsq))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>step_error <span class="ot">&lt;-</span> P[, , <span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> P[, , <span class="sc">-</span><span class="fu">dim</span>(P)[<span class="dv">3</span>]]           <span class="co"># predicted increments</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>step_error <span class="ot">&lt;-</span> step_error <span class="sc">-</span> (tr<span class="sc">$</span>Y[, , <span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> tr<span class="sc">$</span>Y[, , <span class="sc">-</span><span class="fu">dim</span>(tr<span class="sc">$</span>Y)[<span class="dv">3</span>]])</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">daily_increment_rmse =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(step_error<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">trajectory_rmse =</span> <span class="fu">evaluate</span>(P, tr)[[<span class="dv">1</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>P <span class="op">=</span> cross_validate(Theta, tr, fit_stlsq)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>step_error <span class="op">=</span> np.diff(P, axis<span class="op">=</span><span class="dv">2</span>) <span class="op">-</span> np.diff(tr.Y, axis<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>({<span class="st">"daily_increment_rmse"</span>: np.sqrt(np.nanmean(step_error <span class="op">**</span> <span class="dv">2</span>)),</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>       <span class="st">"trajectory_rmse"</span>: evaluate(P, tr)[<span class="st">"trajectory_rmse"</span>]})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>daily_increment_rmse      trajectory_rmse 
           0.02794568           0.52631617 </code></pre>

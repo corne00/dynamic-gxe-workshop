@@ -9,7 +9,35 @@ source("R/page_setup.R")
 
 The data are APSIM simulations of wheat at Narrabri (New South Wales): 199 genotypes in 31 seasons (1983 to 2013), daily from 15 days after sowing to maturity. They are a subset of the simulations of Bustos-Korts et al. (2019), published on [figshare](https://figshare.com/articles/dataset/24843705). Weather is the same for all genotypes within a season and is stored in a separate table.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 02-1
+#| ref.label: 02-1-run
+#| eval: false
+```
+
+## Python
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from dgxe import *
+
+wx = pd.read_csv("data/narrabri_weather.csv")
+traj = pd.read_csv("data/narrabri_biomass.csv.gz")
+print(wx.head(3))
+print(traj.head(3))
+```
+
+:::
+
+```{r}
+#| label: 02-1-run
+#| echo: false
 wx <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 head(wx, 3)
@@ -32,7 +60,29 @@ Some weather variables are given and others are constructed from them.
 
 Thermal time accumulates the daily mean temperature, truncated at zero. Its increments reproduce this definition:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 02-2
+#| ref.label: 02-2-run
+#| eval: false
+```
+
+## Python
+
+```python
+increment = ((wx["Tmin"] + wx["Tmax"]) / 2).clip(lower=0)
+daily_change = wx.groupby("year")["TT"].diff()
+print((daily_change - increment).abs().max())
+```
+
+:::
+
+```{r}
+#| label: 02-2-run
+#| echo: false
 increment <- pmax((wx$Tmin + wx$Tmax) / 2, 0)
 daily_change <- ave(wx$TT, wx$year, FUN = function(x) c(NA, diff(x)))
 max(abs(daily_change - increment), na.rm = TRUE)
@@ -42,7 +92,38 @@ The accumulation starts at sowing, so `TT` on the first day in the table (day 15
 
 The four drivers in the library, for all seasons (grey) and three selected seasons:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 02-3
+#| ref.label: 02-3-run
+#| eval: false
+```
+
+## Python
+
+```python
+seasons = [1984, 1998, 2008]
+fig, axes = plt.subplots(2, 2, figsize=(8, 5), sharex=True)
+for ax, name in zip(axes.flat, DRIVERS):
+    for year, g in wx.groupby("year"):
+        ax.plot(g["das"], g[name], color=GREY, lw=0.25)
+    for year, colour in zip(seasons, [BLUE, CYAN, BURGUNDY]):
+        g = wx[wx["year"] == year]
+        ax.plot(g["das"], g[name], color=colour, lw=0.9, label=year)
+    ax.set_title(name, loc="left")
+axes[0, 0].legend(frameon=False)
+fig.supxlabel("days after sowing")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 02-3-run
+#| echo: false
 #| fig-height: 3.2
 drivers <- c("TT", "DL", "RAW", "RAD")
 w <- data.frame(year = wx$year, das = wx$das,
@@ -64,7 +145,43 @@ ggplot(w, aes(das, value, group = year)) +
 
 The response is the biomass (t/ha) of each genotype; leaf area index `lai` is used in step 8. Each panel is one season: all 199 genotypes in grey and three genotypes with the lowest, median and highest final biomass in colour.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 02-4
+#| ref.label: 02-4-run
+#| eval: false
+```
+
+## Python
+
+```python
+drv = make_drivers(wx)
+tr = make_trajectories(traj, drv)
+three = spread_genotypes(tr)
+days = np.arange(tr.Y.shape[2]) + tr.das0
+
+fig, axes = plt.subplots(1, 4, sharey=True, figsize=(10, 2.8))
+for ax, year in zip(axes, [1984, 1990, 1998, 2008]):
+    s = list(tr.years).index(year)
+    ax.plot(days, tr.Y[:, s].T, color=GREY, lw=0.2)
+    for g, colour in zip(three, [BURGUNDY, CYAN, BLUE]):
+        ax.plot(days, tr.Y[np.searchsorted(tr.genotypes, g), s],
+                color=colour, lw=0.9, label=g)
+    ax.set_title(year, loc="left")
+axes[0].legend(frameon=False)
+axes[0].set_ylabel("biomass (t/ha)")
+fig.supxlabel("days after sowing")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 02-4-run
+#| echo: false
 #| fig-height: 3
 #| warning: false
 drv <- make_drivers(wx)

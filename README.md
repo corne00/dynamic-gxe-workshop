@@ -1,6 +1,6 @@
 # Dynamic G×E workshop
 
-Hands-on workshop (AAGI 2026 Symposium): learning growth equations from crop-model data with sparse regression in R.
+Hands-on workshop (AAGI 2026 Symposium): learning growth equations from crop-model data with sparse regression, in R and Python.
 
 Site: step-by-step pages (method, data, design matrix, fitting, validation, interpretation, genotypes, limitations, extensions) with copyable code and pre-run output.
 
@@ -12,7 +12,7 @@ wx   <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
-`scripts/parity_check.R` cross-validates all fitting methods on a few genotypes. Packages: `glmnet`, `leaps`, `iml`, `ggplot2` (and `splines` for one example).
+Python: `PYTHONPATH=python`, then `from dgxe import *`. `scripts/parity_check.R` and `scripts/parity_check.py` cross-validate all fitting methods on a few genotypes and give the same errors. R packages: `glmnet`, `leaps`, `iml`, `ggplot2` (and `splines` for one example). Python packages: `numpy`, `pandas`, `scipy`, `scikit-learn`, `matplotlib`, `PyALE`.
 
 ## Build the site
 
@@ -26,7 +26,7 @@ Publish with GitHub Pages: Settings → Pages → Deploy from a branch → `main
 
 ## Layout
 
-- `*.qmd`: the pages · `R/functions.R`: all workshop functions · `R/pipeline.R`: steps 2–3 in one script
+- `*.qmd`: the pages · `R/functions.R` and `python/dgxe.py`: all workshop functions · `R/pipeline.R`: steps 2–3 in one script
 - `data/`: Narrabri weather and APSIM biomass/LAI trajectories · `scripts/`: data export and parity check
 - `images/`: static figures from the research code (page 9 only)
 

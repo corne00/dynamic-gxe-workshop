@@ -9,18 +9,100 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
+```r
+source("R/pipeline.R")
+```
+
+## Python
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from dgxe import *
+
+wx = pd.read_csv("data/narrabri_weather.csv")
+traj = pd.read_csv("data/narrabri_biomass.csv.gz")
+drv = make_drivers(wx)
+Theta = make_library(drv)
+tr = make_trajectories(traj, drv)
+```
+
+:::
+
+
 ## Choice of library
 
 The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing `var = "lai"`. Least squares is used for all libraries here.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 08-1
+#| ref.label: 08-1-run
+#| eval: false
+```
+
+## Python
+
+```python
+trl = make_trajectories(traj, drv, var="lai")
+P_poly = cross_validate(Theta, trl, fit_ols)
+```
+
+:::
+
+```{r}
+#| label: 08-1-run
+#| echo: false
 trl <- make_trajectories(traj, drv, var = "lai")
 P_poly <- cached("cv_lai_poly.rds", cross_validate(Theta, trl, fit_ols))
 ```
 
-As an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly:
+As an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly (`splines::bs` in R, `scipy.interpolate.BSpline` in Python; the two bases span the same functions and give the same fit):
+
+::: {.panel-tabset group="language"}
+
+## R
 
 ```{r}
+#| label: 08-2
+#| ref.label: 08-2-run
+#| eval: false
+```
+
+## Python
+
+```python
+from scipy.interpolate import BSpline
+
+tt = drv.U[:, :, 0].ravel()
+inner = np.quantile(tt, [0.25, 0.5, 0.75])
+knots = np.r_[[tt.min()] * 4, inner, [tt.max()] * 4]
+B = BSpline.design_matrix(tt, knots, 3).toarray()[:, 1:]   # 6 basis functions
+others = drv.U[:, :, 1:].reshape(-1, 3)                    # DL, RAW, RAD
+terms = [f"B{i}" for i in range(1, 7)] + ["DL", "RAW", "RAD"]
+Theta_spl = SimpleNamespace(array=np.column_stack([B, others]).reshape(
+    *drv.U.shape[:2], 9), terms=terms)
+P_spl = cross_validate(Theta_spl, trl, fit_ols)
+
+base = lookup_trajectory(trl)
+print(pd.DataFrame({"cubic polynomial": evaluate(P_poly, trl),
+                    "B-spline in TT": evaluate(P_spl, trl),
+                    "baseline": evaluate(base, trl)}).T.round(3))
+```
+
+:::
+
+```{r}
+#| label: 08-2-run
+#| echo: false
 B <- bs(as.vector(drv$U[, , "TT"]), df = 6)
 others <- matrix(drv$U[, , -1], ncol = 3, dimnames = list(NULL, c("DL", "RAW", "RAD")))
 Theta_spl <- array(cbind(B, others), c(dim(drv$U)[1:2], 9),
@@ -33,7 +115,37 @@ round(rbind(`cubic polynomial` = evaluate(P_poly, trl),
             baseline = evaluate(base, trl)), 3)
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 08-3
+#| ref.label: 08-3-run
+#| eval: false
+```
+
+## Python
+
+```python
+days = np.arange(1, trl.Y.shape[2]) + trl.das0
+fig, ax = plt.subplots(figsize=(7, 2.8))
+for P, name, colour in [(P_poly, "cubic polynomial", BURGUNDY),
+                        (P_spl, "B-spline in TT", BLUE),
+                        (base, "baseline", "#9CA3AF")]:
+    ax.plot(days, rmse_by_day(P, trl), color=colour, label=name)
+ax.set_xlim(right=155)
+ax.legend(frameon=False)
+ax.set_xlabel("days after sowing")
+ax.set_ylabel("held-out LAI RMSE")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 08-3-run
+#| echo: false
 #| fig-height: 2.8
 models <- c("cubic polynomial", "B-spline in TT", "baseline")
 days <- 2:dim(trl$Y)[3] + trl$das0 - 1
@@ -58,7 +170,37 @@ A cubic polynomial in the standardised drivers cannot represent the rise and fal
 
 Thermal time and day length have a correlation of 0.97. Fitting the same model to the odd and to the even seasons of one genotype gives different coefficients but similar growth rates.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 08-4
+#| ref.label: 08-4-run
+#| eval: false
+```
+
+## Python
+
+```python
+d = make_design(Theta, tr, "g114")
+odd = d.season % 2 == 0                      # seasons 1, 3, 5, ... (0-based)
+b_odd = fit_ols(d.X[odd], d.dy[odd])
+b_even = fit_ols(d.X[~odd], d.dy[~odd])
+cols = [d.terms.index(t) + 1 for t in ["TT", "TT^2", "DL", "DL^2"]]
+print(pd.DataFrame([b_odd[cols], b_even[cols]], index=["odd", "even"],
+                   columns=["TT", "TT^2", "DL", "DL^2"]).round(3))
+
+rate = d.X @ np.c_[b_odd[1:], b_even[1:]] + np.r_[b_odd[0], b_even[0]]
+print({"correlation": np.corrcoef(rate.T)[0, 1],
+       "max_difference": np.abs(rate[:, 0] - rate[:, 1]).max()})
+```
+
+:::
+
+```{r}
+#| label: 08-4-run
+#| echo: false
 d <- make_design(Theta, tr, "g114")
 odd <- fit_ols(d$X[d$season %% 2 == 1, ], d$dy[d$season %% 2 == 1])
 even <- fit_ols(d$X[d$season %% 2 == 0, ], d$dy[d$season %% 2 == 0])
@@ -75,7 +217,30 @@ The data determine the combined effect of correlated drivers better than each co
 
 The regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 08-5
+#| ref.label: 08-5-run
+#| eval: false
+```
+
+## Python
+
+```python
+P = cross_validate(Theta, tr, fit_stlsq)
+step_error = np.diff(P, axis=2) - np.diff(tr.Y, axis=2)
+print({"daily_increment_rmse": np.sqrt(np.nanmean(step_error ** 2)),
+       "trajectory_rmse": evaluate(P, tr)["trajectory_rmse"]})
+```
+
+:::
+
+```{r}
+#| label: 08-5-run
+#| echo: false
 P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
 step_error <- P[, , -1] - P[, , -dim(P)[3]]           # predicted increments
 step_error <- step_error - (tr$Y[, , -1] - tr$Y[, , -dim(tr$Y)[3]])

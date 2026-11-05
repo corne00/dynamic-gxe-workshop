@@ -8,6 +8,32 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
+```r
+source("R/pipeline.R")
+```
+
+## Python
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from dgxe import *
+
+wx = pd.read_csv("data/narrabri_weather.csv")
+traj = pd.read_csv("data/narrabri_biomass.csv.gz")
+drv = make_drivers(wx)
+Theta = make_library(drv)
+tr = make_trajectories(traj, drv)
+```
+
+:::
+
+
 ## Solution
 
 With a library that depends on the drivers only, the solution of the fitted equation is a cumulative sum of the predicted daily growth:
@@ -30,7 +56,28 @@ show_fun("cross_validate", "evaluate")
 
 The sparse model (STLSQ) for all 199 genotypes, with the root-mean-square error (RMSE, t/ha) over whole trajectories, on day 113 after sowing, and at maturity:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-1
+#| ref.label: 05-1-run
+#| eval: false
+```
+
+## Python
+
+```python
+P = cross_validate(Theta, tr, fit_stlsq)
+print({k: round(float(v), 3) for k, v in evaluate(P, tr).items()})
+```
+
+:::
+
+```{r}
+#| label: 05-1-run
+#| echo: false
 P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
 round(evaluate(P, tr), 3)
 ```
@@ -39,7 +86,43 @@ round(evaluate(P, tr), 3)
 
 Season 1998, predicted by models that were fitted without it. All genotypes are shown in grey; the genotypes with the lowest, median and highest final biomass are in colour.
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-2
+#| ref.label: 05-2-run
+#| eval: false
+```
+
+## Python
+
+```python
+s = list(tr.years).index(1998)
+three = spread_genotypes(tr)
+days = np.arange(tr.Y.shape[2]) + tr.das0
+alive = ~np.isnan(tr.Y[:, s])                    # days before maturity
+
+fig, axes = plt.subplots(1, 2, sharey=True, figsize=(8, 3))
+for ax, title, Y in zip(axes, ["APSIM", "Model"], [tr.Y, P]):
+    Ys = np.where(alive, Y[:, s], np.nan)
+    ax.plot(days, Ys.T, color=GREY, lw=0.2)
+    for g, colour in zip(three, [BURGUNDY, CYAN, BLUE]):
+        ax.plot(days, Ys[np.searchsorted(tr.genotypes, g)], color=colour,
+                lw=0.9, label=g)
+    ax.set_title(title, loc="left")
+axes[0].legend(frameon=False)
+axes[0].set_ylabel("biomass (t/ha)")
+fig.supxlabel("days after sowing")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 05-2-run
+#| echo: false
 #| fig-height: 3
 v <- match(1998, tr$years)
 three <- spread_genotypes(tr)
@@ -62,7 +145,38 @@ ggplot(d, aes(das, biomass, group = genotype)) +
 
 Predicted against APSIM biomass on day 113, all genotype-season pairs:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-3
+#| ref.label: 05-3-run
+#| eval: false
+```
+
+## Python
+
+```python
+obs = tr.Y[:, :, 113 - tr.das0].ravel()
+pred = P[:, :, 113 - tr.das0].ravel()
+rmse = np.sqrt(np.mean((obs - pred) ** 2))
+
+fig, ax = plt.subplots(figsize=(4, 4))
+ax.plot([obs.min(), obs.max()], [obs.min(), obs.max()], color="#9CA3AF", lw=0.8)
+ax.scatter(obs, pred, s=2, alpha=0.2, color=BLUE)
+ax.text(obs.min(), pred.max(), f"RMSE {rmse:.2f} t/ha", va="top")
+ax.set_aspect("equal")
+ax.set_xlabel("APSIM biomass (t/ha)")
+ax.set_ylabel("predicted biomass (t/ha)")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 05-3-run
+#| echo: false
 #| fig-height: 3.6
 #| fig-width: 4.2
 d <- data.frame(obs = as.vector(tr$Y[, , 99]), pred = as.vector(P[, , 99]))
@@ -88,14 +202,63 @@ As a reference, each trajectory is predicted by the mean curve of the same genot
 show_fun("lookup_trajectory")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-4
+#| ref.label: 05-4-run
+#| eval: false
+```
+
+## Python
+
+```python
+base = lookup_trajectory(tr)
+print({k: round(float(v), 3) for k, v in evaluate(base, tr).items()})
+```
+
+:::
+
+```{r}
+#| label: 05-4-run
+#| echo: false
 base <- lookup_trajectory(tr)
 round(evaluate(base, tr), 3)
 ```
 
 The error as a function of time:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-5
+#| ref.label: 05-5-run
+#| eval: false
+```
+
+## Python
+
+```python
+days = np.arange(1, tr.Y.shape[2]) + tr.das0
+fig, ax = plt.subplots(figsize=(7, 3))
+ax.plot(days, rmse_by_day(P, tr), color=BLUE, label="model")
+ax.plot(days, rmse_by_day(base, tr), color=BURGUNDY, label="baseline")
+ax.set_xlim(right=155)
+ax.set_xlabel("days after sowing")
+ax.set_ylabel("held-out RMSE (t/ha)")
+ax.legend(frameon=False)
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 05-5-run
+#| echo: false
 #| fig-height: 3
 days <- 2:dim(tr$Y)[3] + tr$das0 - 1
 d <- rbind(data.frame(das = days, rmse = rmse_by_day(P, tr), model = "model"),
@@ -117,7 +280,30 @@ ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) +
 
 All methods of step 4 are evaluated in the same way:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-6
+#| ref.label: 05-6-run
+#| eval: false
+```
+
+## Python
+
+```python
+scores = pd.DataFrame({name: evaluate(cross_validate(Theta, tr, fit), tr)
+                       for name, fit in fit_methods.items()}).T
+scores.loc["baseline"] = evaluate(base, tr)
+print(scores.round(3))
+```
+
+:::
+
+```{r}
+#| label: 05-6-run
+#| echo: false
 scores <- cached("cv_methods.rds", t(sapply(fit_methods, function(fit) {
   evaluate(cross_validate(Theta, tr, fit), tr)
 })))
@@ -130,7 +316,37 @@ The methods are close to each other. The sparse models use fewer terms for a sim
 
 With 12 terms there is little to remove. For a larger library that includes products of drivers (`pairs = TRUE`, 36 terms), the held-out error of backward elimination (every fifth genotype) as a function of the number of terms is:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-7
+#| ref.label: 05-7-run
+#| eval: false
+```
+
+## Python
+
+```python
+Theta2 = make_library(drv, pairs=True)
+genotypes = tr.genotypes[::5]
+ks = [4, 6, 8, 12, 16, 20, 28, 36]
+
+def rmse_for(k):
+    def fit(X, dy):
+        return fit_subset(X, dy, k, "backward")
+    return evaluate(cross_validate(Theta2, tr, fit, genotypes),
+                    tr)["trajectory_rmse"]
+
+by_k = pd.DataFrame({"k": ks, "rmse": [rmse_for(k) for k in ks]})
+```
+
+:::
+
+```{r}
+#| label: 05-7-run
+#| echo: false
 Theta2 <- make_library(drv, pairs = TRUE)
 genotypes <- tr$genotypes[seq(1, 199, by = 5)]
 ks <- c(4, 6, 8, 12, 16, 20, 28, 36)
@@ -141,7 +357,31 @@ by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k)
 })))
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 05-8
+#| ref.label: 05-8-run
+#| eval: false
+```
+
+## Python
+
+```python
+fig, ax = plt.subplots(figsize=(5, 2.8))
+ax.plot(by_k["k"], by_k["rmse"], "o-", color=BLUE)
+ax.set_xlabel("number of terms (36-term library)")
+ax.set_ylabel("held-out trajectory RMSE (t/ha)")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 05-8-run
+#| echo: false
 #| fig-height: 2.8
 #| fig-width: 5
 ggplot(by_k, aes(k, rmse)) +

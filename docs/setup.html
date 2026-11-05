@@ -236,6 +236,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul class="collapse">
   <li><a href="#files" id="toc-files" class="nav-link active" data-scroll-target="#files">Files</a></li>
+  <li><a href="#language" id="toc-language" class="nav-link" data-scroll-target="#language">Language</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
   <li><a href="#test-run" id="toc-test-run" class="nav-link" data-scroll-target="#test-run">Test run</a></li>
   </ul>
@@ -267,26 +268,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="files">Files</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/corne00/dynamic-gxe-workshop.git</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dynamic-gxe-workshop</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>R/functions.R</code> contains all functions used in the workshop. <code>data/</code> contains the Narrabri weather and the biomass trajectories.</p>
+<p><code>R/functions.R</code> contains all functions used in the workshop, and <code>python/dgxe.py</code> the same functions in Python. <code>data/</code> contains the Narrabri weather and the biomass trajectories.</p>
+</section>
+<section id="language" class="level2">
+<h2 class="anchored" data-anchor-id="language">Language</h2>
+<p>Every code block is available in R and in Python. Selecting a language in any of the tabs switches all code on the page, and the choice is remembered. Printed output and figures are produced by the R code; the Python code gives the same numbers (coefficients and errors agree to three decimals, up to the convergence tolerance of the penalised methods).</p>
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
 <p>R 4.1 or later. The fitting methods use <code>glmnet</code> and <code>leaps</code>; the interpretation page uses <code>iml</code> (with <code>yaImpute</code>); the figures use <code>ggplot2</code>.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="fu">c</span>(<span class="st">"glmnet"</span>, <span class="st">"leaps"</span>, <span class="st">"ggplot2"</span>, <span class="st">"iml"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Python 3.9 or later with <code>numpy</code>, <code>pandas</code>, <code>scipy</code>, <code>scikit-learn</code> and <code>matplotlib</code>; the interpretation page also uses <code>PyALE</code>. Python is run from the repository root with <code>python/</code> on the path.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install numpy pandas scipy scikit-learn matplotlib PyALE</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PYTHONPATH</span><span class="op">=</span>python</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="test-run" class="level2">
 <h2 class="anchored" data-anchor-id="test-run">Test run</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/functions.R"</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>wx <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>Theta <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="fu">cross_validate</span>(Theta, tr, fit_ols, <span class="at">genotypes =</span> tr<span class="sc">$</span>genotypes[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>])</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">evaluate</span>(P, tr), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/functions.R"</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>wx <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>Theta <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="fu">cross_validate</span>(Theta, tr, fit_ols, <span class="at">genotypes =</span> tr<span class="sc">$</span>genotypes[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>])</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">evaluate</span>(P, tr), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dgxe <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>wx <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>traj <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(wx)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>Theta <span class="op">=</span> make_library(drv)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>tr <span class="op">=</span> make_trajectories(traj, drv)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>P <span class="op">=</span> cross_validate(Theta, tr, fit_ols, tr.genotypes[:<span class="dv">20</span>])</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(evaluate(P, tr))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The result is the root-mean-square error (t/ha) of 20 genotypes on seasons that were left out of the fit; it should take a few seconds.</p>
 
 

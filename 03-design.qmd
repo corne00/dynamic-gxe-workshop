@@ -9,6 +9,30 @@ wx <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
+```r
+wx <- read.csv("data/narrabri_weather.csv")
+traj <- read.csv("data/narrabri_biomass.csv.gz")
+```
+
+## Python
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from dgxe import *
+
+wx = pd.read_csv("data/narrabri_weather.csv")
+traj = pd.read_csv("data/narrabri_biomass.csv.gz")
+```
+
+:::
+
+
 ## Drivers
 
 The drivers $u_1, \dots, u_4$ (`TT`, `DL`, `RAW`, `RAD`) are standardised to mean 0 and standard deviation 1. The response does not enter this step.
@@ -19,7 +43,28 @@ The drivers $u_1, \dots, u_4$ (`TT`, `DL`, `RAW`, `RAD`) are standardised to mea
 show_fun("make_drivers")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 03-1
+#| ref.label: 03-1-run
+#| eval: false
+```
+
+## Python
+
+```python
+drv = make_drivers(wx)
+print(drv.U.shape)           # season x day x driver
+```
+
+:::
+
+```{r}
+#| label: 03-1-run
+#| echo: false
 drv <- make_drivers(wx)
 dim(drv$U)            # season x day x driver
 ```
@@ -34,7 +79,29 @@ The library contains powers of each driver up to degree 3, giving $K = 12$ terms
 show_fun("library_matrix", "make_library")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 03-2
+#| ref.label: 03-2-run
+#| eval: false
+```
+
+## Python
+
+```python
+Theta = make_library(drv)
+print(Theta.array.shape)     # season x day x term
+print(Theta.terms)
+```
+
+:::
+
+```{r}
+#| label: 03-2-run
+#| echo: false
 Theta <- make_library(drv)
 dim(Theta)            # season x day x term
 dimnames(Theta)[[3]]
@@ -50,7 +117,28 @@ The biomass trajectories are stored in an array `Y[genotype, season, day]` with 
 show_fun("make_trajectories")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 03-3
+#| ref.label: 03-3-run
+#| eval: false
+```
+
+## Python
+
+```python
+tr = make_trajectories(traj, drv)
+print(tr.Y.shape)
+```
+
+:::
+
+```{r}
+#| label: 03-3-run
+#| echo: false
 tr <- make_trajectories(traj, drv)
 dim(tr$Y)
 ```
@@ -65,7 +153,30 @@ For one genotype, the rows of $\mathbf{X}$ are the days of all seasons and the c
 show_fun("make_design")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 03-4
+#| ref.label: 03-4-run
+#| eval: false
+```
+
+## Python
+
+```python
+d = make_design(Theta, tr, "g001")
+print(d.X.shape)
+print(d.X[:3].round(2))
+print(d.dy[:6])
+```
+
+:::
+
+```{r}
+#| label: 03-4-run
+#| echo: false
 d <- make_design(Theta, tr, "g001")
 dim(d$X)
 round(head(d$X, 3), 2)
@@ -74,7 +185,27 @@ head(d$dy)
 
 The regression of the increments on the library is a linear model:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 03-5
+#| ref.label: 03-5-run
+#| eval: false
+```
+
+## Python
+
+```python
+print(pd.Series(fit_ols(d.X, d.dy), index=["1"] + d.terms).round(3))
+```
+
+:::
+
+```{r}
+#| label: 03-5-run
+#| echo: false
 round(coef(lm(d$dy ~ d$X)), 3)
 ```
 

@@ -8,11 +8,62 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
+```r
+source("R/pipeline.R")
+```
+
+## Python
+
+```python
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from dgxe import *
+
+wx = pd.read_csv("data/narrabri_weather.csv")
+traj = pd.read_csv("data/narrabri_biomass.csv.gz")
+drv = make_drivers(wx)
+Theta = make_library(drv)
+tr = make_trajectories(traj, drv)
+```
+
+:::
+
+
 ## Equations of different genotypes
 
 Each genotype has its own equation, with coefficients estimated from the 31 trajectories of that genotype. The sparse models (STLSQ) of all genotypes, fitted to all seasons, give genotype-specific growth rates. Growth rate along the mean weather path, for every genotype (grey) and for the genotypes with the lowest, median and highest final biomass:
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 07-1
+#| ref.label: 07-1-run
+#| eval: false
+```
+
+## Python
+
+```python
+def fit_genotype(g):
+    d = make_design(Theta, tr, g)
+    return fit_stlsq(d.X, d.dy)
+
+coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
+                     index=["1"] + Theta.terms)
+```
+
+:::
+
+```{r}
+#| label: 07-1-run
+#| echo: false
 fit_genotype <- function(g) {
   d <- make_design(Theta, tr, g)
   fit_stlsq(d$X, d$dy)
@@ -20,7 +71,41 @@ fit_genotype <- function(g) {
 coefs <- sapply(tr$genotypes, fit_genotype)
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 07-2
+#| ref.label: 07-2-run
+#| eval: false
+```
+
+## Python
+
+```python
+three = spread_genotypes(tr)
+mean_path = Theta.array.mean(axis=0)               # library, mean weather
+b = coefs.to_numpy()
+rate = pd.DataFrame(b[0] + mean_path @ b[1:], columns=coefs.columns)
+rate["das"] = np.arange(len(rate)) + tr.das0
+rate = rate[rate["das"] <= 155]
+
+fig, ax = plt.subplots(figsize=(7, 2.8))
+ax.plot(rate["das"], rate.drop(columns="das"), color=GREY, lw=0.2)
+for g, colour in zip(three, [BURGUNDY, CYAN, BLUE]):
+    ax.plot(rate["das"], rate[g], color=colour, lw=1.2, label=g)
+ax.legend(frameon=False)
+ax.set_xlabel("days after sowing")
+ax.set_ylabel("growth rate (t/ha/day)")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 07-2-run
+#| echo: false
 #| fig-height: 2.8
 three <- spread_genotypes(tr)
 mean_path <- cbind(1, apply(Theta, c(2, 3), mean))       # library, mean weather
@@ -50,7 +135,41 @@ For each season, the predicted and APSIM biomass of the 199 genotypes on a fixed
 show_fun("rank_scores")
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 07-3
+#| ref.label: 07-3-run
+#| eval: false
+```
+
+## Python
+
+```python
+P = cross_validate(Theta, tr, fit_stlsq)
+base = lookup_trajectory(tr)
+days = [49, 64, 77, 98, 113]                       # days after sowing
+
+def scores(day):
+    i = day - tr.das0
+    rows = []
+    for method, Q in [("model", P), ("baseline", base)]:
+        rho, top = rank_scores(Q[:, :, i], tr.Y[:, :, i])
+        rows.append((day, method, rho.mean().round(3), top.mean().round(3)))
+    return rows
+
+out = pd.DataFrame([r for day in days for r in scores(day)],
+                   columns=["das", "method", "rho", "top10"])
+print(out)
+```
+
+:::
+
+```{r}
+#| label: 07-3-run
+#| echo: false
 P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
 base <- lookup_trajectory(tr)
 days <- c(35, 50, 63, 84, 99)       # day index (das = index + 14)
@@ -67,7 +186,36 @@ out[, c("rho", "top10")] <- round(out[, c("rho", "top10")], 3)
 out
 ```
 
+::: {.panel-tabset group="language"}
+
+## R
+
 ```{r}
+#| label: 07-4
+#| ref.label: 07-4-run
+#| eval: false
+```
+
+## Python
+
+```python
+fig, axes = plt.subplots(1, 2, figsize=(8, 2.8))
+for ax, column, title in zip(axes, ["rho", "top10"],
+                             ["Spearman correlation", "top-10% overlap"]):
+    for method, colour in [("model", BLUE), ("baseline", BURGUNDY)]:
+        o = out[out["method"] == method]
+        ax.plot(o["das"], o[column], "o-", color=colour, label=method)
+    ax.set_title(title, loc="left")
+axes[0].legend(frameon=False)
+fig.supxlabel("days after sowing")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 07-4-run
+#| echo: false
 #| fig-height: 2.8
 long <- rbind(
   data.frame(out[c("das", "method")], metric = "Spearman correlation",

@@ -293,34 +293,88 @@ window.Quarto = {
 </header>
 
 
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>wx <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dgxe <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>wx <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>traj <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
 <section id="drivers" class="level2">
 <h2 class="anchored" data-anchor-id="drivers">Drivers</h2>
 <p>The drivers <span class="math inline">\(u_1, \dots, u_4\)</span> (<code>TT</code>, <code>DL</code>, <code>RAW</code>, <code>RAD</code>) are standardised to mean 0 and standard deviation 1. The response does not enter this step.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>make_drivers <span class="ot">&lt;-</span> <span class="cf">function</span>(wx, <span class="at">drivers =</span> <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>)) {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  years <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(wx<span class="sc">$</span>year))</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  das0 <span class="ot">&lt;-</span> <span class="fu">min</span>(wx<span class="sc">$</span>das)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  nd <span class="ot">&lt;-</span> <span class="fu">max</span>(wx<span class="sc">$</span>das) <span class="sc">-</span> das0 <span class="sc">+</span> <span class="dv">1</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  U <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">c</span>(<span class="fu">length</span>(years), nd, <span class="fu">length</span>(drivers)),</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">dimnames =</span> <span class="fu">list</span>(years, <span class="cn">NULL</span>, drivers))</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(drivers)) {</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    i <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">match</span>(wx<span class="sc">$</span>year, years), wx<span class="sc">$</span>das <span class="sc">-</span> das0 <span class="sc">+</span> <span class="dv">1</span>, j)</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    U[i] <span class="ot">&lt;-</span> wx[[drivers[j]]]</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># seasons end on different days: pad with the last value (never fitted)</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (y <span class="cf">in</span> <span class="fu">seq_along</span>(years)) {</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(drivers)) {</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>      u <span class="ot">&lt;-</span> U[y, , j]</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>      U[y, <span class="fu">is.na</span>(u), j] <span class="ot">&lt;-</span> <span class="fu">tail</span>(u[<span class="sc">!</span><span class="fu">is.na</span>(u)], <span class="dv">1</span>)</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>  center <span class="ot">&lt;-</span> <span class="fu">apply</span>(U, <span class="dv">3</span>, mean)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  scale <span class="ot">&lt;-</span> <span class="fu">apply</span>(U, <span class="dv">3</span>, <span class="cf">function</span>(x) <span class="fu">sqrt</span>(<span class="fu">mean</span>((x <span class="sc">-</span> <span class="fu">mean</span>(x))<span class="sc">^</span><span class="dv">2</span>)))</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">U =</span> <span class="fu">sweep</span>(<span class="fu">sweep</span>(U, <span class="dv">3</span>, center), <span class="dv">3</span>, scale, <span class="st">"/"</span>), <span class="at">years =</span> years,</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">das0 =</span> das0, <span class="at">drivers =</span> drivers, <span class="at">center =</span> center, <span class="at">scale =</span> scale)</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>make_drivers <span class="ot">&lt;-</span> <span class="cf">function</span>(wx, <span class="at">drivers =</span> <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>)) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  years <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(wx<span class="sc">$</span>year))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  das0 <span class="ot">&lt;-</span> <span class="fu">min</span>(wx<span class="sc">$</span>das)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  nd <span class="ot">&lt;-</span> <span class="fu">max</span>(wx<span class="sc">$</span>das) <span class="sc">-</span> das0 <span class="sc">+</span> <span class="dv">1</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  U <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">c</span>(<span class="fu">length</span>(years), nd, <span class="fu">length</span>(drivers)),</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">dimnames =</span> <span class="fu">list</span>(years, <span class="cn">NULL</span>, drivers))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(drivers)) {</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    i <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">match</span>(wx<span class="sc">$</span>year, years), wx<span class="sc">$</span>das <span class="sc">-</span> das0 <span class="sc">+</span> <span class="dv">1</span>, j)</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    U[i] <span class="ot">&lt;-</span> wx[[drivers[j]]]</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># seasons end on different days: pad with the last value (never fitted)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (y <span class="cf">in</span> <span class="fu">seq_along</span>(years)) {</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(drivers)) {</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>      u <span class="ot">&lt;-</span> U[y, , j]</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>      U[y, <span class="fu">is.na</span>(u), j] <span class="ot">&lt;-</span> <span class="fu">tail</span>(u[<span class="sc">!</span><span class="fu">is.na</span>(u)], <span class="dv">1</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>  center <span class="ot">&lt;-</span> <span class="fu">apply</span>(U, <span class="dv">3</span>, mean)</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>  scale <span class="ot">&lt;-</span> <span class="fu">apply</span>(U, <span class="dv">3</span>, <span class="cf">function</span>(x) <span class="fu">sqrt</span>(<span class="fu">mean</span>((x <span class="sc">-</span> <span class="fu">mean</span>(x))<span class="sc">^</span><span class="dv">2</span>)))</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">U =</span> <span class="fu">sweep</span>(<span class="fu">sweep</span>(U, <span class="dv">3</span>, center), <span class="dv">3</span>, scale, <span class="st">"/"</span>), <span class="at">years =</span> years,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">das0 =</span> das0, <span class="at">drivers =</span> drivers, <span class="at">center =</span> center, <span class="at">scale =</span> scale)</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_drivers(wx, drivers<span class="op">=</span>DRIVERS):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    years <span class="op">=</span> np.sort(wx[<span class="st">"year"</span>].unique())</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    das0 <span class="op">=</span> wx[<span class="st">"das"</span>].<span class="bu">min</span>()</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    U <span class="op">=</span> np.full((<span class="bu">len</span>(years), wx[<span class="st">"das"</span>].<span class="bu">max</span>() <span class="op">-</span> das0 <span class="op">+</span> <span class="dv">1</span>, <span class="bu">len</span>(drivers)), np.nan)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> np.searchsorted(years, wx[<span class="st">"year"</span>])</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    U[y, (wx[<span class="st">"das"</span>] <span class="op">-</span> das0).to_numpy(), :] <span class="op">=</span> wx[drivers].to_numpy()</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(years)):                  <span class="co"># seasons end on different days</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(drivers)):            <span class="co"># pad with the last value</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>            u <span class="op">=</span> U[s, :, j]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>            u[np.isnan(u)] <span class="op">=</span> u[<span class="op">~</span>np.isnan(u)][<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    center <span class="op">=</span> U.mean(axis<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    scale <span class="op">=</span> U.std(axis<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(U<span class="op">=</span>(U <span class="op">-</span> center) <span class="op">/</span> scale, years<span class="op">=</span>years, das0<span class="op">=</span>das0,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                           drivers<span class="op">=</span><span class="bu">list</span>(drivers), center<span class="op">=</span>center, scale<span class="op">=</span>scale)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(drv<span class="sc">$</span>U)            <span class="co"># season x day x driver</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(drv<span class="sc">$</span>U)            <span class="co"># season x day x driver</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(wx)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(drv.U.shape)           <span class="co"># season x day x driver</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>[1]  31 150   4</code></pre>
 </div>
@@ -329,37 +383,90 @@ window.Quarto = {
 <section id="library" class="level2">
 <h2 class="anchored" data-anchor-id="library">Library</h2>
 <p>The library contains powers of each driver up to degree 3, giving <span class="math inline">\(K = 12\)</span> terms; the constant term is the intercept of the regression.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>library_matrix <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  term <span class="ot">&lt;-</span> <span class="cf">function</span>(x, p) <span class="cf">if</span> (p <span class="sc">==</span> <span class="dv">1</span>) x <span class="cf">else</span> <span class="fu">paste0</span>(x, <span class="st">"^"</span>, p)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  cols <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (d <span class="cf">in</span> <span class="fu">colnames</span>(Z)) {</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>degree) cols[[<span class="fu">term</span>(d, p)]] <span class="ot">&lt;-</span> Z[, d]<span class="sc">^</span>p</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (pairs) {</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (ij <span class="cf">in</span> <span class="fu">combn</span>(<span class="fu">colnames</span>(Z), <span class="dv">2</span>, <span class="at">simplify =</span> <span class="cn">FALSE</span>)) {</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (q <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>          name <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">term</span>(ij[<span class="dv">1</span>], p), <span class="st">"*"</span>, <span class="fu">term</span>(ij[<span class="dv">2</span>], q))</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>          cols[[name]] <span class="ot">&lt;-</span> Z[, ij[<span class="dv">1</span>]]<span class="sc">^</span>p <span class="sc">*</span> Z[, ij[<span class="dv">2</span>]]<span class="sc">^</span>q</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do.call</span>(cbind, cols)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>make_library <span class="ot">&lt;-</span> <span class="cf">function</span>(drv, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">dim</span>(drv<span class="sc">$</span>U)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U, <span class="at">ncol =</span> d[<span class="dv">3</span>], <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, drv<span class="sc">$</span>drivers))</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  L <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(Z, degree, pairs)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">array</span>(L, <span class="fu">c</span>(d[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="fu">ncol</span>(L)), <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="fu">colnames</span>(L)))</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Z: n x m matrix of standardised drivers -&gt; n x K matrix of terms. Powers</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="do">## 1..degree of every driver; pairs = TRUE adds products of pairs of drivers.</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="do">## The constant term is the intercept of the regression and is not included.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>library_matrix <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  term <span class="ot">&lt;-</span> <span class="cf">function</span>(x, p) <span class="cf">if</span> (p <span class="sc">==</span> <span class="dv">1</span>) x <span class="cf">else</span> <span class="fu">paste0</span>(x, <span class="st">"^"</span>, p)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  cols <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (d <span class="cf">in</span> <span class="fu">colnames</span>(Z)) {</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>degree) cols[[<span class="fu">term</span>(d, p)]] <span class="ot">&lt;-</span> Z[, d]<span class="sc">^</span>p</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (pairs) {</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (ij <span class="cf">in</span> <span class="fu">combn</span>(<span class="fu">colnames</span>(Z), <span class="dv">2</span>, <span class="at">simplify =</span> <span class="cn">FALSE</span>)) {</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (q <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>          name <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">term</span>(ij[<span class="dv">1</span>], p), <span class="st">"*"</span>, <span class="fu">term</span>(ij[<span class="dv">2</span>], q))</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>          cols[[name]] <span class="ot">&lt;-</span> Z[, ij[<span class="dv">1</span>]]<span class="sc">^</span>p <span class="sc">*</span> Z[, ij[<span class="dv">2</span>]]<span class="sc">^</span>q</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do.call</span>(cbind, cols)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="do">## Theta[season, day, term]</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>make_library <span class="ot">&lt;-</span> <span class="cf">function</span>(drv, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">dim</span>(drv<span class="sc">$</span>U)</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U, <span class="at">ncol =</span> d[<span class="dv">3</span>], <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, drv<span class="sc">$</span>drivers))</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  L <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(Z, degree, pairs)</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">array</span>(L, <span class="fu">c</span>(d[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="fu">ncol</span>(L)), <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="fu">colnames</span>(L)))</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Z: n x m matrix of standardised drivers -&gt; n x K matrix of terms. Powers</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1..degree of every driver; pairs = True adds products of pairs of drivers.</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The constant term is the intercept of the regression and is not included.</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> library_matrix(Z, names, degree<span class="op">=</span><span class="dv">3</span>, pairs<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> term(x, p):</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x <span class="cf">if</span> p <span class="op">==</span> <span class="dv">1</span> <span class="cf">else</span> <span class="ss">f"</span><span class="sc">{</span>x<span class="sc">}</span><span class="ss">^</span><span class="sc">{</span>p<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    cols <span class="op">=</span> {}</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j, d <span class="kw">in</span> <span class="bu">enumerate</span>(names):</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> p <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, degree <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>            cols[term(d, p)] <span class="op">=</span> Z[:, j] <span class="op">**</span> p</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pairs:</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, j <span class="kw">in</span> combinations(<span class="bu">range</span>(<span class="bu">len</span>(names)), <span class="dv">2</span>):</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> p <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">2</span>):</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> q <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">2</span>):</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                    name <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>term(names[i], p)<span class="sc">}</span><span class="ss">*</span><span class="sc">{</span>term(names[j], q)<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                    cols[name] <span class="op">=</span> Z[:, i] <span class="op">**</span> p <span class="op">*</span> Z[:, j] <span class="op">**</span> q</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.column_stack(<span class="bu">list</span>(cols.values())), <span class="bu">list</span>(cols)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Theta[season, day, term]</span></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_library(drv, degree<span class="op">=</span><span class="dv">3</span>, pairs<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    n_season, n_day, n_driver <span class="op">=</span> drv.U.shape</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> drv.U.reshape(<span class="op">-</span><span class="dv">1</span>, n_driver)</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    L, terms <span class="op">=</span> library_matrix(Z, drv.drivers, degree, pairs)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(array<span class="op">=</span>L.reshape(n_season, n_day, <span class="op">-</span><span class="dv">1</span>), terms<span class="op">=</span>terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>Theta <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(Theta)            <span class="co"># season x day x term</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Theta <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(Theta)            <span class="co"># season x day x term</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">dimnames</span>(Theta)[[<span class="dv">3</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>Theta <span class="op">=</span> make_library(drv)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(Theta.array.shape)     <span class="co"># season x day x term</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(Theta.terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>[1]  31 150  12</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">dimnames</span>(Theta)[[<span class="dv">3</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code> [1] "TT"    "TT^2"  "TT^3"  "DL"    "DL^2"  "DL^3"  "RAW"   "RAW^2" "RAW^3"
 [10] "RAD"   "RAD^2" "RAD^3"</code></pre>
@@ -369,20 +476,53 @@ window.Quarto = {
 <section id="response" class="level2">
 <h2 class="anchored" data-anchor-id="response">Response</h2>
 <p>The biomass trajectories are stored in an array <code>Y[genotype, season, day]</code> with <code>NA</code> after maturity.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>make_trajectories <span class="ot">&lt;-</span> <span class="cf">function</span>(traj, drv, <span class="at">var =</span> <span class="st">"biomass"</span>) {</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  gen <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(traj<span class="sc">$</span>genotype))</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">c</span>(<span class="fu">length</span>(gen), <span class="fu">length</span>(drv<span class="sc">$</span>years), <span class="fu">dim</span>(drv<span class="sc">$</span>U)[<span class="dv">2</span>]),</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>             <span class="at">dimnames =</span> <span class="fu">list</span>(gen, drv<span class="sc">$</span>years, <span class="cn">NULL</span>))</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">match</span>(traj<span class="sc">$</span>genotype, gen), <span class="fu">match</span>(traj<span class="sc">$</span>year, drv<span class="sc">$</span>years),</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>             traj<span class="sc">$</span>das <span class="sc">-</span> drv<span class="sc">$</span>das0 <span class="sc">+</span> <span class="dv">1</span>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  Y[i] <span class="ot">&lt;-</span> traj[[var]]</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  nend <span class="ot">&lt;-</span> <span class="fu">apply</span>(Y, <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="cf">function</span>(v) <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(v)) <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">Y =</span> Y, <span class="at">nend =</span> nend, <span class="at">genotypes =</span> gen, <span class="at">years =</span> drv<span class="sc">$</span>years,</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>       <span class="at">das0 =</span> drv<span class="sc">$</span>das0)</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">## nend[g, y] is the number of daily steps of trajectory (g, y).</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>make_trajectories <span class="ot">&lt;-</span> <span class="cf">function</span>(traj, drv, <span class="at">var =</span> <span class="st">"biomass"</span>) {</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  gen <span class="ot">&lt;-</span> <span class="fu">sort</span>(<span class="fu">unique</span>(traj<span class="sc">$</span>genotype))</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  Y <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">c</span>(<span class="fu">length</span>(gen), <span class="fu">length</span>(drv<span class="sc">$</span>years), <span class="fu">dim</span>(drv<span class="sc">$</span>U)[<span class="dv">2</span>]),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">dimnames =</span> <span class="fu">list</span>(gen, drv<span class="sc">$</span>years, <span class="cn">NULL</span>))</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  i <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">match</span>(traj<span class="sc">$</span>genotype, gen), <span class="fu">match</span>(traj<span class="sc">$</span>year, drv<span class="sc">$</span>years),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>             traj<span class="sc">$</span>das <span class="sc">-</span> drv<span class="sc">$</span>das0 <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>  Y[i] <span class="ot">&lt;-</span> traj[[var]]</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  nend <span class="ot">&lt;-</span> <span class="fu">apply</span>(Y, <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="cf">function</span>(v) <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(v)) <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">Y =</span> Y, <span class="at">nend =</span> nend, <span class="at">genotypes =</span> gen, <span class="at">years =</span> drv<span class="sc">$</span>years,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">das0 =</span> drv<span class="sc">$</span>das0)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># nend[g, s] is the number of daily steps of trajectory (g, s).</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_trajectories(traj, drv, var<span class="op">=</span><span class="st">"biomass"</span>):</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    genotypes <span class="op">=</span> np.sort(traj[<span class="st">"genotype"</span>].unique())</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    Y <span class="op">=</span> np.full((<span class="bu">len</span>(genotypes), <span class="bu">len</span>(drv.years), drv.U.shape[<span class="dv">1</span>]), np.nan)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    g <span class="op">=</span> np.searchsorted(genotypes, traj[<span class="st">"genotype"</span>])</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> np.searchsorted(drv.years, traj[<span class="st">"year"</span>])</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    Y[g, s, traj[<span class="st">"das"</span>] <span class="op">-</span> drv.das0] <span class="op">=</span> traj[var]</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(Y<span class="op">=</span>Y, nend<span class="op">=</span>(<span class="op">~</span>np.isnan(Y)).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">2</span>) <span class="op">-</span> <span class="dv">1</span>,</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>                           genotypes<span class="op">=</span>genotypes, years<span class="op">=</span>drv.years,</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>                           das0<span class="op">=</span>drv.das0)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(tr<span class="sc">$</span>Y)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(tr<span class="sc">$</span>Y)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>tr <span class="op">=</span> make_trajectories(traj, drv)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(tr.Y.shape)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 199  31 150</code></pre>
 </div>
@@ -391,37 +531,83 @@ window.Quarto = {
 <section id="design-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="design-matrix">Design matrix</h2>
 <p>For one genotype, the rows of <span class="math inline">\(\mathbf{X}\)</span> are the days of all seasons and the columns are the library terms; <span class="math inline">\(\Delta\mathbf{y}\)</span> holds the daily biomass increments <span class="math inline">\(y_{i+1} - y_i\)</span>.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>make_design <span class="ot">&lt;-</span> <span class="cf">function</span>(Theta, tr, genotype) {</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">match</span>(genotype, tr<span class="sc">$</span>genotypes)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> tr<span class="sc">$</span>nend[g, ]</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  seasons <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years)</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">lapply</span>(seasons, <span class="cf">function</span>(y) <span class="fu">matrix</span>(Theta[y, <span class="dv">1</span><span class="sc">:</span>n[y], ], n[y]))</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  dy <span class="ot">&lt;-</span> <span class="fu">lapply</span>(seasons, <span class="cf">function</span>(y) <span class="fu">diff</span>(tr<span class="sc">$</span>Y[g, y, <span class="dv">1</span><span class="sc">:</span>(n[y] <span class="sc">+</span> <span class="dv">1</span>)]))</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, X)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="fu">dimnames</span>(Theta)[[<span class="dv">3</span>]]</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">X =</span> X, <span class="at">dy =</span> <span class="fu">unlist</span>(dy), <span class="at">season =</span> <span class="fu">rep</span>(seasons, n))</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Rows: all days of all seasons. X: library at day t. dy: y(t + 1) - y(t).</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>make_design <span class="ot">&lt;-</span> <span class="cf">function</span>(Theta, tr, genotype) {</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">match</span>(genotype, tr<span class="sc">$</span>genotypes)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> tr<span class="sc">$</span>nend[g, ]</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  seasons <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years)</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">lapply</span>(seasons, <span class="cf">function</span>(y) <span class="fu">matrix</span>(Theta[y, <span class="dv">1</span><span class="sc">:</span>n[y], ], n[y]))</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  dy <span class="ot">&lt;-</span> <span class="fu">lapply</span>(seasons, <span class="cf">function</span>(y) <span class="fu">diff</span>(tr<span class="sc">$</span>Y[g, y, <span class="dv">1</span><span class="sc">:</span>(n[y] <span class="sc">+</span> <span class="dv">1</span>)]))</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, X)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="fu">dimnames</span>(Theta)[[<span class="dv">3</span>]]</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">X =</span> X, <span class="at">dy =</span> <span class="fu">unlist</span>(dy), <span class="at">season =</span> <span class="fu">rep</span>(seasons, n))</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rows: all days of all seasons. X: library at day t. dy: y(t + 1) - y(t).</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_design(Theta, tr, genotype):</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    g <span class="op">=</span> <span class="bu">list</span>(tr.genotypes).index(genotype)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> tr.nend[g]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    seasons <span class="op">=</span> <span class="bu">range</span>(<span class="bu">len</span>(tr.years))</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> np.vstack([Theta.array[s, :n[s], :] <span class="cf">for</span> s <span class="kw">in</span> seasons])</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    dy <span class="op">=</span> np.concatenate([np.diff(tr.Y[g, s, :n[s] <span class="op">+</span> <span class="dv">1</span>]) <span class="cf">for</span> s <span class="kw">in</span> seasons])</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    season <span class="op">=</span> np.repeat(np.arange(<span class="bu">len</span>(tr.years)), n)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(X<span class="op">=</span>X, dy<span class="op">=</span>dy, season<span class="op">=</span>season, terms<span class="op">=</span>Theta.terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, <span class="st">"g001"</span>)</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(d<span class="sc">$</span>X)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, <span class="st">"g001"</span>)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(d<span class="sc">$</span>X)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">head</span>(d<span class="sc">$</span>X, <span class="dv">3</span>), <span class="dv">2</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(d<span class="sc">$</span>dy)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> make_design(Theta, tr, <span class="st">"g001"</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(d.X.shape)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(d.X[:<span class="dv">3</span>].<span class="bu">round</span>(<span class="dv">2</span>))</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(d.dy[:<span class="dv">6</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 4158   12</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">head</span>(d<span class="sc">$</span>X, <span class="dv">3</span>), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>        TT TT^2  TT^3    DL DL^2  DL^3  RAW RAW^2 RAW^3   RAD RAD^2 RAD^3
 [1,] -1.58 2.50 -3.95 -0.95 0.90 -0.86 0.85  0.73  0.62 -0.68  0.46 -0.31
 [2,] -1.56 2.45 -3.83 -0.96 0.92 -0.89 0.83  0.69  0.58 -0.84  0.71 -0.60
 [3,] -1.55 2.39 -3.69 -0.97 0.95 -0.92 0.81  0.65  0.53 -0.51  0.26 -0.13</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(d<span class="sc">$</span>dy)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 0.0026 0.0038 0.0045 0.0053 0.0056 0.0063</code></pre>
 </div>
 </div>
 <p>The regression of the increments on the library is a linear model:</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">coef</span>(<span class="fu">lm</span>(d<span class="sc">$</span>dy <span class="sc">~</span> d<span class="sc">$</span>X)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">coef</span>(<span class="fu">lm</span>(d<span class="sc">$</span>dy <span class="sc">~</span> d<span class="sc">$</span>X)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pd.Series(fit_ols(d.X, d.dy), index<span class="op">=</span>[<span class="st">"1"</span>] <span class="op">+</span> d.terms).<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>(Intercept)       d$XTT     d$XTT^2     d$XTT^3       d$XDL     d$XDL^2 
       0.163      -0.046      -0.034       0.015       0.020      -0.055 
