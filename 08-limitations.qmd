@@ -1,0 +1,84 @@
+---
+title: "8 · Limitations"
+---
+
+```{r}
+#| echo: false
+library(ggplot2); library(splines); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
+```
+
+## Choice of library
+
+The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing `var = "lai"`.
+
+```{r}
+trl <- make_trajectories(traj, drv, var = "lai")
+gl  <- gram_stats(Theta, trl)
+cvl <- cv_blocked(Theta, trl, gl, fit_ols)
+```
+
+As an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly:
+
+```{r}
+df <- 6; TT <- drv$U[, , 1]; B <- bs(as.vector(TT), df = df)
+Th_spl <- array(NA_real_, c(dim(TT), 1 + df + 3), dimnames = list(NULL, NULL, c("1", paste0("B", 1:df), "DL", "RAW", "RAD")))
+Th_spl[, , 1] <- 1
+for (j in 1:df) Th_spl[, , 1 + j] <- B[, j]
+for (j in 1:3)  Th_spl[, , 1 + df + j] <- drv$U[, , j + 1]
+cvs <- cv_blocked(Th_spl, trl, gram_stats(Th_spl, trl), fit_ols)
+
+lookup_all <- function(tr_) {
+  base <- array(NA_real_, dim(tr_$Y))
+  for (y in seq_along(tr_$years)) base[, y, ] <- apply(tr_$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)
+  for (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {
+    v <- base[g, y, ]; ok <- which(!is.nan(v)); v[is.nan(v)] <- v[max(ok)]; base[g, y, ] <- v; base[g, y, 1] <- tr_$Y[g, y, 1] }
+  base
+}
+lk <- lookup_all(trl)
+res <- rbind(`cubic polynomial` = evaluate(cvl$pred, trl), `B-spline in TT` = evaluate(cvs$pred, trl), `baseline (no weather)` = evaluate(lk, trl))
+round(res, 3)
+```
+
+```{r}
+#| fig-height: 2.8
+err_by_day <- function(P) sapply(2:dim(P)[3], function(d) { ok <- !is.na(trl$Y[, , d]); sqrt(mean((P[, , d][ok] - trl$Y[, , d][ok])^2)) })
+nd <- dim(trl$Y)[3] - 1; lv <- c("cubic polynomial", "B-spline in TT", "baseline")
+d <- data.frame(das = rep(2:(nd + 1) + trl$das0 - 1, 3), rmse = c(err_by_day(cvl$pred), err_by_day(cvs$pred), err_by_day(lk)),
+                model = factor(rep(lv, each = nd), lv))
+d <- d[d$das <= 15 + 140, ]
+ggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +
+  scale_colour_manual(values = unname(dgxe[c("burgundy", "blue", "grey")])) +
+  labs(x = "days after sowing", y = "held-out LAI RMSE") + theme_dgxe() + theme(legend.position = "top", legend.title = element_blank())
+```
+
+A cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better, but over whole trajectories the baseline remains slightly more accurate (0.47 against 0.53); the spline model is better at day 113 and at maturity. When the model is inaccurate, the library should be examined before the fitting method.
+
+## Collinear drivers
+
+Thermal time and day length have a correlation of 0.97. Fitting the same model separately to odd and even seasons gives different coefficients but nearly identical growth rates.
+
+```{r}
+odd <- which(tr$years %% 2 == 1); even <- which(tr$years %% 2 == 0)
+fo <- fit_years(gram, odd, fit_ols); fe <- fit_years(gram, even, fit_ols)
+tab <- round(cbind(odd_years = fo$mu, even_years = fe$mu), 3); rownames(tab) <- gram$names
+tab[c("TT", "TT^2", "DL", "DL^2"), ]
+Tbar <- apply(Theta, c(2, 3), mean)
+r_odd <- as.vector(Tbar %*% fo$mu); r_even <- as.vector(Tbar %*% fe$mu)
+c(correlation = cor(r_odd, r_even), max_difference = max(abs(r_odd - r_even)))
+```
+
+The data determine the combined effect of correlated drivers better than each coefficient, so response curves are preferable to individual coefficients for interpretation.
+
+## Accumulation of error
+
+The regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.
+
+```{r}
+cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)
+inc_err <- numeric(0)
+for (g in seq_along(tr$genotypes)) for (y in seq_along(tr$years)) { n <- tr$nend[g, y]
+  inc_err <- c(inc_err, diff(cv$pred[g, y, 1:(n + 1)]) - diff(tr$Y[g, y, 1:(n + 1)])) }
+c(daily_increment_rmse = sqrt(mean(inc_err^2)), trajectory_rmse = unname(evaluate(cv$pred, tr)[1]))
+```
+
+For this reason the model is assessed on the simulated trajectory and not on the daily increments.

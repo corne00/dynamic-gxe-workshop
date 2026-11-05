@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Dynamic GxE from scratch</title>
+<title>Sparse identification of crop growth dynamics – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,41 +25,6 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
-}
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -82,7 +47,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -128,7 +93,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-          <h1 class="quarto-secondary-nav-title">Dynamic GxE from scratch</h1>
+          <h1 class="quarto-secondary-nav-title">Sparse identification of crop growth dynamics</h1>
         </a>     
     </div>
   </nav>
@@ -139,7 +104,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -159,19 +124,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -189,13 +154,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -206,14 +171,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -229,24 +194,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
-    <h2 id="toc-title">On this page</h2>
-   
-  <ul class="collapse">
-  <li><a href="#the-question-we-follow" id="toc-the-question-we-follow" class="nav-link active" data-scroll-target="#the-question-we-follow">The question we follow</a></li>
-  <li><a href="#the-pipeline" id="toc-the-pipeline" class="nav-link" data-scroll-target="#the-pipeline">The pipeline</a></li>
-  <li><a href="#how-to-follow-along" id="toc-how-to-follow-along" class="nav-link" data-scroll-target="#how-to-follow-along">How to follow along</a></li>
-  </ul>
-<div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content" tabindex="-1">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">Dynamic GxE from scratch</h1>
-<p class="subtitle lead">Learning the daily growth rule of a crop from data, step by step, in R</p>
+<h1 class="title d-none d-lg-block">Sparse identification of crop growth dynamics</h1>
+<p class="subtitle lead">Workshop, AAGI 2026 Symposium</p>
 </div>
 
 
@@ -263,117 +220,66 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div class="lead">
-<p>A crop does not jump to its final yield; it grows a little every day, and how much it grows depends on that day’s weather and on the genotype. This workshop shows how to <strong>learn that daily growth rule from data</strong>, using nothing but base R and a few lines per step.</p>
-</div>
-<section id="the-question-we-follow" class="level2">
-<h2 class="anchored" data-anchor-id="the-question-we-follow">The question we follow</h2>
-<blockquote class="blockquote">
-<p>Can we learn the daily growth rule of wheat from simulated field trials, and use it to predict a <strong>year the model has never seen</strong>?</p>
-</blockquote>
-<p>We work with one site (Narrabri), 199 wheat genotypes and 31 years of daily data from the public APSIM wheat simulations. The method is <strong>SINDy</strong> (sparse identification of nonlinear dynamics): write the growth rate as a combination of a few candidate functions of the weather, and let the data decide which ones matter.</p>
-</section>
-<section id="the-pipeline" class="level2">
-<h2 class="anchored" data-anchor-id="the-pipeline">The pipeline</h2>
-<p>Every step is a small function with a clear input and output. Any step can be replaced without touching the others, for example a different fitting method or a different library of candidate functions.</p>
-<table class="pipeline">
-<tbody><tr>
-<td>
-<a href="01-idea.html">1 · The idea</a>
-</td>
-<td>
-A model of change is a running total of daily growth. A toy example, solved with <code>lm</code>.
-</td>
+<p>This workshop fits a daily growth equation for wheat biomass to simulated field-trial data, using base R. The growth rate is written as a sparse combination of candidate functions of the weather (SINDy), the coefficients are obtained by regression, and the resulting equation is validated on years that were not used for fitting.</p>
+<p>The data are APSIM simulations for one site (Narrabri): 199 genotypes, 31 seasons (1983 to 2013), daily resolution. Each step below is a short function with a defined input and output, so that any step, in particular the regression method, can be replaced independently of the others.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Step</th>
+<th>Content</th>
 </tr>
-<tr>
-<td>
-<a href="02-data.html">2 · The data</a>
-</td>
-<td>
-Two plain tables: daily weather and daily biomass.
-</td>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="setup.html">Set up</a></td>
+<td>Files, packages, a test run</td>
 </tr>
-<tr>
-<td>
-<a href="03-design.html">3 · Library and design matrix</a>
-</td>
-<td>
-Candidate functions of the weather, stacked into a regression problem.
-</td>
+<tr class="even">
+<td><a href="01-method.html">1 · Method</a></td>
+<td>Model, regression formulation, solution, validation</td>
 </tr>
-<tr>
-<td>
-<a href="04-fitting.html">4 · Fitting</a>
-</td>
-<td>
-OLS, ridge and sparse regression, all behind one signature.
-</td>
+<tr class="odd">
+<td><a href="02-data.html">2 · Data</a></td>
+<td>Weather and biomass tables</td>
 </tr>
-<tr>
-<td>
-<a href="05-validate.html">5 · Simulate and validate</a>
-</td>
-<td>
-Roll the equation forward and test it on held-out years.
-</td>
+<tr class="even">
+<td><a href="03-design.html">3 · Library and design matrix</a></td>
+<td>Candidate functions, design matrix, normal equations</td>
 </tr>
-<tr>
-<td>
-<a href="06-reading.html">6 · Reading the model</a>
-</td>
-<td>
-Response curves: what the equation says about weather and growth.
-</td>
+<tr class="odd">
+<td><a href="04-fitting.html">4 · Fitting</a></td>
+<td>OLS, ridge, sequential thresholding, lasso</td>
 </tr>
-<tr>
-<td>
-<a href="07-genotypes.html">7 · Genotypes</a>
-</td>
-<td>
-A shared model plus genotype deviations, and ranking lines.
-</td>
+<tr class="even">
+<td><a href="05-validate.html">5 · Validation</a></td>
+<td>Simulation and leave-one-year-out cross-validation</td>
 </tr>
-<tr>
-<td>
-<a href="08-pitfalls.html">8 · When it breaks</a>
-</td>
-<td>
-Wrong libraries, collinear drivers, one-step versus rollout fit.
-</td>
+<tr class="odd">
+<td><a href="06-reading.html">6 · Interpretation</a></td>
+<td>Response curves</td>
 </tr>
-<tr>
-<td>
-<a href="09-further.html">9 · Going further</a>
-</td>
-<td>
-Adding crop knowledge, coupled states, and the Bayesian version.
-</td>
+<tr class="even">
+<td><a href="07-genotypes.html">7 · Genotypes</a></td>
+<td>Shared coefficients and genotype deviations; ranking</td>
 </tr>
-</tbody></table>
-</section>
-<section id="how-to-follow-along" class="level2">
-<h2 class="anchored" data-anchor-id="how-to-follow-along">How to follow along</h2>
-<p>Every page runs on its own and takes seconds. The whole pipeline, including leave-one-year-out cross-validation over all 199 genotypes, runs in about ten seconds.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># base R is enough; ggplot2 is only used for the plots</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"ggplot2"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/functions.R"</span>)      <span class="co"># all modelling functions, plain base R</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Start at <a href="setup.html">Set up</a>, or jump straight to <a href="01-idea.html">the idea</a>.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Where the data come from
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The data are simulated biomass and daily weather for four Australian sites, from Bustos-Korts et al.&nbsp;(2019), <em>From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time</em>, Frontiers in Plant Science 10:1540. Because the data are simulated, the true crop parameters are known, which lets us check what the method recovers.</p>
-</div>
-</div>
+<tr class="odd">
+<td><a href="08-limitations.html">8 · Limitations</a></td>
+<td>Library choice, collinearity, error accumulation</td>
+</tr>
+<tr class="even">
+<td><a href="09-further.html">9 · Extensions</a></td>
+<td>Coupled states and further directions</td>
+</tr>
+<tr class="odd">
+<td><a href="reference.html">Reference</a></td>
+<td>Symbols, functions, data, sources</td>
+</tr>
+</tbody>
+</table>
+<p>All functions are in <code>R/functions.R</code> and use base R only; <code>ggplot2</code> is used for the figures. The full pipeline, including cross-validation over all genotypes, runs in a few seconds.</p>
+<p>The data are simulation output from APSIM (Bustos-Korts et al., 2019). The source and licence should be confirmed before reuse.</p>
 
 
-</section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -865,11 +771,11 @@ Adding crop knowledge, coupled states, and the Bayesian version.
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="toc-actions"><ul><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>C. Verburg · TU Delft · CropXR</p>
 </div>

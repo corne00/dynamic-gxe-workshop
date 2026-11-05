@@ -1,32 +1,27 @@
 ---
 title: "4 · Fitting"
-subtitle: "Any regression method can be used: they all read the same two objects, A and b"
 ---
-
-```{=html}
-<div class="stepmeta"><b>You need</b><span><code>gram</code> (A and b per genotype and year) from step 3.</span><b>You get</b><span>coefficients from OLS, ridge, sparse (SSR) and lasso fits, and a feel for which terms matter.</span></div>
-```
 
 ```{r}
 #| echo: false
 library(ggplot2); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
 ```
 
-## One pooled problem
+## Pooled normal equations
 
-To start simply, pool **all genotypes and all years** into one regression. We add up the per-trajectory statistics and put every library column on a common scale (unit root-mean-square), so coefficient sizes are comparable.
+For this step all genotypes and seasons are pooled. The statistics are summed and the library columns scaled to unit root-mean-square, so that coefficients are comparable.
 
 ```{r}
-st <- sum_years(gram, seq_along(tr$years))        # add up all years, keep genotypes apart
-A  <- apply(st$A, c(2, 3), sum)                   # add up genotypes too
+st <- sum_years(gram, seq_along(tr$years))
+A  <- apply(st$A, c(2, 3), sum)
 b  <- colSums(st$b)
-sc <- scale_gram(A, b, n = sum(st$n))             # scaled normal equations
+sc <- scale_gram(A, b, n = sum(st$n))
 terms <- gram$names
 ```
 
-## A fitting method is a function `fit(A, b, ...)`
+## Fitting methods
 
-Every method takes the same two objects and returns `list(coef, support)`.
+Each method takes `(A, b)` and returns `list(coef, support)`.
 
 ```{r}
 #| echo: false
@@ -34,28 +29,28 @@ Every method takes the same two objects and returns `list(coef, support)`.
 show_fun("fit_ols", "fit_ridge", "fit_ssr")
 ```
 
-**Ordinary least squares** uses every term. **Ridge** shrinks them. **Sequential thresholding** (SSR) refits, removes the smallest coefficient, and repeats until $k$ terms remain.
-
 ```{r}
 ols <- fit_ols(sc$A, sc$b)
 rdg <- fit_ridge(sc$A, sc$b, lambda = 0.01)
 ssr <- fit_ssr(sc$A, sc$b, k = 8)
 tab <- data.frame(term = terms, OLS = ols$coef, ridge = rdg$coef, SSR_8 = ssr$coef)
-tab[, -1] <- round(tab[, -1], 3); tab
+tab[, -1] <- round(tab[, -1], 3)
+tab
 ```
 
 ```{r}
-#| fig-height: 3.8
+#| fig-height: 3.6
 d <- reshape(tab, direction = "long", varying = list(2:4), v.names = "coef", timevar = "method", times = names(tab)[2:4], idvar = "term")
 d$term <- factor(d$term, rev(terms)); d$method <- factor(d$method, names(tab)[2:4])
-ggplot(d, aes(coef, term, fill = method)) + geom_col(position = "dodge", width = 0.75) +
-  scale_fill_manual(values = unname(dgxe[c("blue", "cyan", "orange")])) +
-  labs(x = "coefficient (scaled library)", y = NULL, fill = NULL) + theme_dgxe()
+ggplot(d, aes(coef, term, colour = method, shape = method)) + geom_vline(xintercept = 0, colour = "#D1D5DB", linewidth = 0.3) +
+  geom_point(size = 2.2, alpha = 0.9) +
+  scale_colour_manual(values = unname(dgxe[c("blue", "grey", "burgundy")])) +
+  labs(x = "coefficient (scaled library)", y = NULL) + theme_dgxe() + theme(legend.position = "top", legend.title = element_blank())
 ```
 
-## Watching the sparse fit decide
+## Order of elimination
 
-SSR removes terms one at a time. The order shows what the data cannot do without:
+Sequential thresholding removes one term at a time; the order is the following.
 
 ```{r}
 S <- seq_along(terms); out <- character(0)
@@ -63,15 +58,14 @@ while (length(S) > 1) {
   co <- solve(sc$A[S, S, drop = FALSE] + 1e-6 * diag(length(S)), sc$b[S])
   w <- which.min(abs(co)); out <- c(out, terms[S[w]]); S <- S[-w]
 }
-data.frame(removed_in_order = out, terms_left_after = 12:1)
-c(last_standing = terms[S])
+c(removed = out, last = terms[S])
 ```
 
-The first terms to go are the high powers of radiation and water, and what survives longest are the constant and the powers of thermal time and day length. Be careful with this ranking: it is not an importance measure. A term can be dropped because its effect is shared with correlated powers of the same driver, and the order depends on the library. The honest question is how many terms the model needs to predict well on unseen years, which is the topic of step 5; step 6 then reads the fitted *curves* rather than individual coefficients.
+The order depends on the library and on correlations among its terms, and is not a ranking of importance. The number of terms is chosen by validation (step 5).
 
-## Writing your own method: lasso in ten lines
+## Another method: lasso
 
-Nothing above is special. Any method that turns `(A, b)` into coefficients works. As an example, the lasso written as coordinate descent on the same scaled normal equations:
+Any method that maps `(A, b)` to coefficients can be used. As an example, the lasso by coordinate descent on the same scaled normal equations:
 
 ```{r}
 fit_lasso <- function(A, b, lambda = 0.01, iters = 2000, ...) {
@@ -79,8 +73,8 @@ fit_lasso <- function(A, b, lambda = 0.01, iters = 2000, ...) {
   for (it in seq_len(iters)) {
     old <- xi
     for (j in seq_along(b)) {
-      r <- b[j] - sum(A[j, -j] * xi[-j])                         # partial residual
-      xi[j] <- sign(r) * max(abs(r) - lambda, 0) / A[j, j]       # soft threshold
+      r <- b[j] - sum(A[j, -j] * xi[-j])
+      xi[j] <- sign(r) * max(abs(r) - lambda, 0) / A[j, j]
     }
     if (max(abs(xi - old)) < 1e-9) break
   }
@@ -89,15 +83,3 @@ fit_lasso <- function(A, b, lambda = 0.01, iters = 2000, ...) {
 las <- fit_lasso(sc$A, sc$b, lambda = 2e-4)
 setNames(round(las$coef, 3), terms)
 ```
-
-::: {.callout-note title="Idea"}
-The method is a **plug-in**. Steps 2 and 3 produced `A` and `b`; step 4 turns them into coefficients; steps 5 to 8 only need `coef` and `support`. Replace the fitting function and nothing else changes.
-:::
-
-::: {.callout-tip title="Check"}
-OLS and ridge should be close (the problem is well conditioned). Sparse fits should agree with OLS on the terms they keep. If a sparse fit changes sign on a large coefficient, the library has collinear terms.
-:::
-
-::: {.callout-caution title="Swap"}
-Try `fit_ssr(sc$A, sc$b, k = 5)`, `fit_ridge(..., lambda = 1)`, or `fit_lasso(..., lambda = 1e-3)`. The next step shows how to judge them honestly: on years the model has never seen.
-:::

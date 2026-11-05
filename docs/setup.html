@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Set up – Dynamic GxE from scratch</title>
+<title>Set up – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -71,7 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./01-idea.html" rel="next">
+<link href="./01-method.html" rel="next">
 <link href="./index.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -140,7 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -160,19 +160,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -190,13 +190,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -207,14 +207,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -235,9 +235,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#get-the-files" id="toc-get-the-files" class="nav-link active" data-scroll-target="#get-the-files">Get the files</a></li>
+  <li><a href="#files" id="toc-files" class="nav-link active" data-scroll-target="#files">Files</a></li>
   <li><a href="#packages" id="toc-packages" class="nav-link" data-scroll-target="#packages">Packages</a></li>
-  <li><a href="#check-that-it-works" id="toc-check-that-it-works" class="nav-link" data-scroll-target="#check-that-it-works">Check that it works</a></li>
+  <li><a href="#test-run" id="toc-test-run" class="nav-link" data-scroll-target="#test-run">Test run</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/setup.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -247,7 +247,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title d-none d-lg-block">Set up</h1>
-<p class="subtitle lead">What you need, and how to check it works</p>
 </div>
 
 
@@ -264,72 +263,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div class="stepmeta"><b>You need</b><span>R 4.1 or later. Nothing else for the modelling.</span><b>You get</b><span>the data in memory, and a quick test that the whole pipeline runs.</span></div>
-<section id="get-the-files" class="level2">
-<h2 class="anchored" data-anchor-id="get-the-files">Get the files</h2>
+<section id="files" class="level2">
+<h2 class="anchored" data-anchor-id="files">Files</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/corne00/dynamic-gxe-workshop.git</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> dynamic-gxe-workshop</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>The folder has three parts you will use:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Folder</th>
-<th>Content</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>R/functions.R</code></td>
-<td>every function in the workshop, plain base R</td>
-</tr>
-<tr class="even">
-<td><code>data/</code></td>
-<td>the Narrabri weather, biomass trajectories and APSIM cultivar parameters</td>
-</tr>
-<tr class="odd">
-<td><code>scripts/</code></td>
-<td>a command-line version of the full pipeline</td>
-</tr>
-</tbody>
-</table>
+<p><code>R/functions.R</code> contains all functions used in the workshop (base R). <code>data/</code> contains the Narrabri weather, the biomass trajectories and the APSIM cultivar parameters. <code>scripts/parity_check.R</code> runs the complete pipeline.</p>
 </section>
 <section id="packages" class="level2">
 <h2 class="anchored" data-anchor-id="packages">Packages</h2>
-<p>The modelling uses base R only. The plots use <code>ggplot2</code>:</p>
+<p>R 4.1 or later. The modelling code uses base R only. The figures use <code>ggplot2</code>:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">install.packages</span>(<span class="st">"ggplot2"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="check-that-it-works" class="level2">
-<h2 class="anchored" data-anchor-id="check-that-it-works">Check that it works</h2>
+<section id="test-run" class="level2">
+<h2 class="anchored" data-anchor-id="test-run">Test run</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"R/functions.R"</span>)</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>wx   <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)        <span class="co"># daily weather</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)     <span class="co"># daily biomass, one row per genotype x year x day</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>wx   <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>drv   <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>Theta <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv)</span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>tr    <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>gram  <span class="ot">&lt;-</span> <span class="fu">gram_stats</span>(Theta, tr)</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>cv <span class="ot">&lt;-</span> <span class="fu">cv_blocked</span>(Theta, tr, gram, fit_ssr, <span class="at">k =</span> <span class="dv">12</span>)    <span class="co"># leave-one-year-out, 31 fits</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>cv <span class="ot">&lt;-</span> <span class="fu">cv_blocked</span>(Theta, tr, gram, fit_ssr, <span class="at">k =</span> <span class="dv">12</span>)</span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">evaluate</span>(cv<span class="sc">$</span>pred, tr), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>You should see a trajectory RMSE of about 0.52 t/ha on years the model never saw. If you do, everything is in place.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Check
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The same numbers come out of the original research code (Python): trajectory RMSE 0.520, RMSE at day 113 of 0.688 and at maturity of 0.749 t/ha. The base-R version gives 0.521, 0.689 and 0.747.</p>
-</div>
-</div>
+<p>The expected output is a trajectory RMSE of about 0.52 t/ha. The research implementation in Python gives 0.520, 0.688 and 0.749 for the trajectory, day-113 and maturity RMSE; this code gives 0.521, 0.689 and 0.747.</p>
 
 
 </section>
@@ -818,8 +777,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./01-idea.html" class="pagination-link" aria-label="1 · The idea">
-        <span class="nav-page-text">1 · The idea</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./01-method.html" class="pagination-link" aria-label="1 · Method">
+        <span class="nav-page-text">1 · Method</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -827,7 +786,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;

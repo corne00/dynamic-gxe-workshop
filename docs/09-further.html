@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>9 · Going further – Dynamic GxE from scratch</title>
+<title>9 · Extensions – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -37,7 +37,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./reference.html" rel="next">
-<link href="./08-pitfalls.html" rel="prev">
+<link href="./08-limitations.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
@@ -48,7 +48,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -123,7 +123,7 @@ window.Quarto = {
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-          <h1 class="quarto-secondary-nav-title">9 · Going further</h1>
+          <h1 class="quarto-secondary-nav-title">9 · Extensions</h1>
         </a>     
     </div>
   </nav>
@@ -134,7 +134,7 @@ window.Quarto = {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -154,19 +154,19 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -184,13 +184,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -201,14 +201,14 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -229,11 +229,11 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#the-weather-only-model-has-a-limitation" id="toc-the-weather-only-model-has-a-limitation" class="nav-link active" data-scroll-target="#the-weather-only-model-has-a-limitation">The weather-only model has a limitation</a></li>
-  <li><a href="#use-physical-knowledge-in-the-library" id="toc-use-physical-knowledge-in-the-library" class="nav-link" data-scroll-target="#use-physical-knowledge-in-the-library">Use physical knowledge in the library</a></li>
-  <li><a href="#what-we-found-at-narrabri" id="toc-what-we-found-at-narrabri" class="nav-link" data-scroll-target="#what-we-found-at-narrabri">What we found at Narrabri</a></li>
-  <li><a href="#reading-the-learned-response" id="toc-reading-the-learned-response" class="nav-link" data-scroll-target="#reading-the-learned-response">Reading the learned response</a></li>
-  <li><a href="#other-directions" id="toc-other-directions" class="nav-link" data-scroll-target="#other-directions">Other directions</a></li>
+  <li><a href="#coupled-states" id="toc-coupled-states" class="nav-link active" data-scroll-target="#coupled-states">Coupled states</a></li>
+  <li><a href="#physical-terms-in-the-library" id="toc-physical-terms-in-the-library" class="nav-link" data-scroll-target="#physical-terms-in-the-library">Physical terms in the library</a></li>
+  <li><a href="#results-at-narrabri" id="toc-results-at-narrabri" class="nav-link" data-scroll-target="#results-at-narrabri">Results at Narrabri</a></li>
+  <li><a href="#response-curves" id="toc-response-curves" class="nav-link" data-scroll-target="#response-curves">Response curves</a></li>
+  <li><a href="#further-directions" id="toc-further-directions" class="nav-link" data-scroll-target="#further-directions">Further directions</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/09-further.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -242,8 +242,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">9 · Going further</h1>
-<p class="subtitle lead">Coupling the equations, and what the R code here does not cover</p>
+<h1 class="title d-none d-lg-block">9 · Extensions</h1>
 </div>
 
 
@@ -260,34 +259,22 @@ window.Quarto = {
 </header>
 
 
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Not reproduced in R
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The numbers and figures on this page come from the research code (Python) behind this workshop, not from the R functions on the previous pages. They are shown to indicate where the method goes next. They are static, and they are not part of the hands-on part.</p>
-</div>
-</div>
-<section id="the-weather-only-model-has-a-limitation" class="level2">
-<h2 class="anchored" data-anchor-id="the-weather-only-model-has-a-limitation">The weather-only model has a limitation</h2>
-<p>In steps 4 to 8 growth depends on the weather and on the day, but <strong>not on the crop’s own state</strong>. That is why solving the equation is just a running total. Real crops are different: more leaf area means more light intercepted, which means faster biomass growth. A model that captures this is a <strong>coupled</strong> system with two states,</p>
+<p>The numbers and figures on this page come from the research code (Python), not from the R functions of the previous steps, and are not reproduced in R.</p>
+<section id="coupled-states" class="level2">
+<h2 class="anchored" data-anchor-id="coupled-states">Coupled states</h2>
+<p>In steps 4 to 8 the growth rate depends on the weather but not on the state of the crop, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. A model with this feedback is a coupled system in leaf area index <span class="math inline">\(L\)</span> and biomass <span class="math inline">\(B\)</span>,</p>
 <p><span class="math display">\[
 \frac{\mathrm{d}L}{\mathrm{d}t} = f_L(L, B, u_t), \qquad \frac{\mathrm{d}B}{\mathrm{d}t} = f_B(L, B, u_t),
 \]</span></p>
-<p>with <span class="math inline">\(L\)</span> the leaf area index and <span class="math inline">\(B\)</span> the biomass. Now the state appears on the right-hand side, so solving needs a proper ODE solver and cannot be done with <code>cumsum</code>. The normal-equation machinery of steps 3 to 5 still applies for fitting (the regression is still linear in the coefficients), but the rollout is a numerical integration, and errors can feed back on themselves.</p>
+<p>Because the state appears on the right-hand side, the solution requires numerical integration. The regression remains linear in the coefficients, so steps 3 and 4 apply unchanged, but errors in the states feed back into the rates.</p>
 </section>
-<section id="use-physical-knowledge-in-the-library" class="level2">
-<h2 class="anchored" data-anchor-id="use-physical-knowledge-in-the-library">Use physical knowledge in the library</h2>
-<p>A useful library term for biomass is the <strong>light intercepted by the canopy</strong>, <span class="math inline">\(I = 1 - \exp(-0.5\,L)\)</span>. This is plant physiology put into the dictionary as one candidate term: <span class="math inline">\(\mathrm{d}B/\mathrm{d}t \ni I \cdot \text{RAD}\)</span>.</p>
+<section id="physical-terms-in-the-library" class="level2">
+<h2 class="anchored" data-anchor-id="physical-terms-in-the-library">Physical terms in the library</h2>
+<p>A candidate term for biomass growth is the light intercepted by the canopy, <span class="math inline">\(I = 1 - \exp(-0.5\,L)\)</span>, multiplied by radiation: <span class="math inline">\(\mathrm{d}B/\mathrm{d}t \ni I \cdot \mathrm{RAD}\)</span>.</p>
 </section>
-<section id="what-we-found-at-narrabri" class="level2">
-<h2 class="anchored" data-anchor-id="what-we-found-at-narrabri">What we found at Narrabri</h2>
-<p>Final biomass error of coupled variants (leave-one-year-out, t/ha), from the research code:</p>
+<section id="results-at-narrabri" class="level2">
+<h2 class="anchored" data-anchor-id="results-at-narrabri">Results at Narrabri</h2>
+<p>Final biomass RMSE of coupled variants (leave-one-year-out, t/ha):</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -309,16 +296,16 @@ window.Quarto = {
 <td>0.90</td>
 </tr>
 <tr class="even">
-<td>Same, driven by the <strong>true</strong> APSIM LAI</td>
+<td>Same, driven by the true APSIM LAI</td>
 <td>0.45</td>
 </tr>
 </tbody>
 </table>
-<p>So the coupled idea works well <strong>if the LAI is right</strong>: with the true LAI the biomass error falls to 0.45, below the weather-only model. When LAI itself must be predicted from weather, the error depends heavily on how good that LAI model is, and a poor LAI model (the polynomial one) is far worse than none. This is the same lesson as step 8: the library has to be able to express the target.</p>
+<p>With the true LAI the biomass error is 0.45, below that of the weather-only model. When LAI has to be predicted from the weather, the error depends on the quality of the LAI model, and a poor LAI model (the polynomial) is worse than none, as in step 8.</p>
 </section>
-<section id="reading-the-learned-response" class="level2">
-<h2 class="anchored" data-anchor-id="reading-the-learned-response">Reading the learned response</h2>
-<p>Fitted LAI and biomass growth-rate response curves at Narrabri (ALE, as in step 6):</p>
+<section id="response-curves" class="level2">
+<h2 class="anchored" data-anchor-id="response-curves">Response curves</h2>
+<p>Response curves of the fitted LAI and biomass equations (ALE, as in step 6):</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/narrabri_lai_response.png" class="img-fluid figure-img" style="width:100.0%"></p>
@@ -332,27 +319,14 @@ window.Quarto = {
 </figure>
 </div>
 </section>
-<section id="other-directions" class="level2">
-<h2 class="anchored" data-anchor-id="other-directions">Other directions</h2>
+<section id="further-directions" class="level2">
+<h2 class="anchored" data-anchor-id="further-directions">Further directions</h2>
 <ul>
-<li><strong>Other regression methods.</strong> Anything with the <code>fit(A, b, ...)</code> signature works. Bayesian versions of the regression, with sparsity-inducing priors, give uncertainty for the coefficients but are slower and need extra packages.</li>
-<li><strong>Other sites.</strong> We used one site. Pooling sites adds site-level variation in the weather and is a natural next step.</li>
-<li><strong>New genotypes.</strong> Predicting an unseen genotype needs information about it, such as its parameter values, and has not been shown here.</li>
-<li><strong>Other responses.</strong> The same pipeline applies to other state variables; step 8 showed one example (LAI).</li>
+<li>Other regression methods: any method with the signature <code>fit(A, b, ...)</code>. Bayesian regression with sparsity-inducing priors provides uncertainty for the coefficients at higher computational cost.</li>
+<li>Several sites: pooling sites adds variation in the weather.</li>
+<li>New genotypes: prediction for a genotype not used in fitting requires additional information about it, for example its parameter values. This is not treated here.</li>
+<li>Other responses: step 8 shows leaf area index as an example.</li>
 </ul>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Idea
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The workflow of this workshop, a <strong>library of candidate terms, a regression, a rollout, and a validation on unseen years</strong>, does not change when the model becomes coupled. What changes is the rollout (a solver) and how carefully the library has to be built.</p>
-</div>
-</div>
 
 
 </section>
@@ -836,8 +810,8 @@ window.Quarto = {
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="./08-pitfalls.html" class="pagination-link" aria-label="8 · When it breaks">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">8 · When it breaks</span>
+      <a href="./08-limitations.html" class="pagination-link" aria-label="8 · Limitations">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">8 · Limitations</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
@@ -850,7 +824,7 @@ window.Quarto = {
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;

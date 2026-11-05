@@ -1,6 +1,3 @@
-/* extra tweaks that do not need Sass */
+/* intentionally minimal */
+figure img, .cell-output-display img { max-width: 100%; }
 .quarto-title-meta { margin-top: .5rem; }
-.pipeline { width: 100%; border-collapse: separate; border-spacing: 0 .35rem; }
-.pipeline td { padding: .45rem .8rem; vertical-align: top; }
-.pipeline td:first-child { white-space: nowrap; font-weight: 500; background: #eef6fb; border-left: 4px solid #00A6D6; border-radius: 4px 0 0 4px; }
-.pipeline td:last-child { background: #f8fafc; border-radius: 0 4px 4px 0; }

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Reference – Dynamic GxE from scratch</title>
+<title>Reference – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -47,7 +47,7 @@ ul.task-list li input[type="checkbox"] {
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -133,7 +133,7 @@ window.Quarto = {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -153,19 +153,19 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -183,13 +183,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -200,14 +200,14 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -394,25 +394,13 @@ window.Quarto = {
 <section id="data" class="level2">
 <h2 class="anchored" data-anchor-id="data">Data</h2>
 <p>Daily simulated wheat growth from the APSIM model at Narrabri (NSW, Australia): 199 genotypes, 31 seasons (1983 to 2013). See <a href="./02-data.html">Data</a> for the columns. Files are in <code>data/</code>.</p>
-<div class="callout callout-style-default callout-warning callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Warning</span>Data source and licence
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The data are simulation output. Please check the source and licence of the underlying APSIM simulations before reuse or redistribution; this repository does not grant any licence for them.</p>
-</div>
-</div>
+<p>The data are simulation output. The source and licence of the underlying APSIM simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.</p>
 </section>
 <section id="sources" class="level2">
 <h2 class="anchored" data-anchor-id="sources">Sources</h2>
 <ul>
 <li>Brunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. <em>PNAS</em> 113(15), 3932–3937.</li>
-<li>Bustos-Korts, D. et al.&nbsp;(2019). Combining crop growth modeling and statistical genetic modeling to evaluate phenotyping strategies. <em>Frontiers in Plant Science</em> 10, 1491.</li>
+<li>Bustos-Korts, D. et al.&nbsp;(2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. <em>Frontiers in Plant Science</em> 10, 1540. doi:10.3389/fpls.2019.01540</li>
 <li>Apley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. <em>Journal of the Royal Statistical Society B</em> 82(4), 1059–1086.</li>
 </ul>
 
@@ -898,8 +886,8 @@ window.Quarto = {
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="./09-further.html" class="pagination-link" aria-label="9 · Going further">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">9 · Going further</span>
+      <a href="./09-further.html" class="pagination-link" aria-label="9 · Extensions">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">9 · Extensions</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
@@ -909,7 +897,7 @@ window.Quarto = {
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;

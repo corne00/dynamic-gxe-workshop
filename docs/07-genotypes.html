@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>7 · Genotypes – Dynamic GxE from scratch</title>
+<title>7 · Genotypes – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -71,7 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./08-pitfalls.html" rel="next">
+<link href="./08-limitations.html" rel="next">
 <link href="./06-reading.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -169,7 +169,7 @@ window.Quarto = {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -189,19 +189,19 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -219,13 +219,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -236,14 +236,14 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -264,9 +264,9 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#shared-plus-deviation" id="toc-shared-plus-deviation" class="nav-link active" data-scroll-target="#shared-plus-deviation">Shared plus deviation</a></li>
-  <li><a href="#what-differs-between-genotypes" id="toc-what-differs-between-genotypes" class="nav-link" data-scroll-target="#what-differs-between-genotypes">What differs between genotypes?</a></li>
-  <li><a href="#does-it-rank-genotypes-better-than-a-lookup" id="toc-does-it-rank-genotypes-better-than-a-lookup" class="nav-link" data-scroll-target="#does-it-rank-genotypes-better-than-a-lookup">Does it rank genotypes better than a lookup?</a></li>
+  <li><a href="#shared-coefficients-and-deviations" id="toc-shared-coefficients-and-deviations" class="nav-link active" data-scroll-target="#shared-coefficients-and-deviations">Shared coefficients and deviations</a></li>
+  <li><a href="#growth-rate-by-genotype" id="toc-growth-rate-by-genotype" class="nav-link" data-scroll-target="#growth-rate-by-genotype">Growth rate by genotype</a></li>
+  <li><a href="#ranking-genotypes" id="toc-ranking-genotypes" class="nav-link" data-scroll-target="#ranking-genotypes">Ranking genotypes</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/07-genotypes.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -276,7 +276,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title d-none d-lg-block">7 · Genotypes</h1>
-<p class="subtitle lead">One shared rule, plus a small deviation for each genotype</p>
 </div>
 
 
@@ -293,14 +292,9 @@ window.Quarto = {
 </header>
 
 
-<div class="stepmeta"><b>You need</b><span>the objects from step 5 and the final fit from step 6.</span><b>You get</b><span>genotype-specific growth rules, and a test of whether they rank genotypes better than a table lookup.</span></div>
-<section id="shared-plus-deviation" class="level2">
-<h2 class="anchored" data-anchor-id="shared-plus-deviation">Shared plus deviation</h2>
-<p>All 199 genotypes grow in a similar way, and each differs a little. We write the coefficient vector of genotype <span class="math inline">\(g\)</span> as</p>
-<p><span class="math display">\[
-\xi_g = \mu + \delta_g,
-\]</span></p>
-<p>where <span class="math inline">\(\mu\)</span> is shared (found in step 4 from the pooled data) and <span class="math inline">\(\delta_g\)</span> is a small, <strong>ridge-shrunk</strong> correction estimated from that genotype’s own 31 seasons. The support (which terms are active) is shared, so every genotype has the same equation form and only the numbers differ.</p>
+<section id="shared-coefficients-and-deviations" class="level2">
+<h2 class="anchored" data-anchor-id="shared-coefficients-and-deviations">Shared coefficients and deviations</h2>
+<p>The coefficients of genotype <span class="math inline">\(g\)</span> are <span class="math inline">\(\xi_g = \mu + \delta_g\)</span>. The support is common to all genotypes. The shared vector <span class="math inline">\(\mu\)</span> is estimated from the pooled data; each <span class="math inline">\(\delta_g\)</span> is a ridge-penalised correction estimated from the data of genotype <span class="math inline">\(g\)</span> only.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>fit_hier <span class="ot">&lt;-</span> <span class="cf">function</span>(Ag, bg, support, <span class="at">lam_mu =</span> <span class="fl">1e-4</span>, <span class="at">lam_g =</span> <span class="fl">0.01</span>) {</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  K <span class="ot">&lt;-</span> <span class="fu">dim</span>(Ag)[<span class="dv">2</span>]; k <span class="ot">&lt;-</span> <span class="fu">length</span>(support); G <span class="ot">&lt;-</span> <span class="fu">dim</span>(Ag)[<span class="dv">1</span>]</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  Apool <span class="ot">&lt;-</span> <span class="fu">apply</span>(Ag[, support, support, <span class="at">drop =</span> <span class="cn">FALSE</span>], <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), sum); bpool <span class="ot">&lt;-</span> <span class="fu">colSums</span>(bg[, support, <span class="at">drop =</span> <span class="cn">FALSE</span>])</span>
@@ -314,26 +308,23 @@ window.Quarto = {
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="fu">fit_years</span>(gram, <span class="fu">seq_along</span>(tr<span class="sc">$</span>years), fit_ssr, <span class="at">k =</span> <span class="dv">12</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(f<span class="sc">$</span>xi)                                  <span class="co"># genotype x term</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(f<span class="sc">$</span>xi)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] 199  13</code></pre>
 </div>
 </div>
 </section>
-<section id="what-differs-between-genotypes" class="level2">
-<h2 class="anchored" data-anchor-id="what-differs-between-genotypes">What differs between genotypes?</h2>
-<p>Growth rate along the <strong>average weather path</strong>, for the genotypes with the lowest, median and highest mean final biomass:</p>
+<section id="growth-rate-by-genotype" class="level2">
+<h2 class="anchored" data-anchor-id="growth-rate-by-genotype">Growth rate by genotype</h2>
+<p>Growth rate along the mean weather path for each genotype (grey) and for the shared model <span class="math inline">\(\mu\)</span> (blue).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>fin <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">seq_along</span>(tr<span class="sc">$</span>genotypes), <span class="cf">function</span>(g) <span class="fu">mean</span>(<span class="fu">sapply</span>(<span class="fu">seq_along</span>(tr<span class="sc">$</span>years), <span class="cf">function</span>(y) tr<span class="sc">$</span>Y[g, y, tr<span class="sc">$</span>nend[g, y] <span class="sc">+</span> <span class="dv">1</span>])))</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>pick <span class="ot">&lt;-</span> <span class="fu">order</span>(fin)[<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">100</span>, <span class="dv">199</span>)]</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>Tbar <span class="ot">&lt;-</span> <span class="fu">apply</span>(Theta, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), mean)                                   <span class="co"># average library over years</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>dd <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(pick, <span class="cf">function</span>(g) <span class="fu">data.frame</span>(<span class="at">das =</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(Tbar)) <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>,</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">rate =</span> <span class="fu">as.vector</span>(Tbar <span class="sc">%*%</span> f<span class="sc">$</span>xi[g, ]), <span class="at">genotype =</span> tr<span class="sc">$</span>genotypes[g],</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">group =</span> <span class="fu">c</span>(<span class="st">"lowest"</span>, <span class="st">"median"</span>, <span class="st">"highest"</span>)[<span class="fu">match</span>(g, pick)])))</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>dd <span class="ot">&lt;-</span> dd[dd<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">15</span> <span class="sc">+</span> <span class="dv">140</span>, ]</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(dd, <span class="fu">aes</span>(das, rate, <span class="at">colour =</span> group)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"orange"</span>, <span class="st">"blue"</span>, <span class="st">"cyan"</span>)])) <span class="sc">+</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"growth rate (t/ha/day)"</span>, <span class="at">colour =</span> <span class="st">"final biomass"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Tbar <span class="ot">&lt;-</span> <span class="fu">apply</span>(Theta, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), mean)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>das  <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(Tbar)) <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">das =</span> <span class="fu">rep</span>(das, <span class="fu">nrow</span>(f<span class="sc">$</span>xi)), <span class="at">genotype =</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(f<span class="sc">$</span>xi)), <span class="at">each =</span> <span class="fu">length</span>(das)), <span class="at">rate =</span> <span class="fu">as.vector</span>(Tbar <span class="sc">%*%</span> <span class="fu">t</span>(f<span class="sc">$</span>xi)))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">das =</span> das, <span class="at">rate =</span> <span class="fu">as.vector</span>(Tbar <span class="sc">%*%</span> f<span class="sc">$</span>mu))</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> d[d<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">15</span> <span class="sc">+</span> <span class="dv">140</span>, ]; m <span class="ot">&lt;-</span> m[m<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">15</span> <span class="sc">+</span> <span class="dv">140</span>, ]</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(das, rate)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> genotype), <span class="at">colour =</span> dgxe[[<span class="st">"grey"</span>]], <span class="at">linewidth =</span> <span class="fl">0.2</span>, <span class="at">alpha =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> m, <span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"growth rate (t/ha/day)"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -342,11 +333,10 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>The genotypes differ in when growth starts, how high the peak is, and how early it ends: the same shape, shifted and scaled.</p>
 </section>
-<section id="does-it-rank-genotypes-better-than-a-lookup" class="level2">
-<h2 class="anchored" data-anchor-id="does-it-rank-genotypes-better-than-a-lookup">Does it rank genotypes better than a lookup?</h2>
-<p>Breeders often care more about the <em>ranking</em> of genotypes in a given year than about absolute biomass. For every year, we compare the predicted and APSIM ranking of the 199 genotypes at a fixed day using the Spearman correlation, and by the overlap of the predicted and true top 10%. The competitor is again the no-weather lookup (the genotype’s mean in the other years).</p>
+<section id="ranking-genotypes" class="level2">
+<h2 class="anchored" data-anchor-id="ranking-genotypes">Ranking genotypes</h2>
+<p>For each season the predicted and APSIM biomass of the 199 genotypes at a fixed day are compared by the Spearman correlation and by the overlap of the top 10%. The reference is the mean of the genotype in the other seasons.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>rank_scores <span class="ot">&lt;-</span> <span class="cf">function</span>(Pd, Yd, <span class="at">top =</span> <span class="fl">0.1</span>) {</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  k <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="dv">1</span>, <span class="fu">round</span>(top <span class="sc">*</span> <span class="fu">nrow</span>(Yd)))</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="fu">ncol</span>(Yd)), <span class="cf">function</span>(y) <span class="fu">data.frame</span>(</span>
@@ -356,30 +346,31 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>lookup_baseline <span class="ot">&lt;-</span> <span class="cf">function</span>(Yd) (<span class="fu">rowSums</span>(Yd) <span class="sc">-</span> Yd) <span class="sc">/</span> (<span class="fu">ncol</span>(Yd) <span class="sc">-</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>cv   <span class="ot">&lt;-</span> <span class="fu">cv_blocked</span>(Theta, tr, gram, fit_ssr, <span class="at">k =</span> <span class="dv">12</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">35</span>, <span class="dv">50</span>, <span class="dv">63</span>, <span class="dv">84</span>, <span class="dv">99</span>)                         <span class="co"># day index; das = day index + 14</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">35</span>, <span class="dv">50</span>, <span class="dv">63</span>, <span class="dv">84</span>, <span class="dv">99</span>)                         <span class="co"># day index; das = index + 14</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>out  <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(days, <span class="cf">function</span>(d) {</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  Yd <span class="ot">&lt;-</span> tr<span class="sc">$</span>Y[, , d]; a <span class="ot">&lt;-</span> <span class="fu">rank_scores</span>(cv<span class="sc">$</span>pred[, , d], Yd); b <span class="ot">&lt;-</span> <span class="fu">rank_scores</span>(<span class="fu">lookup_baseline</span>(Yd), Yd)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> d <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>, <span class="at">method =</span> <span class="fu">c</span>(<span class="st">"SINDy"</span>, <span class="st">"lookup"</span>),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> d <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>, <span class="at">method =</span> <span class="fu">c</span>(<span class="st">"model"</span>, <span class="st">"baseline"</span>),</span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">rho =</span> <span class="fu">c</span>(<span class="fu">mean</span>(a<span class="sc">$</span>rho), <span class="fu">mean</span>(b<span class="sc">$</span>rho)), <span class="at">top10 =</span> <span class="fu">c</span>(<span class="fu">mean</span>(a<span class="sc">$</span>top), <span class="fu">mean</span>(b<span class="sc">$</span>top))) }))</span>
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>out<span class="sc">$</span>rho <span class="ot">&lt;-</span> <span class="fu">round</span>(out<span class="sc">$</span>rho, <span class="dv">3</span>); out<span class="sc">$</span>top10 <span class="ot">&lt;-</span> <span class="fu">round</span>(out<span class="sc">$</span>top10, <span class="dv">3</span>); out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   das method   rho top10
-1   49  SINDy 0.958 0.887
-2   49 lookup 1.000 1.000
-3   64  SINDy 0.983 0.902
-4   64 lookup 1.000 0.984
-5   77  SINDy 0.987 0.934
-6   77 lookup 0.998 0.982
-7   98  SINDy 0.983 0.913
-8   98 lookup 0.978 0.924
-9  113  SINDy 0.976 0.863
-10 113 lookup 0.951 0.818</code></pre>
+<pre><code>   das   method   rho top10
+1   49    model 0.958 0.887
+2   49 baseline 1.000 1.000
+3   64    model 0.983 0.902
+4   64 baseline 1.000 0.984
+5   77    model 0.987 0.934
+6   77 baseline 0.998 0.982
+7   98    model 0.983 0.913
+8   98 baseline 0.978 0.924
+9  113    model 0.976 0.863
+10 113 baseline 0.951 0.818</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>o <span class="ot">&lt;-</span> <span class="fu">reshape</span>(out, <span class="at">direction =</span> <span class="st">"long"</span>, <span class="at">varying =</span> <span class="fu">c</span>(<span class="st">"rho"</span>, <span class="st">"top10"</span>), <span class="at">v.names =</span> <span class="st">"score"</span>, <span class="at">timevar =</span> <span class="st">"metric"</span>, <span class="at">times =</span> <span class="fu">c</span>(<span class="st">"Spearman rho"</span>, <span class="st">"top-10% overlap"</span>), <span class="at">idvar =</span> <span class="fu">c</span>(<span class="st">"das"</span>, <span class="st">"method"</span>))</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(o, <span class="fu">aes</span>(das, score, <span class="at">colour =</span> method)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.2</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>metric, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"orange"</span>, <span class="st">"blue"</span>)])) <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">colour =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>o <span class="ot">&lt;-</span> <span class="fu">reshape</span>(out, <span class="at">direction =</span> <span class="st">"long"</span>, <span class="at">varying =</span> <span class="fu">c</span>(<span class="st">"rho"</span>, <span class="st">"top10"</span>), <span class="at">v.names =</span> <span class="st">"score"</span>, <span class="at">timevar =</span> <span class="st">"metric"</span>, <span class="at">times =</span> <span class="fu">c</span>(<span class="st">"Spearman correlation"</span>, <span class="st">"top-10% overlap"</span>), <span class="at">idvar =</span> <span class="fu">c</span>(<span class="st">"das"</span>, <span class="st">"method"</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(o, <span class="fu">aes</span>(das, score, <span class="at">colour =</span> method)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span> <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.8</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>metric, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"burgundy"</span>, <span class="st">"blue"</span>)])) <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>, <span class="at">legend.title =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -388,46 +379,7 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>Early in the season the lookup wins: the ranking has not yet been shaped by the weather, so each genotype’s average curve already orders them well. Later, when the season’s weather has started to reorder genotypes, the model that uses the weather overtakes the lookup. This is what we would hope for from a model that responds to weather, but it is also an honest reminder that the lookup is hard to beat when there is nothing to learn from the weather.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Idea
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><strong>Sharing strength across genotypes.</strong> One genotype has only 31 trajectories, which would not support a 12-term model on its own. Pooling fixes the <em>form</em> of the equation; shrinkage lets each genotype adjust the numbers only as far as its own data justify.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Check
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Plot the deviations <span class="math inline">\(\delta_g\)</span> for one term across genotypes: they should be small compared to <span class="math inline">\(\mu\)</span> and roughly centred on zero. If they are large, the shared structure is not capturing what genotypes have in common.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Pitfall
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>These ranking results are for genotypes <strong>seen in training</strong> and predicted in held-out <em>years</em>. Predicting a brand-new genotype needs extra information (such as its parameters) and is not tested here.</p>
-</div>
-</div>
+<p>Early in the season the baseline ranks genotypes better, since the order is determined mainly by genotype and not yet by weather. From about day 100 the model is better. These results are for genotypes included in fitting and seasons that were held out.</p>
 
 
 </section>
@@ -911,13 +863,13 @@ window.Quarto = {
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="./06-reading.html" class="pagination-link" aria-label="6 · Reading the model">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">6 · Reading the model</span>
+      <a href="./06-reading.html" class="pagination-link" aria-label="6 · Interpretation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">6 · Interpretation</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./08-pitfalls.html" class="pagination-link" aria-label="8 · When it breaks">
-        <span class="nav-page-text">8 · When it breaks</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./08-limitations.html" class="pagination-link" aria-label="8 · Limitations">
+        <span class="nav-page-text">8 · Limitations</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -925,7 +877,7 @@ window.Quarto = {
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;

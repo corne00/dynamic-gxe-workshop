@@ -1,11 +1,6 @@
 ---
-title: "5 · Roll forward and validate"
-subtitle: "Solve the equation for a year the model has never seen"
+title: "5 · Validation"
 ---
-
-```{=html}
-<div class="stepmeta"><b>You need</b><span><code>Theta</code>, <code>tr</code>, <code>gram</code> and a fitting method from step 4.</span><b>You get</b><span>predicted biomass trajectories for held-out years, and a table comparing methods.</span></div>
-```
 
 ```{r}
 #| echo: false
@@ -19,13 +14,9 @@ fit_lasso <- function(A, b, lambda = 0.01, iters = 2000, ...) {
 }
 ```
 
-## Solving the equation is a running total
+## Simulation
 
-The fitted rule says how fast biomass grows on each day, given that day's weather. Because the library depends only on the weather, there is nothing to integrate numerically: biomass is the starting value plus the running sum of daily growth.
-
-$$
-y(t) = y_0 + \sum_{s<t} \Theta(u_s)\,\xi
-$$
+The library depends on the weather only, so the solution is a cumulative sum:
 
 ```{r}
 #| echo: false
@@ -33,33 +24,33 @@ $$
 show_fun("simulate")
 ```
 
-## One held-out year
+## One held-out season
 
-Fit on all years except 1998, then predict 1998 from its weather alone. `fit_years` chooses the shared terms with the chosen method, then adds a small shrunk deviation for each genotype (step 7).
+The model is fitted to all seasons except 1998 (shared support of 12 terms, plus genotype deviations) and used to predict 1998 from its weather. All 199 genotypes are shown.
 
 ```{r}
 yv    <- match(1998, tr$years)
 train <- setdiff(seq_along(tr$years), yv)
 f     <- fit_years(gram, train, fit_ssr, k = 12)
-y0    <- apply(tr$Y[, train, 1], 1, mean)                       # starting biomass: training mean
-pred  <- simulate(f$xi, Theta[yv, , ], y0)                      # day x genotype
-f$names[f$support]                                              # the 12 shared terms
+y0    <- apply(tr$Y[, train, 1], 1, mean)
+pred  <- simulate(f$xi, Theta[yv, , ], y0)
+f$names[f$support]
 ```
 
 ```{r}
-#| fig-height: 4
-gs <- c(1, 70, 140, 199); rows <- list()
-for (g in gs) { n <- tr$nend[g, yv] + 1
-  rows[[length(rows) + 1]] <- data.frame(genotype = tr$genotypes[g], das = (1:n) + tr$das0 - 1,
-    APSIM = tr$Y[g, yv, 1:n], SINDy = pred[1:n, g]) }
-d <- do.call(rbind, rows); d <- reshape(d, direction = "long", varying = c("APSIM", "SINDy"), v.names = "biomass", timevar = "source", times = c("APSIM", "SINDy"), idvar = c("genotype", "das"))
-ggplot(d, aes(das, biomass, colour = source, linetype = source)) + geom_line(linewidth = 0.9) + facet_wrap(~genotype, nrow = 1) +
-  scale_colour_manual(values = unname(dgxe[c("blue", "orange")])) + labs(x = "days after sowing", y = "biomass (t/ha)", colour = NULL, linetype = NULL) + theme_dgxe()
+#| fig-height: 3
+rows <- lapply(seq_along(tr$genotypes), function(g) { n <- tr$nend[g, yv] + 1
+  data.frame(genotype = g, das = 1:n + tr$das0 - 1, APSIM = tr$Y[g, yv, 1:n], Model = pred[1:n, g]) })
+d <- do.call(rbind, rows)
+d <- reshape(d, direction = "long", varying = c("APSIM", "Model"), v.names = "biomass", timevar = "source", times = c("APSIM", "Model"), idvar = c("genotype", "das"))
+d$source <- factor(d$source, c("APSIM", "Model"))
+ggplot(d, aes(das, biomass, group = genotype)) + geom_line(aes(colour = source), linewidth = 0.2, alpha = 0.3) + facet_wrap(~source) +
+  scale_colour_manual(values = unname(dgxe[c("grey", "blue")])) + labs(x = "days after sowing", y = "biomass (t/ha)") + theme_dgxe()
 ```
 
 ## Leave-one-year-out cross-validation
 
-Repeat for every year: each year is predicted by a model that never saw it. Seeing only weather forecasts, not APSIM biomass, is the point; this is the honest test.
+The same procedure is repeated for each of the 31 seasons.
 
 ```{r}
 #| echo: false
@@ -69,26 +60,54 @@ show_fun("cv_blocked", "evaluate")
 
 ```{r}
 system.time(cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12))
-round(evaluate(cv$pred, tr, fixed_day = 99), 3)       # array index 99 = day 113 after sowing
+round(evaluate(cv$pred, tr, fixed_day = 99), 3)       # index 99 = day 113 after sowing
 ```
 
-## A baseline that uses no weather
+Predicted against APSIM biomass at day 113, all genotype-season pairs:
 
-How much does the weather add? A simple competitor: predict each genotype's biomass curve by the **average of its own curves in the other years**.
+```{r}
+#| fig-height: 3.6
+#| fig-width: 4.2
+d <- data.frame(obs = as.vector(tr$Y[, , 99]), pred = as.vector(cv$pred[, , 99]))
+r <- sqrt(mean((d$obs - d$pred)^2, na.rm = TRUE))
+ggplot(d, aes(obs, pred)) + geom_abline(colour = "#9CA3AF", linewidth = 0.4) + geom_point(colour = dgxe[["blue"]], size = 0.5, alpha = 0.2) +
+  annotate("text", x = min(d$obs, na.rm = TRUE), y = max(d$pred, na.rm = TRUE), label = sprintf("RMSE %.2f t/ha", r), hjust = 0, vjust = 1, size = 3.4) +
+  coord_equal() + labs(x = "APSIM biomass (t/ha)", y = "predicted biomass (t/ha)") + theme_dgxe()
+```
+
+## Baseline without weather
+
+As a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons.
 
 ```{r}
 base <- array(NA_real_, dim(tr$Y))
 for (y in seq_along(tr$years)) base[, y, ] <- apply(tr$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)
 for (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {
-  v <- base[g, y, ]; ok <- which(!is.nan(v)); v[is.nan(v)] <- v[max(ok)]               # after the last other year ends: hold the last mean
-  base[g, y, ] <- v; base[g, y, 1] <- tr$Y[g, y, 1]                                    # same start as the model
+  v <- base[g, y, ]; ok <- which(!is.nan(v)); v[is.nan(v)] <- v[max(ok)]      # hold the last mean after the last other season ends
+  base[g, y, ] <- v; base[g, y, 1] <- tr$Y[g, y, 1]
 }
 round(evaluate(base, tr, fixed_day = 99), 3)
 ```
 
-## Swap the fitting method
+The error as a function of time:
 
-Because every method has the signature `fit(A, b, ...)`, comparing them is one loop:
+```{r}
+#| fig-height: 3
+err <- function(P) sapply(2:dim(P)[3], function(d) { ok <- !is.na(tr$Y[, , d]); sqrt(mean((P[, , d][ok] - tr$Y[, , d][ok])^2)) })
+nd <- dim(tr$Y)[3] - 1
+d <- data.frame(das = rep(2:(nd + 1) + tr$das0 - 1, 2), rmse = c(err(cv$pred), err(base)),
+                model = factor(rep(c("model", "no-weather baseline"), each = nd), c("model", "no-weather baseline")))
+d <- d[d$das <= 15 + 140, ]
+ggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +
+  scale_colour_manual(values = unname(dgxe[c("blue", "burgundy")])) +
+  annotate("text", x = 40, y = 0.5, label = "model", colour = dgxe[["blue"]], size = 3.4, hjust = 0) +
+  annotate("text", x = 40, y = 0.2, label = "baseline", colour = dgxe[["burgundy"]], size = 3.4, hjust = 0) +
+  labs(x = "days after sowing", y = "held-out RMSE (t/ha)") + theme_dgxe()
+```
+
+## Choice of fitting method
+
+All methods share the signature `fit(A, b, ...)`, so they can be compared in one loop.
 
 ```{r}
 methods <- list(OLS = list(fit_ols), ridge = list(fit_ridge, lambda = 0.01),
@@ -96,15 +115,13 @@ methods <- list(OLS = list(fit_ols), ridge = list(fit_ridge, lambda = 0.01),
 res <- cached("swap_methods.rds", do.call(rbind, lapply(names(methods), function(nm) {
   m <- methods[[nm]]; cv <- do.call(cv_blocked, c(list(Theta, tr, gram, m[[1]]), m[-1]))
   data.frame(method = nm, t(round(evaluate(cv$pred, tr), 3))) })))
-res <- rbind(res, data.frame(method = "no weather (lookup)", t(round(evaluate(base, tr), 3))))
+res <- rbind(res, data.frame(method = "baseline", t(round(evaluate(base, tr), 3))))
 res
 ```
 
-OLS and ridge are best on this small library, and the sparse fits reach the same accuracy with 12 of 13 terms; k = 8 is visibly worse. The lookup baseline is the reference: if a model cannot beat it, the weather is not helping.
+## Number of terms
 
-## How many terms? A larger library
-
-With the 13-term library, sparsity buys little: it is already small. Add products of drivers (`pairs = TRUE`, 37 terms) and the picture changes:
+With the 13-term library the sparse model has little room to reduce complexity. Adding products of drivers (`pairs = TRUE`, 37 terms) gives a larger dictionary:
 
 ```{r}
 Theta2 <- make_library(drv, pairs = TRUE); gram2 <- gram_stats(Theta2, tr)
@@ -113,21 +130,11 @@ rk <- cached("rmse_vs_k_pairs.rds", data.frame(k = ks, rmse = sapply(ks, functio
 ```
 
 ```{r}
-#| fig-height: 3.4
-ggplot(rk, aes(k, rmse)) + geom_line(colour = dgxe[["blue"]], linewidth = 0.9) + geom_point(colour = dgxe[["blue"]], size = 2.4) +
-  geom_hline(yintercept = res$trajectory_rmse[res$method == "OLS"], colour = dgxe[["orange"]], linetype = 2) +
-  annotate("text", x = 37, y = res$trajectory_rmse[res$method == "OLS"], label = "13-term OLS", vjust = -0.6, hjust = 1, colour = dgxe[["orange"]], size = 3.4) +
-  labs(x = "number of terms kept (SSR)", y = "held-out trajectory RMSE (t/ha)") + theme_dgxe()
+#| fig-height: 2.8
+#| fig-width: 5
+ols13 <- res$trajectory_rmse[res$method == "OLS"]
+ggplot(rk, aes(k, rmse)) + geom_hline(yintercept = ols13, colour = dgxe[["burgundy"]], linewidth = 0.4, linetype = 2) +
+  geom_line(colour = dgxe[["blue"]], linewidth = 0.8) + geom_point(colour = dgxe[["blue"]], size = 2) +
+  annotate("text", x = 37, y = ols13, label = "13-term library, OLS", vjust = -0.7, hjust = 1, colour = dgxe[["burgundy"]], size = 3.3) +
+  labs(x = "number of terms (37-term library)", y = "held-out trajectory RMSE (t/ha)") + theme_dgxe()
 ```
-
-::: {.callout-note title="Idea"}
-**Predicting forward is a running total, and it is judged on years the model never saw.** Error accumulates along the rollout, so this is a stricter test than one-step prediction. A model can fit daily increments well and still drift.
-:::
-
-::: {.callout-tip title="Check"}
-The model should beat the weather-free lookup, and the held-out error should be larger than the in-sample error. Plot a few trajectories: errors that grow steadily through the season point to a missing driver.
-:::
-
-::: {.callout-important title="Pitfall"}
-**Never validate by randomly holding out days.** Neighbouring days of one year are nearly identical, and a year is the unit of independent weather, so we hold out whole years. The same goes for genotypes of the same year when you ask about new weather.
-:::

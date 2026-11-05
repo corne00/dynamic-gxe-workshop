@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>6 · Reading the model – Dynamic GxE from scratch</title>
+<title>6 · Interpretation – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -115,35 +115,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -158,7 +129,7 @@ window.Quarto = {
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-          <h1 class="quarto-secondary-nav-title">6 · Reading the model</h1>
+          <h1 class="quarto-secondary-nav-title">6 · Interpretation</h1>
         </a>     
     </div>
   </nav>
@@ -169,7 +140,7 @@ window.Quarto = {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -189,19 +160,19 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -219,13 +190,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -236,14 +207,14 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -264,9 +235,10 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#the-final-model" id="toc-the-final-model" class="nav-link active" data-scroll-target="#the-final-model">The final model</a></li>
-  <li><a href="#growth-rate-through-the-season" id="toc-growth-rate-through-the-season" class="nav-link" data-scroll-target="#growth-rate-through-the-season">Growth rate through the season</a></li>
-  <li><a href="#the-effect-of-one-driver-accumulated-local-effects" id="toc-the-effect-of-one-driver-accumulated-local-effects" class="nav-link" data-scroll-target="#the-effect-of-one-driver-accumulated-local-effects">The effect of one driver: accumulated local effects</a></li>
+  <li><a href="#final-model" id="toc-final-model" class="nav-link active" data-scroll-target="#final-model">Final model</a></li>
+  <li><a href="#growth-rate-over-the-season" id="toc-growth-rate-over-the-season" class="nav-link" data-scroll-target="#growth-rate-over-the-season">Growth rate over the season</a></li>
+  <li><a href="#effect-of-a-single-driver" id="toc-effect-of-a-single-driver" class="nav-link" data-scroll-target="#effect-of-a-single-driver">Effect of a single driver</a></li>
+  <li><a href="#interactions-and-partial-dependence" id="toc-interactions-and-partial-dependence" class="nav-link" data-scroll-target="#interactions-and-partial-dependence">Interactions and partial dependence</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/06-reading.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -275,8 +247,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">6 · Reading the model</h1>
-<p class="subtitle lead">The fitted rule is an equation you can read, and curves you can plot</p>
+<h1 class="title d-none d-lg-block">6 · Interpretation</h1>
 </div>
 
 
@@ -293,13 +264,12 @@ window.Quarto = {
 </header>
 
 
-<div class="stepmeta"><b>You need</b><span>a fitting method and the objects from step 5.</span><b>You get</b><span>the final equation, and one curve per driver showing how it affects growth.</span></div>
-<section id="the-final-model" class="level2">
-<h2 class="anchored" data-anchor-id="the-final-model">The final model</h2>
-<p>For reading (not for validating) we fit once on <strong>all</strong> years. Validation told us the model generalises; now we look at what it learned.</p>
+<section id="final-model" class="level2">
+<h2 class="anchored" data-anchor-id="final-model">Final model</h2>
+<p>For interpretation the model is fitted once to all seasons. The shared coefficients on the 12-term support, in standardised drivers, are:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>f  <span class="ot">&lt;-</span> <span class="fu">fit_years</span>(gram, <span class="fu">seq_along</span>(tr<span class="sc">$</span>years), fit_ssr, <span class="at">k =</span> <span class="dv">12</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> f<span class="sc">$</span>mu                                      <span class="co"># shared coefficients (all genotypes)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> f<span class="sc">$</span>mu</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">setNames</span>(mu[f<span class="sc">$</span>support], f<span class="sc">$</span>names[f<span class="sc">$</span>support]), <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      1      TT    TT^2    TT^3      DL    DL^2    DL^3     RAW   RAW^2     RAD 
@@ -307,25 +277,21 @@ window.Quarto = {
   RAD^2   RAD^3 
 -0.0025 -0.0004 </code></pre>
 </div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rate <span class="ot">&lt;-</span> <span class="cf">function</span>(Z) <span class="fu">as.vector</span>(<span class="fu">library_matrix</span>(Z) <span class="sc">%*%</span> mu)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>This is the shared growth rule, written in standardised drivers (mean 0, standard deviation 1):</p>
-<p><span class="math display">\[
-\frac{\mathrm{d}\,\text{biomass}}{\mathrm{d}t} = 0.155 \;-\; 0.036\,\text{TT} - 0.029\,\text{TT}^2 + 0.012\,\text{TT}^3 + 0.019\,\text{DL} - 0.054\,\text{DL}^2 + \dots
-\]</span></p>
-<p>The coefficients of a polynomial are hard to interpret one by one, so we plot what the equation does instead.</p>
+<p>Individual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.</p>
 </section>
-<section id="growth-rate-through-the-season" class="level2">
-<h2 class="anchored" data-anchor-id="growth-rate-through-the-season">Growth rate through the season</h2>
-<p>Apply the rule to the weather of each year. Each thin line is one year; the thick line is the average.</p>
+<section id="growth-rate-over-the-season" class="level2">
+<h2 class="anchored" data-anchor-id="growth-rate-over-the-season">Growth rate over the season</h2>
+<p>Predicted growth rate for the weather of each season (grey) and the mean (blue).</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rate <span class="ot">&lt;-</span> <span class="cf">function</span>(Z) <span class="fu">as.vector</span>(<span class="fu">library_matrix</span>(Z) <span class="sc">%*%</span> mu)                  <span class="co"># Z: n x 4 matrix of standardised drivers</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>ny <span class="ot">&lt;-</span> <span class="fu">length</span>(tr<span class="sc">$</span>years); nd <span class="ot">&lt;-</span> <span class="fu">dim</span>(Theta)[<span class="dv">2</span>]</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>R  <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">seq_len</span>(ny), <span class="cf">function</span>(y) <span class="fu">as.vector</span>(Theta[y, , ] <span class="sc">%*%</span> mu))       <span class="co"># day x year</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>d  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">das =</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(nd) <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>, ny), <span class="at">year =</span> <span class="fu">rep</span>(tr<span class="sc">$</span>years, <span class="at">each =</span> nd), <span class="at">rate =</span> <span class="fu">as.vector</span>(R))</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>d  <span class="ot">&lt;-</span> d[d<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">15</span> <span class="sc">+</span> <span class="fu">max</span>(tr<span class="sc">$</span>nend) <span class="sc">-</span> <span class="dv">1</span>, ]</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(das, rate, <span class="at">group =</span> year)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">colour =</span> dgxe[[<span class="st">"sky"</span>]], <span class="at">linewidth =</span> <span class="fl">0.4</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_summary</span>(<span class="fu">aes</span>(<span class="at">group =</span> <span class="dv">1</span>), <span class="at">fun =</span> mean, <span class="at">geom =</span> <span class="st">"line"</span>, <span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">1.2</span>) <span class="sc">+</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"biomass growth rate (t/ha/day)"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>ny <span class="ot">&lt;-</span> <span class="fu">length</span>(tr<span class="sc">$</span>years); nd <span class="ot">&lt;-</span> <span class="fu">dim</span>(Theta)[<span class="dv">2</span>]</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>R  <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">seq_len</span>(ny), <span class="cf">function</span>(y) <span class="fu">as.vector</span>(Theta[y, , ] <span class="sc">%*%</span> mu))</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>d  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">das =</span> <span class="fu">rep</span>(<span class="fu">seq_len</span>(nd) <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>, ny), <span class="at">year =</span> <span class="fu">rep</span>(tr<span class="sc">$</span>years, <span class="at">each =</span> nd), <span class="at">rate =</span> <span class="fu">as.vector</span>(R))</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>d  <span class="ot">&lt;-</span> d[d<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">15</span> <span class="sc">+</span> <span class="fu">max</span>(tr<span class="sc">$</span>nend) <span class="sc">-</span> <span class="dv">1</span>, ]</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(das, rate)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> year), <span class="at">colour =</span> dgxe[[<span class="st">"grey"</span>]], <span class="at">linewidth =</span> <span class="fl">0.3</span>, <span class="at">alpha =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_summary</span>(<span class="at">fun =</span> mean, <span class="at">geom =</span> <span class="st">"line"</span>, <span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"growth rate (t/ha/day)"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -335,12 +301,12 @@ window.Quarto = {
 </div>
 </div>
 </section>
-<section id="the-effect-of-one-driver-accumulated-local-effects" class="level2">
-<h2 class="anchored" data-anchor-id="the-effect-of-one-driver-accumulated-local-effects">The effect of one driver: accumulated local effects</h2>
-<p>To see how growth responds to one driver (say radiation), we cannot simply vary it in the equation while holding the others at their mean, because in real weather the drivers move together. Here thermal time and day length have correlation 0.97:</p>
+<section id="effect-of-a-single-driver" class="level2">
+<h2 class="anchored" data-anchor-id="effect-of-a-single-driver">Effect of a single driver</h2>
+<p>The effect of one driver cannot be read by varying it alone while the others are held fixed, since the drivers are correlated in real weather:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Z <span class="ot">&lt;-</span> <span class="fu">observed_points</span>(drv, tr)                   <span class="co"># the weather that actually occurred (rows = year x day)</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cor</span>(Z), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Z <span class="ot">&lt;-</span> <span class="fu">observed_points</span>(drv, tr)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cor</span>(Z), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>       TT    DL   RAW   RAD
 TT   1.00  0.97 -0.65  0.72
@@ -349,33 +315,31 @@ RAW -0.65 -0.67  1.00 -0.58
 RAD  0.72  0.74 -0.58  1.00</code></pre>
 </div>
 </div>
-<p><strong>Accumulated local effects (ALE)</strong> avoid asking the model about weather that never happens: within each small interval of the driver they compare the model with the driver at the two ends of the interval, using the real values of the other drivers, then add up the changes.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ale_curve <span class="ot">&lt;-</span> <span class="cf">function</span>(rate, Z, j, <span class="at">K =</span> <span class="dv">24</span>) {</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  e <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">quantile</span>(Z[, j], <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> K <span class="sc">+</span> <span class="dv">1</span>))); nb_ <span class="ot">&lt;-</span> <span class="fu">length</span>(e) <span class="sc">-</span> <span class="dv">1</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">findInterval</span>(Z[, j], e), <span class="dv">1</span>), nb_)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  Zu <span class="ot">&lt;-</span> Z; Zl <span class="ot">&lt;-</span> Z; Zu[, j] <span class="ot">&lt;-</span> e[b <span class="sc">+</span> <span class="dv">1</span>]; Zl[, j] <span class="ot">&lt;-</span> e[b]</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">rate</span>(Zu) <span class="sc">-</span> <span class="fu">rate</span>(Zl); nb <span class="ot">&lt;-</span> <span class="fu">tabulate</span>(b, nb_)</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  md <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="fu">split</span>(d, <span class="fu">factor</span>(b, <span class="at">levels =</span> <span class="fu">seq_len</span>(nb_))), sum, <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">pmax</span>(nb, <span class="dv">1</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  A <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">cumsum</span>(md)); mid <span class="ot">&lt;-</span> (A[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">+</span> A[<span class="sc">-</span><span class="fu">length</span>(A)]) <span class="sc">/</span> <span class="dv">2</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">z =</span> e, <span class="at">effect =</span> A <span class="sc">-</span> <span class="fu">sum</span>(mid <span class="sc">*</span> nb) <span class="sc">/</span> <span class="fu">sum</span>(nb))</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>For contrast, the classical <strong>partial dependence</strong> (PDP) sets the driver to a value for all observations at once:</p>
+<p>Accumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the rate.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ale_curve <span class="ot">&lt;-</span> <span class="cf">function</span>(rate, Z, j, <span class="at">K =</span> <span class="dv">24</span>) {</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  e <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">quantile</span>(Z[, j], <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="at">length.out =</span> K <span class="sc">+</span> <span class="dv">1</span>))); nb_ <span class="ot">&lt;-</span> <span class="fu">length</span>(e) <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">pmin</span>(<span class="fu">pmax</span>(<span class="fu">findInterval</span>(Z[, j], e), <span class="dv">1</span>), nb_)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  Zu <span class="ot">&lt;-</span> Z; Zl <span class="ot">&lt;-</span> Z; Zu[, j] <span class="ot">&lt;-</span> e[b <span class="sc">+</span> <span class="dv">1</span>]; Zl[, j] <span class="ot">&lt;-</span> e[b]</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">rate</span>(Zu) <span class="sc">-</span> <span class="fu">rate</span>(Zl); nb <span class="ot">&lt;-</span> <span class="fu">tabulate</span>(b, nb_)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  md <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="fu">split</span>(d, <span class="fu">factor</span>(b, <span class="at">levels =</span> <span class="fu">seq_len</span>(nb_))), sum, <span class="dv">0</span>) <span class="sc">/</span> <span class="fu">pmax</span>(nb, <span class="dv">1</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  A <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">cumsum</span>(md)); mid <span class="ot">&lt;-</span> (A[<span class="sc">-</span><span class="dv">1</span>] <span class="sc">+</span> A[<span class="sc">-</span><span class="fu">length</span>(A)]) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">z =</span> e, <span class="at">effect =</span> A <span class="sc">-</span> <span class="fu">sum</span>(mid <span class="sc">*</span> nb) <span class="sc">/</span> <span class="fu">sum</span>(nb))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>pdp <span class="ot">&lt;-</span> <span class="cf">function</span>(rate, Z, j, grid) <span class="fu">sapply</span>(grid, <span class="cf">function</span>(v) { Zv <span class="ot">&lt;-</span> Z; Zv[, j] <span class="ot">&lt;-</span> v; <span class="fu">mean</span>(<span class="fu">rate</span>(Zv)) })</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j) {</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> <span class="fu">ale_curve</span>(rate, Z, j); p <span class="ot">&lt;-</span> <span class="fu">pdp</span>(rate, Z, j, a<span class="sc">$</span>z)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> a<span class="sc">$</span>z <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j]                                     <span class="co"># back to natural units</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rbind</span>(<span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> x, <span class="at">effect =</span> a<span class="sc">$</span>effect, <span class="at">method =</span> <span class="st">"ALE"</span>),</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> x, <span class="at">effect =</span> p <span class="sc">-</span> <span class="fu">mean</span>(p) <span class="sc">+</span> <span class="dv">0</span>, <span class="at">method =</span> <span class="st">"PDP"</span>))</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>}))</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>curves<span class="sc">$</span>driver <span class="ot">&lt;-</span> <span class="fu">factor</span>(curves<span class="sc">$</span>driver, <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> <span class="fu">ale_curve</span>(rate, Z, j)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> a<span class="sc">$</span>z <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j], <span class="at">effect =</span> a<span class="sc">$</span>effect)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>}))</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>pts <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> Z[, j] <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j])))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>curves<span class="sc">$</span>driver <span class="ot">&lt;-</span> <span class="fu">factor</span>(curves<span class="sc">$</span>driver, drv<span class="sc">$</span>drivers); pts<span class="sc">$</span>driver <span class="ot">&lt;-</span> <span class="fu">factor</span>(pts<span class="sc">$</span>driver, drv<span class="sc">$</span>drivers)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(x, effect, <span class="at">colour =</span> method, <span class="at">linetype =</span> method)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"orange"</span>)])) <span class="sc">+</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"driver value (TT: degree-days, DL: hours, RAW: 0 to 1, RAD: MJ/m2/day)"</span>, <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span>, <span class="at">colour =</span> <span class="cn">NULL</span>, <span class="at">linetype =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(x, effect)) <span class="sc">+</span> <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rug</span>(<span class="at">data =</span> pts, <span class="fu">aes</span>(<span class="at">x =</span> x), <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>, <span class="at">sides =</span> <span class="st">"b"</span>, <span class="at">alpha =</span> <span class="fl">0.03</span>, <span class="at">colour =</span> dgxe[[<span class="st">"ink"</span>]]) <span class="sc">+</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"TT (°C d) · DL (h) · RAW (0 to 1) · RAD (MJ/m²/day)"</span>, <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -384,20 +348,25 @@ RAD  0.72  0.74 -0.58  1.00</code></pre>
 </div>
 </div>
 </div>
-<p>For this library the two curves lie on top of each other. That is expected: the library is a sum of one-driver polynomials, so the effect of one driver does not depend on the others. The methods only differ once the model contains <strong>interactions</strong>. Refit with the 37-term library, which adds products of drivers:</p>
+<p>The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the season, not a response to temperature. TT and DL are correlated at 0.97 and are best read together.</p>
+</section>
+<section id="interactions-and-partial-dependence" class="level2">
+<h2 class="anchored" data-anchor-id="interactions-and-partial-dependence">Interactions and partial dependence</h2>
+<p>The 13-term library is additive in the drivers, so partial dependence and ALE coincide. With products of drivers (37 terms) they differ:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv, <span class="at">pairs =</span> <span class="cn">TRUE</span>); gram2 <span class="ot">&lt;-</span> <span class="fu">gram_stats</span>(Theta2, tr)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>f2 <span class="ot">&lt;-</span> <span class="fu">fit_years</span>(gram2, <span class="fu">seq_along</span>(tr<span class="sc">$</span>years), fit_ssr, <span class="at">k =</span> <span class="dv">20</span>)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>rate2 <span class="ot">&lt;-</span> <span class="cf">function</span>(Z) <span class="fu">as.vector</span>(<span class="fu">library_matrix</span>(Z, <span class="at">pairs =</span> <span class="cn">TRUE</span>) <span class="sc">%*%</span> f2<span class="sc">$</span>mu)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>curves2 <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="cf">function</span>(j) {</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> <span class="fu">ale_curve</span>(rate2, Z, j); p <span class="ot">&lt;-</span> <span class="fu">pdp</span>(rate2, Z, j, a<span class="sc">$</span>z); x <span class="ot">&lt;-</span> a<span class="sc">$</span>z <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j]</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rbind</span>(<span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> x, <span class="at">effect =</span> a<span class="sc">$</span>effect, <span class="at">method =</span> <span class="st">"ALE"</span>),</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> x, <span class="at">effect =</span> p <span class="sc">-</span> <span class="fu">mean</span>(p), <span class="at">method =</span> <span class="st">"PDP"</span>)) }))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>pdp <span class="ot">&lt;-</span> <span class="cf">function</span>(rate, Z, j, grid) <span class="fu">sapply</span>(grid, <span class="cf">function</span>(v) { Zv <span class="ot">&lt;-</span> Z; Zv[, j] <span class="ot">&lt;-</span> v; <span class="fu">mean</span>(<span class="fu">rate</span>(Zv)) })</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv, <span class="at">pairs =</span> <span class="cn">TRUE</span>); gram2 <span class="ot">&lt;-</span> <span class="fu">gram_stats</span>(Theta2, tr)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>f2 <span class="ot">&lt;-</span> <span class="fu">fit_years</span>(gram2, <span class="fu">seq_along</span>(tr<span class="sc">$</span>years), fit_ssr, <span class="at">k =</span> <span class="dv">20</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>rate2 <span class="ot">&lt;-</span> <span class="cf">function</span>(Z) <span class="fu">as.vector</span>(<span class="fu">library_matrix</span>(Z, <span class="at">pairs =</span> <span class="cn">TRUE</span>) <span class="sc">%*%</span> f2<span class="sc">$</span>mu)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>curves2 <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="cf">function</span>(j) {</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  a <span class="ot">&lt;-</span> <span class="fu">ale_curve</span>(rate2, Z, j); p <span class="ot">&lt;-</span> <span class="fu">pdp</span>(rate2, Z, j, a<span class="sc">$</span>z); x <span class="ot">&lt;-</span> a<span class="sc">$</span>z <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j]</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rbind</span>(<span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> x, <span class="at">effect =</span> a<span class="sc">$</span>effect, <span class="at">method =</span> <span class="st">"ALE"</span>),</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        <span class="fu">data.frame</span>(<span class="at">driver =</span> drv<span class="sc">$</span>drivers[j], <span class="at">x =</span> x, <span class="at">effect =</span> p <span class="sc">-</span> <span class="fu">mean</span>(p), <span class="at">method =</span> <span class="st">"partial dependence"</span>)) }))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves2, <span class="fu">aes</span>(x, effect, <span class="at">colour =</span> method, <span class="at">linetype =</span> method)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"orange"</span>)])) <span class="sc">+</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"driver value"</span>, <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span>, <span class="at">colour =</span> <span class="cn">NULL</span>, <span class="at">linetype =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves2, <span class="fu">aes</span>(x, effect, <span class="at">colour =</span> method, <span class="at">linetype =</span> method)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"burgundy"</span>)])) <span class="sc">+</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"driver value"</span>, <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>, <span class="at">legend.title =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -406,59 +375,7 @@ RAD  0.72  0.74 -0.58  1.00</code></pre>
 </div>
 </div>
 </div>
-<p>Where the curves now differ, partial dependence is averaging over weather combinations that do not occur (for example a cold season with very long days), so the ALE curve is the one to interpret.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Idea
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><strong>A fitted equation is a model you can interrogate.</strong> The coefficients are a way to <em>store</em> the equation; the curves are how you <em>read</em> it. Each curve answers one question: “if this driver were a bit higher on a day like those in the data, how would growth change?”</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Pitfall
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><strong>Thermal time is a clock, not a temperature.</strong> Its curve shows how growth changes as the season advances (as degree-days accumulate), not how the crop responds to a hot day. Do not read the TT curve as a temperature response. Because TT and DL are 0.97 correlated, the model cannot separate them well; read their curves together.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Check
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Do the curves look agronomically plausible? Water (RAW) should not reduce growth as it rises, and radiation should not reduce growth as it increases. A curve that goes the wrong way is a prompt to look at the data, not to publish.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Swap
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Replace <code>mu</code> with the coefficients of any other fit (<code>fit_years(gram, years, fit_ridge)</code>, or the 37-term library) and re-run the plotting code unchanged; <code>rate()</code> is the only place the model enters.</p>
-</div>
-</div>
+<p>Partial dependence evaluates the model at combinations of drivers that do not occur in the data (for example a short day late in a high thermal-time season), whereas ALE does not.</p>
 
 
 </section>
@@ -942,8 +859,8 @@ RAD  0.72  0.74 -0.58  1.00</code></pre>
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="./05-validate.html" class="pagination-link" aria-label="5 · Simulate and validate">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">5 · Simulate and validate</span>
+      <a href="./05-validate.html" class="pagination-link" aria-label="5 · Validation">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">5 · Validation</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
@@ -956,7 +873,7 @@ RAD  0.72  0.74 -0.58  1.00</code></pre>
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;

@@ -34,7 +34,7 @@
     "href": "reference.html#data",
     "title": "Reference",
     "section": "Data",
-    "text": "Data\nDaily simulated wheat growth from the APSIM model at Narrabri (NSW, Australia): 199 genotypes, 31 seasons (1983 to 2013). See Data for the columns. Files are in data/.\n\n\n\n\n\n\nWarningData source and licence\n\n\n\nThe data are simulation output. Please check the source and licence of the underlying APSIM simulations before reuse or redistribution; this repository does not grant any licence for them.",
+    "text": "Data\nDaily simulated wheat growth from the APSIM model at Narrabri (NSW, Australia): 199 genotypes, 31 seasons (1983 to 2013). See Data for the columns. Files are in data/.\nThe data are simulation output. The source and licence of the underlying APSIM simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.",
     "crumbs": [
       "Reference"
     ]
@@ -44,108 +44,108 @@
     "href": "reference.html#sources",
     "title": "Reference",
     "section": "Sources",
-    "text": "Sources\n\nBrunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. PNAS 113(15), 3932–3937.\nBustos-Korts, D. et al. (2019). Combining crop growth modeling and statistical genetic modeling to evaluate phenotyping strategies. Frontiers in Plant Science 10, 1491.\nApley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. Journal of the Royal Statistical Society B 82(4), 1059–1086.",
+    "text": "Sources\n\nBrunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. PNAS 113(15), 3932–3937.\nBustos-Korts, D. et al. (2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. Frontiers in Plant Science 10, 1540. doi:10.3389/fpls.2019.01540\nApley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. Journal of the Royal Statistical Society B 82(4), 1059–1086.",
     "crumbs": [
       "Reference"
     ]
   },
   {
-    "objectID": "08-pitfalls.html",
-    "href": "08-pitfalls.html",
-    "title": "8 · Pitfalls",
+    "objectID": "08-limitations.html",
+    "href": "08-limitations.html",
+    "title": "8 · Limitations",
     "section": "",
-    "text": "You needthe pipeline from steps 2 to 5.You getthree diagnostic habits, and a checklist.",
+    "text": "The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing var = \"lai\".\n\ntrl &lt;- make_trajectories(traj, drv, var = \"lai\")\ngl  &lt;- gram_stats(Theta, trl)\ncvl &lt;- cv_blocked(Theta, trl, gl, fit_ols)\n\nAs an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly:\n\ndf &lt;- 6; TT &lt;- drv$U[, , 1]; B &lt;- bs(as.vector(TT), df = df)\nTh_spl &lt;- array(NA_real_, c(dim(TT), 1 + df + 3), dimnames = list(NULL, NULL, c(\"1\", paste0(\"B\", 1:df), \"DL\", \"RAW\", \"RAD\")))\nTh_spl[, , 1] &lt;- 1\nfor (j in 1:df) Th_spl[, , 1 + j] &lt;- B[, j]\nfor (j in 1:3)  Th_spl[, , 1 + df + j] &lt;- drv$U[, , j + 1]\ncvs &lt;- cv_blocked(Th_spl, trl, gram_stats(Th_spl, trl), fit_ols)\n\nlookup_all &lt;- function(tr_) {\n  base &lt;- array(NA_real_, dim(tr_$Y))\n  for (y in seq_along(tr_$years)) base[, y, ] &lt;- apply(tr_$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)\n  for (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {\n    v &lt;- base[g, y, ]; ok &lt;- which(!is.nan(v)); v[is.nan(v)] &lt;- v[max(ok)]; base[g, y, ] &lt;- v; base[g, y, 1] &lt;- tr_$Y[g, y, 1] }\n  base\n}\nlk &lt;- lookup_all(trl)\nres &lt;- rbind(`cubic polynomial` = evaluate(cvl$pred, trl), `B-spline in TT` = evaluate(cvs$pred, trl), `baseline (no weather)` = evaluate(lk, trl))\nround(res, 3)\n\n                      trajectory_rmse fixed_day_rmse maturity_rmse\ncubic polynomial                0.885          1.212         0.972\nB-spline in TT                  0.526          0.664         0.539\nbaseline (no weather)           0.473          0.687         0.637\n\n\n\nerr_by_day &lt;- function(P) sapply(2:dim(P)[3], function(d) { ok &lt;- !is.na(trl$Y[, , d]); sqrt(mean((P[, , d][ok] - trl$Y[, , d][ok])^2)) })\nnd &lt;- dim(trl$Y)[3] - 1; lv &lt;- c(\"cubic polynomial\", \"B-spline in TT\", \"baseline\")\nd &lt;- data.frame(das = rep(2:(nd + 1) + trl$das0 - 1, 3), rmse = c(err_by_day(cvl$pred), err_by_day(cvs$pred), err_by_day(lk)),\n                model = factor(rep(lv, each = nd), lv))\nd &lt;- d[d$das &lt;= 15 + 140, ]\nggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +\n  scale_colour_manual(values = unname(dgxe[c(\"burgundy\", \"blue\", \"grey\")])) +\n  labs(x = \"days after sowing\", y = \"held-out LAI RMSE\") + theme_dgxe() + theme(legend.position = \"top\", legend.title = element_blank())\n\n\n\n\n\n\n\n\nA cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better, but over whole trajectories the baseline remains slightly more accurate (0.47 against 0.53); the spline model is better at day 113 and at maturity. When the model is inaccurate, the library should be examined before the fitting method.",
     "crumbs": [
-      "The pipeline",
-      "8 · When it breaks"
+      "Steps",
+      "8 · Limitations"
     ]
   },
   {
-    "objectID": "08-pitfalls.html#a-library-that-cannot-express-the-target",
-    "href": "08-pitfalls.html#a-library-that-cannot-express-the-target",
-    "title": "8 · Pitfalls",
-    "section": "1 · A library that cannot express the target",
-    "text": "1 · A library that cannot express the target\nSo far the response was biomass, which grows roughly as a smooth function of the season. Now try the same pipeline on leaf area index (LAI), which rises, peaks, and then falls as leaves senesce. We only change var = \"lai\".\n\ntrl &lt;- make_trajectories(traj, drv, var = \"lai\")\ngl  &lt;- gram_stats(Theta, trl)\ncvl &lt;- cv_blocked(Theta, trl, gl, fit_ols)                 # cubic polynomial library, all 13 terms\nround(evaluate(cvl$pred, trl), 3)\n\ntrajectory_rmse  fixed_day_rmse   maturity_rmse \n          0.885           1.212           0.972 \n\n\nCompare with the lookup (the genotype’s mean curve in other years), and with a different library: a B-spline basis in thermal time, which is flexible in the season clock, plus the other drivers linearly.\n\nlookup_all &lt;- function(tr_) {\n  base &lt;- array(NA_real_, dim(tr_$Y))\n  for (y in seq_along(tr_$years)) base[, y, ] &lt;- apply(tr_$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)\n  for (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {\n    v &lt;- base[g, y, ]; ok &lt;- which(!is.nan(v)); v[is.nan(v)] &lt;- v[max(ok)]; base[g, y, ] &lt;- v; base[g, y, 1] &lt;- tr_$Y[g, y, 1] }\n  base\n}\ndf &lt;- 6; TT &lt;- drv$U[, , 1]; B &lt;- bs(as.vector(TT), df = df)\nTh_spl &lt;- array(NA_real_, c(dim(TT), 1 + df + 3), dimnames = list(NULL, NULL, c(\"1\", paste0(\"B\", 1:df), \"DL\", \"RAW\", \"RAD\")))\nTh_spl[, , 1] &lt;- 1\nfor (j in 1:df) Th_spl[, , 1 + j] &lt;- B[, j]\nfor (j in 1:3)  Th_spl[, , 1 + df + j] &lt;- drv$U[, , j + 1]\ncvs &lt;- cv_blocked(Th_spl, trl, gram_stats(Th_spl, trl), fit_ols)\n\nres &lt;- rbind(`cubic polynomial` = evaluate(cvl$pred, trl), `B-spline in TT` = evaluate(cvs$pred, trl), `no-weather lookup` = evaluate(lookup_all(trl), trl))\nround(res, 3)\n\n                  trajectory_rmse fixed_day_rmse maturity_rmse\ncubic polynomial            0.885          1.212         0.972\nB-spline in TT              0.526          0.664         0.539\nno-weather lookup           0.473          0.687         0.637\n\n\nThe summary table hides when each model is wrong. The error of every held-out trajectory, by day:\n\nlk &lt;- lookup_all(trl)\nerr_by_day &lt;- function(P) sapply(2:dim(P)[3], function(d) { ok &lt;- !is.na(trl$Y[, , d]); sqrt(mean((P[, , d][ok] - trl$Y[, , d][ok])^2)) })\nnd &lt;- dim(trl$Y)[3] - 1\nd &lt;- data.frame(das = rep(2:(nd + 1) + trl$das0 - 1, 3), rmse = c(err_by_day(cvl$pred), err_by_day(cvs$pred), err_by_day(lk)),\n                model = factor(rep(c(\"cubic polynomial\", \"B-spline in TT\", \"no-weather lookup\"), each = nd), c(\"cubic polynomial\", \"B-spline in TT\", \"no-weather lookup\")))\nd &lt;- d[d$das &lt;= 15 + 140, ]\nggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.9) +\n  scale_colour_manual(values = unname(dgxe[c(\"red\", \"green\", \"blue\")])) + labs(x = \"days after sowing\", y = \"held-out LAI RMSE\", colour = NULL) + theme_dgxe()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nImportantPitfall\n\n\n\nThe spline library is far better than the polynomial for LAI (0.53 versus 0.89 trajectory RMSE) and beats the lookup at day 113 and at maturity, but over whole trajectories the lookup is still slightly ahead (0.47). The polynomial is clearly worse than the lookup everywhere. A polynomial in standardised drivers cannot make the rise-and-fall shape of LAI. When a model fails, look at the library before the fitting method: a better regression cannot find a term that is not in the dictionary.",
+    "objectID": "08-limitations.html#choice-of-library",
+    "href": "08-limitations.html#choice-of-library",
+    "title": "8 · Limitations",
+    "section": "",
+    "text": "The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing var = \"lai\".\n\ntrl &lt;- make_trajectories(traj, drv, var = \"lai\")\ngl  &lt;- gram_stats(Theta, trl)\ncvl &lt;- cv_blocked(Theta, trl, gl, fit_ols)\n\nAs an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly:\n\ndf &lt;- 6; TT &lt;- drv$U[, , 1]; B &lt;- bs(as.vector(TT), df = df)\nTh_spl &lt;- array(NA_real_, c(dim(TT), 1 + df + 3), dimnames = list(NULL, NULL, c(\"1\", paste0(\"B\", 1:df), \"DL\", \"RAW\", \"RAD\")))\nTh_spl[, , 1] &lt;- 1\nfor (j in 1:df) Th_spl[, , 1 + j] &lt;- B[, j]\nfor (j in 1:3)  Th_spl[, , 1 + df + j] &lt;- drv$U[, , j + 1]\ncvs &lt;- cv_blocked(Th_spl, trl, gram_stats(Th_spl, trl), fit_ols)\n\nlookup_all &lt;- function(tr_) {\n  base &lt;- array(NA_real_, dim(tr_$Y))\n  for (y in seq_along(tr_$years)) base[, y, ] &lt;- apply(tr_$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)\n  for (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {\n    v &lt;- base[g, y, ]; ok &lt;- which(!is.nan(v)); v[is.nan(v)] &lt;- v[max(ok)]; base[g, y, ] &lt;- v; base[g, y, 1] &lt;- tr_$Y[g, y, 1] }\n  base\n}\nlk &lt;- lookup_all(trl)\nres &lt;- rbind(`cubic polynomial` = evaluate(cvl$pred, trl), `B-spline in TT` = evaluate(cvs$pred, trl), `baseline (no weather)` = evaluate(lk, trl))\nround(res, 3)\n\n                      trajectory_rmse fixed_day_rmse maturity_rmse\ncubic polynomial                0.885          1.212         0.972\nB-spline in TT                  0.526          0.664         0.539\nbaseline (no weather)           0.473          0.687         0.637\n\n\n\nerr_by_day &lt;- function(P) sapply(2:dim(P)[3], function(d) { ok &lt;- !is.na(trl$Y[, , d]); sqrt(mean((P[, , d][ok] - trl$Y[, , d][ok])^2)) })\nnd &lt;- dim(trl$Y)[3] - 1; lv &lt;- c(\"cubic polynomial\", \"B-spline in TT\", \"baseline\")\nd &lt;- data.frame(das = rep(2:(nd + 1) + trl$das0 - 1, 3), rmse = c(err_by_day(cvl$pred), err_by_day(cvs$pred), err_by_day(lk)),\n                model = factor(rep(lv, each = nd), lv))\nd &lt;- d[d$das &lt;= 15 + 140, ]\nggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +\n  scale_colour_manual(values = unname(dgxe[c(\"burgundy\", \"blue\", \"grey\")])) +\n  labs(x = \"days after sowing\", y = \"held-out LAI RMSE\") + theme_dgxe() + theme(legend.position = \"top\", legend.title = element_blank())\n\n\n\n\n\n\n\n\nA cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better, but over whole trajectories the baseline remains slightly more accurate (0.47 against 0.53); the spline model is better at day 113 and at maturity. When the model is inaccurate, the library should be examined before the fitting method.",
     "crumbs": [
-      "The pipeline",
-      "8 · When it breaks"
+      "Steps",
+      "8 · Limitations"
     ]
   },
   {
-    "objectID": "08-pitfalls.html#collinear-drivers-stable-curves-unstable-coefficients",
-    "href": "08-pitfalls.html#collinear-drivers-stable-curves-unstable-coefficients",
-    "title": "8 · Pitfalls",
-    "section": "2 · Collinear drivers: stable curves, unstable coefficients",
-    "text": "2 · Collinear drivers: stable curves, unstable coefficients\nThermal time and day length move together (correlation 0.97). Fit the same model separately on the odd and even years and compare.\n\nodd &lt;- which(tr$years %% 2 == 1); even &lt;- which(tr$years %% 2 == 0)\nfo &lt;- fit_years(gram, odd, fit_ols); fe &lt;- fit_years(gram, even, fit_ols)\ntab &lt;- round(cbind(odd_years = fo$mu, even_years = fe$mu), 3); rownames(tab) &lt;- gram$names; tab[c(\"TT\", \"TT^2\", \"DL\", \"DL^2\"), ]\n\n     odd_years even_years\nTT      -0.063     -0.037\nTT^2    -0.036     -0.031\nDL       0.045      0.020\nDL^2    -0.055     -0.051\n\n\nThe coefficients for TT and DL are quite different between the halves. But what matters is the growth rate the model predicts:\n\nTbar &lt;- apply(Theta, c(2, 3), mean)\nr_odd &lt;- as.vector(Tbar %*% fo$mu); r_even &lt;- as.vector(Tbar %*% fe$mu)\nc(correlation = cor(r_odd, r_even), max_difference_t_per_ha_day = max(abs(r_odd - r_even)))\n\n                correlation max_difference_t_per_ha_day \n                0.998197498                 0.009107564 \n\n\n\n\n\n\n\n\nNoteIdea\n\n\n\nWhen drivers are collinear, the data constrain the combination, not each coefficient. The predicted rate is stable; individual coefficients are not. That is why step 6 reads curves, never single coefficients, and why a sparse model’s choice between TT and DL should not be over-interpreted.",
+    "objectID": "08-limitations.html#collinear-drivers",
+    "href": "08-limitations.html#collinear-drivers",
+    "title": "8 · Limitations",
+    "section": "Collinear drivers",
+    "text": "Collinear drivers\nThermal time and day length have a correlation of 0.97. Fitting the same model separately to odd and even seasons gives different coefficients but nearly identical growth rates.\n\nodd &lt;- which(tr$years %% 2 == 1); even &lt;- which(tr$years %% 2 == 0)\nfo &lt;- fit_years(gram, odd, fit_ols); fe &lt;- fit_years(gram, even, fit_ols)\ntab &lt;- round(cbind(odd_years = fo$mu, even_years = fe$mu), 3); rownames(tab) &lt;- gram$names\ntab[c(\"TT\", \"TT^2\", \"DL\", \"DL^2\"), ]\n\n     odd_years even_years\nTT      -0.063     -0.037\nTT^2    -0.036     -0.031\nDL       0.045      0.020\nDL^2    -0.055     -0.051\n\nTbar &lt;- apply(Theta, c(2, 3), mean)\nr_odd &lt;- as.vector(Tbar %*% fo$mu); r_even &lt;- as.vector(Tbar %*% fe$mu)\nc(correlation = cor(r_odd, r_even), max_difference = max(abs(r_odd - r_even)))\n\n   correlation max_difference \n   0.998197498    0.009107564 \n\n\nThe data determine the combined effect of correlated drivers better than each coefficient, so response curves are preferable to individual coefficients for interpretation.",
     "crumbs": [
-      "The pipeline",
-      "8 · When it breaks"
+      "Steps",
+      "8 · Limitations"
     ]
   },
   {
-    "objectID": "08-pitfalls.html#small-daily-errors-large-accumulated-errors",
-    "href": "08-pitfalls.html#small-daily-errors-large-accumulated-errors",
-    "title": "8 · Pitfalls",
-    "section": "3 · Small daily errors, large accumulated errors",
-    "text": "3 · Small daily errors, large accumulated errors\nThe regression is on daily increments. The prediction is a running total of those increments, so small biases add up.\n\ncv &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)\ninc_err &lt;- numeric(0)\nfor (g in seq_along(tr$genotypes)) for (y in seq_along(tr$years)) { n &lt;- tr$nend[g, y]\n  inc_err &lt;- c(inc_err, diff(cv$pred[g, y, 1:(n + 1)]) - diff(tr$Y[g, y, 1:(n + 1)])) }\nc(daily_increment_rmse = sqrt(mean(inc_err^2)), rollout_rmse = unname(evaluate(cv$pred, tr)[1]))\n\ndaily_increment_rmse         rollout_rmse \n          0.02801567           0.52096960 \n\n\nA tiny daily error can produce a large accumulated one, so always judge the model on the rollout, never on one-step fit.",
+    "objectID": "08-limitations.html#accumulation-of-error",
+    "href": "08-limitations.html#accumulation-of-error",
+    "title": "8 · Limitations",
+    "section": "Accumulation of error",
+    "text": "Accumulation of error\nThe regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.\n\ncv &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)\ninc_err &lt;- numeric(0)\nfor (g in seq_along(tr$genotypes)) for (y in seq_along(tr$years)) { n &lt;- tr$nend[g, y]\n  inc_err &lt;- c(inc_err, diff(cv$pred[g, y, 1:(n + 1)]) - diff(tr$Y[g, y, 1:(n + 1)])) }\nc(daily_increment_rmse = sqrt(mean(inc_err^2)), trajectory_rmse = unname(evaluate(cv$pred, tr)[1]))\n\ndaily_increment_rmse      trajectory_rmse \n          0.02801567           0.52096960 \n\n\nFor this reason the model is assessed on the simulated trajectory and not on the daily increments.",
     "crumbs": [
-      "The pipeline",
-      "8 · When it breaks"
-    ]
-  },
-  {
-    "objectID": "08-pitfalls.html#a-checklist-before-you-trust-a-result",
-    "href": "08-pitfalls.html#a-checklist-before-you-trust-a-result",
-    "title": "8 · Pitfalls",
-    "section": "A checklist before you trust a result",
-    "text": "A checklist before you trust a result\n\n\n\n\n\n\n\nQuestion\nHow to check\n\n\n\n\nDid you validate on years the model never saw?\nleave-one-year-out (step 5)\n\n\nDoes it beat a no-weather lookup?\nstep 5 and step 7 baselines\n\n\nIs the library able to express the target?\nplot predicted versus APSIM trajectories; try a richer library\n\n\nIs the choice between sparse terms stable?\ncompare fits on halves of the years\n\n\nDo the curves make agronomic sense?\naccumulated local effects (step 6)",
-    "crumbs": [
-      "The pipeline",
-      "8 · When it breaks"
+      "Steps",
+      "8 · Limitations"
     ]
   },
   {
     "objectID": "06-reading.html",
     "href": "06-reading.html",
-    "title": "6 · Reading the model",
+    "title": "6 · Interpretation",
     "section": "",
-    "text": "You needa fitting method and the objects from step 5.You getthe final equation, and one curve per driver showing how it affects growth.",
+    "text": "For interpretation the model is fitted once to all seasons. The shared coefficients on the 12-term support, in standardised drivers, are:\n\nf  &lt;- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)\nmu &lt;- f$mu\nround(setNames(mu[f$support], f$names[f$support]), 4)\n\n      1      TT    TT^2    TT^3      DL    DL^2    DL^3     RAW   RAW^2     RAD \n 0.1551 -0.0355 -0.0290  0.0116  0.0191 -0.0538  0.0184  0.0110 -0.0127  0.0073 \n  RAD^2   RAD^3 \n-0.0025 -0.0004 \n\nrate &lt;- function(Z) as.vector(library_matrix(Z) %*% mu)\n\nIndividual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.",
     "crumbs": [
-      "The pipeline",
-      "6 · Reading the model"
+      "Steps",
+      "6 · Interpretation"
     ]
   },
   {
-    "objectID": "06-reading.html#the-final-model",
-    "href": "06-reading.html#the-final-model",
-    "title": "6 · Reading the model",
-    "section": "The final model",
-    "text": "The final model\nFor reading (not for validating) we fit once on all years. Validation told us the model generalises; now we look at what it learned.\n\nf  &lt;- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)\nmu &lt;- f$mu                                      # shared coefficients (all genotypes)\nround(setNames(mu[f$support], f$names[f$support]), 4)\n\n      1      TT    TT^2    TT^3      DL    DL^2    DL^3     RAW   RAW^2     RAD \n 0.1551 -0.0355 -0.0290  0.0116  0.0191 -0.0538  0.0184  0.0110 -0.0127  0.0073 \n  RAD^2   RAD^3 \n-0.0025 -0.0004 \n\n\nThis is the shared growth rule, written in standardised drivers (mean 0, standard deviation 1):\n\\[\n\\frac{\\mathrm{d}\\,\\text{biomass}}{\\mathrm{d}t} = 0.155 \\;-\\; 0.036\\,\\text{TT} - 0.029\\,\\text{TT}^2 + 0.012\\,\\text{TT}^3 + 0.019\\,\\text{DL} - 0.054\\,\\text{DL}^2 + \\dots\n\\]\nThe coefficients of a polynomial are hard to interpret one by one, so we plot what the equation does instead.",
+    "objectID": "06-reading.html#final-model",
+    "href": "06-reading.html#final-model",
+    "title": "6 · Interpretation",
+    "section": "",
+    "text": "For interpretation the model is fitted once to all seasons. The shared coefficients on the 12-term support, in standardised drivers, are:\n\nf  &lt;- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)\nmu &lt;- f$mu\nround(setNames(mu[f$support], f$names[f$support]), 4)\n\n      1      TT    TT^2    TT^3      DL    DL^2    DL^3     RAW   RAW^2     RAD \n 0.1551 -0.0355 -0.0290  0.0116  0.0191 -0.0538  0.0184  0.0110 -0.0127  0.0073 \n  RAD^2   RAD^3 \n-0.0025 -0.0004 \n\nrate &lt;- function(Z) as.vector(library_matrix(Z) %*% mu)\n\nIndividual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.",
     "crumbs": [
-      "The pipeline",
-      "6 · Reading the model"
+      "Steps",
+      "6 · Interpretation"
     ]
   },
   {
-    "objectID": "06-reading.html#growth-rate-through-the-season",
-    "href": "06-reading.html#growth-rate-through-the-season",
-    "title": "6 · Reading the model",
-    "section": "Growth rate through the season",
-    "text": "Growth rate through the season\nApply the rule to the weather of each year. Each thin line is one year; the thick line is the average.\n\nrate &lt;- function(Z) as.vector(library_matrix(Z) %*% mu)                  # Z: n x 4 matrix of standardised drivers\nny &lt;- length(tr$years); nd &lt;- dim(Theta)[2]\nR  &lt;- sapply(seq_len(ny), function(y) as.vector(Theta[y, , ] %*% mu))       # day x year\nd  &lt;- data.frame(das = rep(seq_len(nd) + tr$das0 - 1, ny), year = rep(tr$years, each = nd), rate = as.vector(R))\nd  &lt;- d[d$das &lt;= 15 + max(tr$nend) - 1, ]\nggplot(d, aes(das, rate, group = year)) + geom_line(colour = dgxe[[\"sky\"]], linewidth = 0.4, alpha = 0.7) +\n  stat_summary(aes(group = 1), fun = mean, geom = \"line\", colour = dgxe[[\"blue\"]], linewidth = 1.2) +\n  labs(x = \"days after sowing\", y = \"biomass growth rate (t/ha/day)\") + theme_dgxe()",
+    "objectID": "06-reading.html#growth-rate-over-the-season",
+    "href": "06-reading.html#growth-rate-over-the-season",
+    "title": "6 · Interpretation",
+    "section": "Growth rate over the season",
+    "text": "Growth rate over the season\nPredicted growth rate for the weather of each season (grey) and the mean (blue).\n\nny &lt;- length(tr$years); nd &lt;- dim(Theta)[2]\nR  &lt;- sapply(seq_len(ny), function(y) as.vector(Theta[y, , ] %*% mu))\nd  &lt;- data.frame(das = rep(seq_len(nd) + tr$das0 - 1, ny), year = rep(tr$years, each = nd), rate = as.vector(R))\nd  &lt;- d[d$das &lt;= 15 + max(tr$nend) - 1, ]\nggplot(d, aes(das, rate)) + geom_line(aes(group = year), colour = dgxe[[\"grey\"]], linewidth = 0.3, alpha = 0.7) +\n  stat_summary(fun = mean, geom = \"line\", colour = dgxe[[\"blue\"]], linewidth = 0.9) +\n  labs(x = \"days after sowing\", y = \"growth rate (t/ha/day)\") + theme_dgxe()",
     "crumbs": [
-      "The pipeline",
-      "6 · Reading the model"
+      "Steps",
+      "6 · Interpretation"
     ]
   },
   {
-    "objectID": "06-reading.html#the-effect-of-one-driver-accumulated-local-effects",
-    "href": "06-reading.html#the-effect-of-one-driver-accumulated-local-effects",
-    "title": "6 · Reading the model",
-    "section": "The effect of one driver: accumulated local effects",
-    "text": "The effect of one driver: accumulated local effects\nTo see how growth responds to one driver (say radiation), we cannot simply vary it in the equation while holding the others at their mean, because in real weather the drivers move together. Here thermal time and day length have correlation 0.97:\n\nZ &lt;- observed_points(drv, tr)                   # the weather that actually occurred (rows = year x day)\nround(cor(Z), 2)\n\n       TT    DL   RAW   RAD\nTT   1.00  0.97 -0.65  0.72\nDL   0.97  1.00 -0.67  0.74\nRAW -0.65 -0.67  1.00 -0.58\nRAD  0.72  0.74 -0.58  1.00\n\n\nAccumulated local effects (ALE) avoid asking the model about weather that never happens: within each small interval of the driver they compare the model with the driver at the two ends of the interval, using the real values of the other drivers, then add up the changes.\nale_curve &lt;- function(rate, Z, j, K = 24) {\n  e &lt;- unique(quantile(Z[, j], seq(0, 1, length.out = K + 1))); nb_ &lt;- length(e) - 1\n  b &lt;- pmin(pmax(findInterval(Z[, j], e), 1), nb_)\n  Zu &lt;- Z; Zl &lt;- Z; Zu[, j] &lt;- e[b + 1]; Zl[, j] &lt;- e[b]\n  d &lt;- rate(Zu) - rate(Zl); nb &lt;- tabulate(b, nb_)\n  md &lt;- vapply(split(d, factor(b, levels = seq_len(nb_))), sum, 0) / pmax(nb, 1)\n  A &lt;- c(0, cumsum(md)); mid &lt;- (A[-1] + A[-length(A)]) / 2\n  data.frame(z = e, effect = A - sum(mid * nb) / sum(nb))\n}\nFor contrast, the classical partial dependence (PDP) sets the driver to a value for all observations at once:\n\npdp &lt;- function(rate, Z, j, grid) sapply(grid, function(v) { Zv &lt;- Z; Zv[, j] &lt;- v; mean(rate(Zv)) })\n\ncurves &lt;- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {\n  a &lt;- ale_curve(rate, Z, j); p &lt;- pdp(rate, Z, j, a$z)\n  x &lt;- a$z * drv$scale[j] + drv$center[j]                                     # back to natural units\n  rbind(data.frame(driver = drv$drivers[j], x = x, effect = a$effect, method = \"ALE\"),\n        data.frame(driver = drv$drivers[j], x = x, effect = p - mean(p) + 0, method = \"PDP\"))\n}))\ncurves$driver &lt;- factor(curves$driver, c(\"TT\", \"DL\", \"RAW\", \"RAD\"))\n\n\nggplot(curves, aes(x, effect, colour = method, linetype = method)) + geom_line(linewidth = 0.9) +\n  facet_wrap(~driver, scales = \"free_x\") +\n  scale_colour_manual(values = unname(dgxe[c(\"blue\", \"orange\")])) +\n  labs(x = \"driver value (TT: degree-days, DL: hours, RAW: 0 to 1, RAD: MJ/m2/day)\", y = \"effect on growth rate (t/ha/day)\", colour = NULL, linetype = NULL) + theme_dgxe()\n\n\n\n\n\n\n\n\nFor this library the two curves lie on top of each other. That is expected: the library is a sum of one-driver polynomials, so the effect of one driver does not depend on the others. The methods only differ once the model contains interactions. Refit with the 37-term library, which adds products of drivers:\n\nTheta2 &lt;- make_library(drv, pairs = TRUE); gram2 &lt;- gram_stats(Theta2, tr)\nf2 &lt;- fit_years(gram2, seq_along(tr$years), fit_ssr, k = 20)\nrate2 &lt;- function(Z) as.vector(library_matrix(Z, pairs = TRUE) %*% f2$mu)\ncurves2 &lt;- do.call(rbind, lapply(1:2, function(j) {\n  a &lt;- ale_curve(rate2, Z, j); p &lt;- pdp(rate2, Z, j, a$z); x &lt;- a$z * drv$scale[j] + drv$center[j]\n  rbind(data.frame(driver = drv$drivers[j], x = x, effect = a$effect, method = \"ALE\"),\n        data.frame(driver = drv$drivers[j], x = x, effect = p - mean(p), method = \"PDP\")) }))\n\n\nggplot(curves2, aes(x, effect, colour = method, linetype = method)) + geom_line(linewidth = 0.9) + facet_wrap(~driver, scales = \"free_x\") +\n  scale_colour_manual(values = unname(dgxe[c(\"blue\", \"orange\")])) +\n  labs(x = \"driver value\", y = \"effect on growth rate (t/ha/day)\", colour = NULL, linetype = NULL) + theme_dgxe()\n\n\n\n\n\n\n\n\nWhere the curves now differ, partial dependence is averaging over weather combinations that do not occur (for example a cold season with very long days), so the ALE curve is the one to interpret.\n\n\n\n\n\n\nNoteIdea\n\n\n\nA fitted equation is a model you can interrogate. The coefficients are a way to store the equation; the curves are how you read it. Each curve answers one question: “if this driver were a bit higher on a day like those in the data, how would growth change?”\n\n\n\n\n\n\n\n\nImportantPitfall\n\n\n\nThermal time is a clock, not a temperature. Its curve shows how growth changes as the season advances (as degree-days accumulate), not how the crop responds to a hot day. Do not read the TT curve as a temperature response. Because TT and DL are 0.97 correlated, the model cannot separate them well; read their curves together.\n\n\n\n\n\n\n\n\nTipCheck\n\n\n\nDo the curves look agronomically plausible? Water (RAW) should not reduce growth as it rises, and radiation should not reduce growth as it increases. A curve that goes the wrong way is a prompt to look at the data, not to publish.\n\n\n\n\n\n\n\n\nCautionSwap\n\n\n\nReplace mu with the coefficients of any other fit (fit_years(gram, years, fit_ridge), or the 37-term library) and re-run the plotting code unchanged; rate() is the only place the model enters.",
+    "objectID": "06-reading.html#effect-of-a-single-driver",
+    "href": "06-reading.html#effect-of-a-single-driver",
+    "title": "6 · Interpretation",
+    "section": "Effect of a single driver",
+    "text": "Effect of a single driver\nThe effect of one driver cannot be read by varying it alone while the others are held fixed, since the drivers are correlated in real weather:\n\nZ &lt;- observed_points(drv, tr)\nround(cor(Z), 2)\n\n       TT    DL   RAW   RAD\nTT   1.00  0.97 -0.65  0.72\nDL   0.97  1.00 -0.67  0.74\nRAW -0.65 -0.67  1.00 -0.58\nRAD  0.72  0.74 -0.58  1.00\n\n\nAccumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the rate.\nale_curve &lt;- function(rate, Z, j, K = 24) {\n  e &lt;- unique(quantile(Z[, j], seq(0, 1, length.out = K + 1))); nb_ &lt;- length(e) - 1\n  b &lt;- pmin(pmax(findInterval(Z[, j], e), 1), nb_)\n  Zu &lt;- Z; Zl &lt;- Z; Zu[, j] &lt;- e[b + 1]; Zl[, j] &lt;- e[b]\n  d &lt;- rate(Zu) - rate(Zl); nb &lt;- tabulate(b, nb_)\n  md &lt;- vapply(split(d, factor(b, levels = seq_len(nb_))), sum, 0) / pmax(nb, 1)\n  A &lt;- c(0, cumsum(md)); mid &lt;- (A[-1] + A[-length(A)]) / 2\n  data.frame(z = e, effect = A - sum(mid * nb) / sum(nb))\n}\n\ncurves &lt;- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {\n  a &lt;- ale_curve(rate, Z, j)\n  data.frame(driver = drv$drivers[j], x = a$z * drv$scale[j] + drv$center[j], effect = a$effect)\n}))\npts &lt;- do.call(rbind, lapply(seq_along(drv$drivers), function(j)\n  data.frame(driver = drv$drivers[j], x = Z[, j] * drv$scale[j] + drv$center[j])))\ncurves$driver &lt;- factor(curves$driver, drv$drivers); pts$driver &lt;- factor(pts$driver, drv$drivers)\n\n\nggplot(curves, aes(x, effect)) + geom_hline(yintercept = 0, colour = \"#D1D5DB\", linewidth = 0.3) +\n  geom_line(colour = dgxe[[\"blue\"]], linewidth = 0.9) +\n  geom_rug(data = pts, aes(x = x), inherit.aes = FALSE, sides = \"b\", alpha = 0.03, colour = dgxe[[\"ink\"]]) +\n  facet_wrap(~driver, scales = \"free_x\") +\n  labs(x = \"TT (°C d) · DL (h) · RAW (0 to 1) · RAD (MJ/m²/day)\", y = \"effect on growth rate (t/ha/day)\") + theme_dgxe()\n\n\n\n\n\n\n\n\nThe rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the season, not a response to temperature. TT and DL are correlated at 0.97 and are best read together.",
     "crumbs": [
-      "The pipeline",
-      "6 · Reading the model"
+      "Steps",
+      "6 · Interpretation"
+    ]
+  },
+  {
+    "objectID": "06-reading.html#interactions-and-partial-dependence",
+    "href": "06-reading.html#interactions-and-partial-dependence",
+    "title": "6 · Interpretation",
+    "section": "Interactions and partial dependence",
+    "text": "Interactions and partial dependence\nThe 13-term library is additive in the drivers, so partial dependence and ALE coincide. With products of drivers (37 terms) they differ:\n\npdp &lt;- function(rate, Z, j, grid) sapply(grid, function(v) { Zv &lt;- Z; Zv[, j] &lt;- v; mean(rate(Zv)) })\nTheta2 &lt;- make_library(drv, pairs = TRUE); gram2 &lt;- gram_stats(Theta2, tr)\nf2 &lt;- fit_years(gram2, seq_along(tr$years), fit_ssr, k = 20)\nrate2 &lt;- function(Z) as.vector(library_matrix(Z, pairs = TRUE) %*% f2$mu)\ncurves2 &lt;- do.call(rbind, lapply(1:2, function(j) {\n  a &lt;- ale_curve(rate2, Z, j); p &lt;- pdp(rate2, Z, j, a$z); x &lt;- a$z * drv$scale[j] + drv$center[j]\n  rbind(data.frame(driver = drv$drivers[j], x = x, effect = a$effect, method = \"ALE\"),\n        data.frame(driver = drv$drivers[j], x = x, effect = p - mean(p), method = \"partial dependence\")) }))\n\n\nggplot(curves2, aes(x, effect, colour = method, linetype = method)) + geom_line(linewidth = 0.8) + facet_wrap(~driver, scales = \"free_x\") +\n  scale_colour_manual(values = unname(dgxe[c(\"blue\", \"burgundy\")])) +\n  labs(x = \"driver value\", y = \"effect on growth rate (t/ha/day)\") + theme_dgxe() + theme(legend.position = \"top\", legend.title = element_blank())\n\n\n\n\n\n\n\n\nPartial dependence evaluates the model at combinations of drivers that do not occur in the data (for example a short day late in a high thermal-time season), whereas ALE does not.",
+    "crumbs": [
+      "Steps",
+      "6 · Interpretation"
     ]
   },
   {
@@ -153,98 +153,87 @@
     "href": "04-fitting.html",
     "title": "4 · Fitting",
     "section": "",
-    "text": "You needgram (A and b per genotype and year) from step 3.You getcoefficients from OLS, ridge, sparse (SSR) and lasso fits, and a feel for which terms matter.",
+    "text": "For this step all genotypes and seasons are pooled. The statistics are summed and the library columns scaled to unit root-mean-square, so that coefficients are comparable.\n\nst &lt;- sum_years(gram, seq_along(tr$years))\nA  &lt;- apply(st$A, c(2, 3), sum)\nb  &lt;- colSums(st$b)\nsc &lt;- scale_gram(A, b, n = sum(st$n))\nterms &lt;- gram$names",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "4 · Fitting"
     ]
   },
   {
-    "objectID": "04-fitting.html#one-pooled-problem",
-    "href": "04-fitting.html#one-pooled-problem",
+    "objectID": "04-fitting.html#pooled-normal-equations",
+    "href": "04-fitting.html#pooled-normal-equations",
     "title": "4 · Fitting",
-    "section": "One pooled problem",
-    "text": "One pooled problem\nTo start simply, pool all genotypes and all years into one regression. We add up the per-trajectory statistics and put every library column on a common scale (unit root-mean-square), so coefficient sizes are comparable.\n\nst &lt;- sum_years(gram, seq_along(tr$years))        # add up all years, keep genotypes apart\nA  &lt;- apply(st$A, c(2, 3), sum)                   # add up genotypes too\nb  &lt;- colSums(st$b)\nsc &lt;- scale_gram(A, b, n = sum(st$n))             # scaled normal equations\nterms &lt;- gram$names",
+    "section": "",
+    "text": "For this step all genotypes and seasons are pooled. The statistics are summed and the library columns scaled to unit root-mean-square, so that coefficients are comparable.\n\nst &lt;- sum_years(gram, seq_along(tr$years))\nA  &lt;- apply(st$A, c(2, 3), sum)\nb  &lt;- colSums(st$b)\nsc &lt;- scale_gram(A, b, n = sum(st$n))\nterms &lt;- gram$names",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "4 · Fitting"
     ]
   },
   {
-    "objectID": "04-fitting.html#a-fitting-method-is-a-function-fita-b-...",
-    "href": "04-fitting.html#a-fitting-method-is-a-function-fita-b-...",
+    "objectID": "04-fitting.html#fitting-methods",
+    "href": "04-fitting.html#fitting-methods",
     "title": "4 · Fitting",
-    "section": "A fitting method is a function fit(A, b, ...)",
-    "text": "A fitting method is a function fit(A, b, ...)\nEvery method takes the same two objects and returns list(coef, support).\nfit_ols &lt;- function(A, b, ...) {\n  list(coef = solve(A, b), support = seq_along(b))\n}\nfit_ridge &lt;- function(A, b, lambda = 0.01, ...) {\n  list(coef = solve(A + lambda * mean(diag(A)) * diag(nrow(A)), b), support = seq_along(b))\n}\nfit_ssr &lt;- function(A, b, k = 8, alpha = 1e-6, ...) {\n  S &lt;- seq_along(b)\n  repeat {\n    co &lt;- solve(A[S, S, drop = FALSE] + alpha * diag(length(S)), b[S])\n    if (length(S) &lt;= k) break\n    S &lt;- S[-which.min(abs(co))]\n  }\n  coef &lt;- numeric(length(b)); coef[S] &lt;- co\n  list(coef = coef, support = S)\n}\nOrdinary least squares uses every term. Ridge shrinks them. Sequential thresholding (SSR) refits, removes the smallest coefficient, and repeats until \\(k\\) terms remain.\n\nols &lt;- fit_ols(sc$A, sc$b)\nrdg &lt;- fit_ridge(sc$A, sc$b, lambda = 0.01)\nssr &lt;- fit_ssr(sc$A, sc$b, k = 8)\ntab &lt;- data.frame(term = terms, OLS = ols$coef, ridge = rdg$coef, SSR_8 = ssr$coef)\ntab[, -1] &lt;- round(tab[, -1], 3); tab\n\n    term    OLS  ridge  SSR_8\n1      1  0.156  0.143  0.154\n2     TT -0.034  0.002 -0.016\n3   TT^2 -0.032 -0.033 -0.030\n4   TT^3  0.018  0.005  0.011\n5     DL  0.019 -0.007  0.002\n6   DL^2 -0.055 -0.040 -0.056\n7   DL^3  0.024  0.020  0.026\n8    RAW  0.011  0.009  0.000\n9  RAW^2 -0.017 -0.015 -0.020\n10 RAW^3 -0.001  0.002  0.000\n11   RAD  0.007  0.008  0.000\n12 RAD^2 -0.003 -0.003  0.000\n13 RAD^3 -0.001 -0.002  0.000\n\n\n\nd &lt;- reshape(tab, direction = \"long\", varying = list(2:4), v.names = \"coef\", timevar = \"method\", times = names(tab)[2:4], idvar = \"term\")\nd$term &lt;- factor(d$term, rev(terms)); d$method &lt;- factor(d$method, names(tab)[2:4])\nggplot(d, aes(coef, term, fill = method)) + geom_col(position = \"dodge\", width = 0.75) +\n  scale_fill_manual(values = unname(dgxe[c(\"blue\", \"cyan\", \"orange\")])) +\n  labs(x = \"coefficient (scaled library)\", y = NULL, fill = NULL) + theme_dgxe()",
+    "section": "Fitting methods",
+    "text": "Fitting methods\nEach method takes (A, b) and returns list(coef, support).\nfit_ols &lt;- function(A, b, ...) {\n  list(coef = solve(A, b), support = seq_along(b))\n}\nfit_ridge &lt;- function(A, b, lambda = 0.01, ...) {\n  list(coef = solve(A + lambda * mean(diag(A)) * diag(nrow(A)), b), support = seq_along(b))\n}\nfit_ssr &lt;- function(A, b, k = 8, alpha = 1e-6, ...) {\n  S &lt;- seq_along(b)\n  repeat {\n    co &lt;- solve(A[S, S, drop = FALSE] + alpha * diag(length(S)), b[S])\n    if (length(S) &lt;= k) break\n    S &lt;- S[-which.min(abs(co))]\n  }\n  coef &lt;- numeric(length(b)); coef[S] &lt;- co\n  list(coef = coef, support = S)\n}\n\nols &lt;- fit_ols(sc$A, sc$b)\nrdg &lt;- fit_ridge(sc$A, sc$b, lambda = 0.01)\nssr &lt;- fit_ssr(sc$A, sc$b, k = 8)\ntab &lt;- data.frame(term = terms, OLS = ols$coef, ridge = rdg$coef, SSR_8 = ssr$coef)\ntab[, -1] &lt;- round(tab[, -1], 3)\ntab\n\n    term    OLS  ridge  SSR_8\n1      1  0.156  0.143  0.154\n2     TT -0.034  0.002 -0.016\n3   TT^2 -0.032 -0.033 -0.030\n4   TT^3  0.018  0.005  0.011\n5     DL  0.019 -0.007  0.002\n6   DL^2 -0.055 -0.040 -0.056\n7   DL^3  0.024  0.020  0.026\n8    RAW  0.011  0.009  0.000\n9  RAW^2 -0.017 -0.015 -0.020\n10 RAW^3 -0.001  0.002  0.000\n11   RAD  0.007  0.008  0.000\n12 RAD^2 -0.003 -0.003  0.000\n13 RAD^3 -0.001 -0.002  0.000\n\n\n\nd &lt;- reshape(tab, direction = \"long\", varying = list(2:4), v.names = \"coef\", timevar = \"method\", times = names(tab)[2:4], idvar = \"term\")\nd$term &lt;- factor(d$term, rev(terms)); d$method &lt;- factor(d$method, names(tab)[2:4])\nggplot(d, aes(coef, term, colour = method, shape = method)) + geom_vline(xintercept = 0, colour = \"#D1D5DB\", linewidth = 0.3) +\n  geom_point(size = 2.2, alpha = 0.9) +\n  scale_colour_manual(values = unname(dgxe[c(\"blue\", \"grey\", \"burgundy\")])) +\n  labs(x = \"coefficient (scaled library)\", y = NULL) + theme_dgxe() + theme(legend.position = \"top\", legend.title = element_blank())",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "4 · Fitting"
     ]
   },
   {
-    "objectID": "04-fitting.html#watching-the-sparse-fit-decide",
-    "href": "04-fitting.html#watching-the-sparse-fit-decide",
+    "objectID": "04-fitting.html#order-of-elimination",
+    "href": "04-fitting.html#order-of-elimination",
     "title": "4 · Fitting",
-    "section": "Watching the sparse fit decide",
-    "text": "Watching the sparse fit decide\nSSR removes terms one at a time. The order shows what the data cannot do without:\n\nS &lt;- seq_along(terms); out &lt;- character(0)\nwhile (length(S) &gt; 1) {\n  co &lt;- solve(sc$A[S, S, drop = FALSE] + 1e-6 * diag(length(S)), sc$b[S])\n  w &lt;- which.min(abs(co)); out &lt;- c(out, terms[S[w]]); S &lt;- S[-w]\n}\ndata.frame(removed_in_order = out, terms_left_after = 12:1)\n\n   removed_in_order terms_left_after\n1             RAW^3               12\n2             RAD^3               11\n3             RAD^2               10\n4               RAD                9\n5               RAW                8\n6                DL                7\n7              TT^3                6\n8                TT                5\n9             RAW^2                4\n10             DL^3                3\n11             DL^2                2\n12             TT^2                1\n\nc(last_standing = terms[S])\n\nlast_standing \n          \"1\" \n\n\nThe first terms to go are the high powers of radiation and water, and what survives longest are the constant and the powers of thermal time and day length. Be careful with this ranking: it is not an importance measure. A term can be dropped because its effect is shared with correlated powers of the same driver, and the order depends on the library. The honest question is how many terms the model needs to predict well on unseen years, which is the topic of step 5; step 6 then reads the fitted curves rather than individual coefficients.",
+    "section": "Order of elimination",
+    "text": "Order of elimination\nSequential thresholding removes one term at a time; the order is the following.\n\nS &lt;- seq_along(terms); out &lt;- character(0)\nwhile (length(S) &gt; 1) {\n  co &lt;- solve(sc$A[S, S, drop = FALSE] + 1e-6 * diag(length(S)), sc$b[S])\n  w &lt;- which.min(abs(co)); out &lt;- c(out, terms[S[w]]); S &lt;- S[-w]\n}\nc(removed = out, last = terms[S])\n\n removed1  removed2  removed3  removed4  removed5  removed6  removed7  removed8 \n  \"RAW^3\"   \"RAD^3\"   \"RAD^2\"     \"RAD\"     \"RAW\"      \"DL\"    \"TT^3\"      \"TT\" \n removed9 removed10 removed11 removed12      last \n  \"RAW^2\"    \"DL^3\"    \"DL^2\"    \"TT^2\"       \"1\" \n\n\nThe order depends on the library and on correlations among its terms, and is not a ranking of importance. The number of terms is chosen by validation (step 5).",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "4 · Fitting"
     ]
   },
   {
-    "objectID": "04-fitting.html#writing-your-own-method-lasso-in-ten-lines",
-    "href": "04-fitting.html#writing-your-own-method-lasso-in-ten-lines",
+    "objectID": "04-fitting.html#another-method-lasso",
+    "href": "04-fitting.html#another-method-lasso",
     "title": "4 · Fitting",
-    "section": "Writing your own method: lasso in ten lines",
-    "text": "Writing your own method: lasso in ten lines\nNothing above is special. Any method that turns (A, b) into coefficients works. As an example, the lasso written as coordinate descent on the same scaled normal equations:\n\nfit_lasso &lt;- function(A, b, lambda = 0.01, iters = 2000, ...) {\n  xi &lt;- numeric(length(b))\n  for (it in seq_len(iters)) {\n    old &lt;- xi\n    for (j in seq_along(b)) {\n      r &lt;- b[j] - sum(A[j, -j] * xi[-j])                         # partial residual\n      xi[j] &lt;- sign(r) * max(abs(r) - lambda, 0) / A[j, j]       # soft threshold\n    }\n    if (max(abs(xi - old)) &lt; 1e-9) break\n  }\n  list(coef = xi, support = which(xi != 0))\n}\nlas &lt;- fit_lasso(sc$A, sc$b, lambda = 2e-4)\nsetNames(round(las$coef, 3), terms)\n\n     1     TT   TT^2   TT^3     DL   DL^2   DL^3    RAW  RAW^2  RAW^3    RAD \n 0.149  0.000 -0.034  0.004 -0.003 -0.045  0.023  0.010 -0.017  0.000  0.005 \n RAD^2  RAD^3 \n-0.003  0.000 \n\n\n\n\n\n\n\n\nNoteIdea\n\n\n\nThe method is a plug-in. Steps 2 and 3 produced A and b; step 4 turns them into coefficients; steps 5 to 8 only need coef and support. Replace the fitting function and nothing else changes.\n\n\n\n\n\n\n\n\nTipCheck\n\n\n\nOLS and ridge should be close (the problem is well conditioned). Sparse fits should agree with OLS on the terms they keep. If a sparse fit changes sign on a large coefficient, the library has collinear terms.\n\n\n\n\n\n\n\n\nCautionSwap\n\n\n\nTry fit_ssr(sc$A, sc$b, k = 5), fit_ridge(..., lambda = 1), or fit_lasso(..., lambda = 1e-3). The next step shows how to judge them honestly: on years the model has never seen.",
+    "section": "Another method: lasso",
+    "text": "Another method: lasso\nAny method that maps (A, b) to coefficients can be used. As an example, the lasso by coordinate descent on the same scaled normal equations:\n\nfit_lasso &lt;- function(A, b, lambda = 0.01, iters = 2000, ...) {\n  xi &lt;- numeric(length(b))\n  for (it in seq_len(iters)) {\n    old &lt;- xi\n    for (j in seq_along(b)) {\n      r &lt;- b[j] - sum(A[j, -j] * xi[-j])\n      xi[j] &lt;- sign(r) * max(abs(r) - lambda, 0) / A[j, j]\n    }\n    if (max(abs(xi - old)) &lt; 1e-9) break\n  }\n  list(coef = xi, support = which(xi != 0))\n}\nlas &lt;- fit_lasso(sc$A, sc$b, lambda = 2e-4)\nsetNames(round(las$coef, 3), terms)\n\n     1     TT   TT^2   TT^3     DL   DL^2   DL^3    RAW  RAW^2  RAW^3    RAD \n 0.149  0.000 -0.034  0.004 -0.003 -0.045  0.023  0.010 -0.017  0.000  0.005 \n RAD^2  RAD^3 \n-0.003  0.000",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "4 · Fitting"
     ]
   },
   {
     "objectID": "02-data.html",
     "href": "02-data.html",
-    "title": "2 · The data",
+    "title": "2 · Data",
     "section": "",
-    "text": "You neednothing from earlier pages.You getthe two data frames used everywhere else, wx and traj.",
+    "text": "The data are APSIM simulations of wheat at Narrabri (New South Wales): 199 genotypes in 31 seasons (1983 to 2013), daily from 15 days after sowing to maturity. Weather is common to all genotypes within a season and is stored in a separate table.\nwx   &lt;- read.csv(\"data/narrabri_weather.csv\")\ntraj &lt;- read.csv(\"data/narrabri_biomass.csv.gz\")\nhead(wx, 3)\n\n  year das     TT     DL    RAW RAD\n1 1983  15 247.50 11.191 0.7966  12\n2 1983  16 256.75 11.180 0.7909  11\n3 1983  17 267.50 11.169 0.7838  13\n\nhead(traj, 3)\n\n  genotype year das biomass   lai\n1     g001 1983  15  0.0164 0.039\n2     g001 1983  16  0.0190 0.043\n3     g001 1983  17  0.0228 0.049",
     "crumbs": [
-      "The pipeline",
-      "2 · The data"
+      "Steps",
+      "2 · Data"
     ]
   },
   {
-    "objectID": "02-data.html#what-the-data-are",
-    "href": "02-data.html#what-the-data-are",
-    "title": "2 · The data",
-    "section": "What the data are",
-    "text": "What the data are\nThe data come from APSIM wheat simulations at Narrabri, a site in northern New South Wales: 199 genotypes grown in 31 years (1983 to 2013). Every genotype-year has daily biomass from 15 days after sowing until that genotype’s own maturity. Because weather is the same for all genotypes in a given year, we keep weather and biomass in separate tables.\n\nwx   &lt;- read.csv(\"data/narrabri_weather.csv\")        # one row per year x day\ntraj &lt;- read.csv(\"data/narrabri_biomass.csv.gz\")     # one row per genotype x year x day\n\n\nhead(wx, 4)\n\n  year das     TT     DL    RAW RAD\n1 1983  15 247.50 11.191 0.7966  12\n2 1983  16 256.75 11.180 0.7909  11\n3 1983  17 267.50 11.169 0.7838  13\n4 1983  18 278.00 11.158 0.7762  14\n\nhead(traj[traj$genotype == \"g001\" & traj$year == 1983, ], 4)\n\n  genotype year das biomass   lai\n1     g001 1983  15  0.0164 0.039\n2     g001 1983  16  0.0190 0.043\n3     g001 1983  17  0.0228 0.049\n4     g001 1983  18  0.0273 0.056\n\n\n\n\n\nColumn\nMeaning\n\n\n\n\ndas\ndays after sowing (the data start at day 15)\n\n\nTT\nthermal time: accumulated degree-days since sowing (°C d)\n\n\nDL\nday length (h)\n\n\nRAW\nrelative available water, 0 (dry) to 1 (wet)\n\n\nRAD\nsolar radiation (MJ m⁻² d⁻¹)\n\n\nbiomass\nabove-ground dry matter (t/ha)\n\n\nlai\nleaf area index (m² m⁻²), used later\n\n\n\n\nc(genotypes = length(unique(traj$genotype)), years = length(unique(traj$year)),\n  rows_weather = nrow(wx), rows_biomass = nrow(traj))\n\n   genotypes        years rows_weather rows_biomass \n         199           31         4453       849234",
+    "objectID": "02-data.html#biomass",
+    "href": "02-data.html#biomass",
+    "title": "2 · Data",
+    "section": "Biomass",
+    "text": "Biomass\nEach line is one genotype. The four seasons were chosen to span the range of weather.\n\nsel &lt;- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]\nggplot(sel, aes(das, biomass, group = genotype)) + geom_line(colour = dgxe[[\"blue\"]], linewidth = 0.2, alpha = 0.25) +\n  facet_wrap(~year, nrow = 1) + labs(x = \"days after sowing\", y = \"biomass (t/ha)\") + theme_dgxe()",
     "crumbs": [
-      "The pipeline",
-      "2 · The data"
+      "Steps",
+      "2 · Data"
     ]
   },
   {
-    "objectID": "02-data.html#biomass-trajectories",
-    "href": "02-data.html#biomass-trajectories",
-    "title": "2 · The data",
-    "section": "Biomass trajectories",
-    "text": "Biomass trajectories\nThree genotypes in four different years. All genotypes follow the same season, but they differ in how fast they grow and when they finish.\n\nsel &lt;- traj[traj$genotype %in% c(\"g001\", \"g080\", \"g160\") & traj$year %in% c(1984, 1990, 1998, 2008), ]\nggplot(sel, aes(das, biomass, colour = genotype)) + geom_line(linewidth = 0.9) +\n  facet_wrap(~year, nrow = 1) + scale_colour_manual(values = unname(dgxe[c(\"blue\", \"cyan\", \"orange\")])) +\n  labs(x = \"days after sowing\", y = \"biomass (t/ha)\") + theme_dgxe()",
+    "objectID": "02-data.html#weather",
+    "href": "02-data.html#weather",
+    "title": "2 · Data",
+    "section": "Weather",
+    "text": "Weather\nEach grey line is one season; the blue line is the mean over seasons.\n\nw &lt;- reshape(wx, direction = \"long\", varying = c(\"TT\", \"DL\", \"RAW\", \"RAD\"), v.names = \"value\", timevar = \"driver\",\n             times = c(\"TT\", \"DL\", \"RAW\", \"RAD\"), idvar = c(\"year\", \"das\"))\nw$driver &lt;- factor(w$driver, c(\"TT\", \"DL\", \"RAW\", \"RAD\"))\nm &lt;- aggregate(value ~ driver + das, w, mean)\nggplot(w, aes(das, value)) + geom_line(aes(group = year), colour = dgxe[[\"grey\"]], linewidth = 0.25, alpha = 0.6) +\n  geom_line(data = m, colour = dgxe[[\"blue\"]], linewidth = 0.8) + facet_wrap(~driver, scales = \"free_y\") +\n  labs(x = \"days after sowing\", y = NULL) + theme_dgxe()\n\n\n\n\n\n\n\n\nTrajectories end on different days, since genotypes mature at different times. The end of each trajectory is tracked in step 3.",
     "crumbs": [
-      "The pipeline",
-      "2 · The data"
-    ]
-  },
-  {
-    "objectID": "02-data.html#the-weather-the-crop-experienced",
-    "href": "02-data.html#the-weather-the-crop-experienced",
-    "title": "2 · The data",
-    "section": "The weather the crop experienced",
-    "text": "The weather the crop experienced\nFour drivers over the same years. They look very different from year to year, and this variation is what lets us learn how growth responds to weather.\n\nw &lt;- reshape(wx[wx$year %in% c(1984, 1990, 1998, 2008), ], direction = \"long\", varying = c(\"TT\", \"DL\", \"RAW\", \"RAD\"),\n             v.names = \"value\", timevar = \"driver\", times = c(\"TT\", \"DL\", \"RAW\", \"RAD\"), idvar = c(\"year\", \"das\"))\nw$driver &lt;- factor(w$driver, c(\"TT\", \"DL\", \"RAW\", \"RAD\"))\nggplot(w, aes(das, value, colour = factor(year))) + geom_line(linewidth = 0.7) + facet_wrap(~driver, scales = \"free_y\") +\n  scale_colour_manual(values = unname(dgxe[c(\"blue\", \"cyan\", \"green\", \"orange\")])) +\n  labs(x = \"days after sowing\", y = NULL) + theme_dgxe()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNoteIdea\n\n\n\nTwo things to remember from this page. First, weather is identical for all genotypes within a year, so genotypes can only differ through the coefficients of the growth rule, not through their weather. Second, thermal time keeps rising through the season, so it also acts as a clock that tells the model how far along the crop is.\n\n\n\n\n\n\n\n\nTipCheck\n\n\n\nDo you get 199 genotypes and 31 years? Is the weather the same for every genotype? (It is: the weather table has no genotype column.)\n\n\n\n\n\n\n\n\nImportantPitfall\n\n\n\nTrajectories end on different days (each genotype matures at its own time). Keep track of where each one stops, as we do in the next step; padding with zeros or repeating the last value silently corrupts the regression.",
-    "crumbs": [
-      "The pipeline",
-      "2 · The data"
+      "Steps",
+      "2 · Data"
     ]
   },
   {
@@ -252,17 +241,17 @@
     "href": "setup.html",
     "title": "Set up",
     "section": "",
-    "text": "You needR 4.1 or later. Nothing else for the modelling.You getthe data in memory, and a quick test that the whole pipeline runs.",
+    "text": "git clone https://github.com/corne00/dynamic-gxe-workshop.git\ncd dynamic-gxe-workshop\nR/functions.R contains all functions used in the workshop (base R). data/ contains the Narrabri weather, the biomass trajectories and the APSIM cultivar parameters. scripts/parity_check.R runs the complete pipeline.",
     "crumbs": [
       "Set up"
     ]
   },
   {
-    "objectID": "setup.html#get-the-files",
-    "href": "setup.html#get-the-files",
+    "objectID": "setup.html#files",
+    "href": "setup.html#files",
     "title": "Set up",
-    "section": "Get the files",
-    "text": "Get the files\ngit clone https://github.com/corne00/dynamic-gxe-workshop.git\ncd dynamic-gxe-workshop\nThe folder has three parts you will use:\n\n\n\n\n\n\n\nFolder\nContent\n\n\n\n\nR/functions.R\nevery function in the workshop, plain base R\n\n\ndata/\nthe Narrabri weather, biomass trajectories and APSIM cultivar parameters\n\n\nscripts/\na command-line version of the full pipeline",
+    "section": "",
+    "text": "git clone https://github.com/corne00/dynamic-gxe-workshop.git\ncd dynamic-gxe-workshop\nR/functions.R contains all functions used in the workshop (base R). data/ contains the Narrabri weather, the biomass trajectories and the APSIM cultivar parameters. scripts/parity_check.R runs the complete pipeline.",
     "crumbs": [
       "Set up"
     ]
@@ -272,17 +261,17 @@
     "href": "setup.html#packages",
     "title": "Set up",
     "section": "Packages",
-    "text": "Packages\nThe modelling uses base R only. The plots use ggplot2:\ninstall.packages(\"ggplot2\")",
+    "text": "Packages\nR 4.1 or later. The modelling code uses base R only. The figures use ggplot2:\ninstall.packages(\"ggplot2\")",
     "crumbs": [
       "Set up"
     ]
   },
   {
-    "objectID": "setup.html#check-that-it-works",
-    "href": "setup.html#check-that-it-works",
+    "objectID": "setup.html#test-run",
+    "href": "setup.html#test-run",
     "title": "Set up",
-    "section": "Check that it works",
-    "text": "Check that it works\nsource(\"R/functions.R\")\n\nwx   &lt;- read.csv(\"data/narrabri_weather.csv\")        # daily weather\ntraj &lt;- read.csv(\"data/narrabri_biomass.csv.gz\")     # daily biomass, one row per genotype x year x day\n\ndrv   &lt;- make_drivers(wx)\nTheta &lt;- make_library(drv)\ntr    &lt;- make_trajectories(traj, drv)\ngram  &lt;- gram_stats(Theta, tr)\n\ncv &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)    # leave-one-year-out, 31 fits\nround(evaluate(cv$pred, tr), 3)\nYou should see a trajectory RMSE of about 0.52 t/ha on years the model never saw. If you do, everything is in place.\n\n\n\n\n\n\nTipCheck\n\n\n\nThe same numbers come out of the original research code (Python): trajectory RMSE 0.520, RMSE at day 113 of 0.688 and at maturity of 0.749 t/ha. The base-R version gives 0.521, 0.689 and 0.747.",
+    "section": "Test run",
+    "text": "Test run\nsource(\"R/functions.R\")\n\nwx   &lt;- read.csv(\"data/narrabri_weather.csv\")\ntraj &lt;- read.csv(\"data/narrabri_biomass.csv.gz\")\n\ndrv   &lt;- make_drivers(wx)\nTheta &lt;- make_library(drv)\ntr    &lt;- make_trajectories(traj, drv)\ngram  &lt;- gram_stats(Theta, tr)\n\ncv &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)\nround(evaluate(cv$pred, tr), 3)\nThe expected output is a trajectory RMSE of about 0.52 t/ha. The research implementation in Python gives 0.520, 0.688 and 0.749 for the trajectory, day-113 and maturity RMSE; this code gives 0.521, 0.689 and 0.747.",
     "crumbs": [
       "Set up"
     ]
@@ -290,107 +279,99 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "Dynamic GxE from scratch",
+    "title": "Sparse identification of crop growth dynamics",
     "section": "",
-    "text": "A crop does not jump to its final yield; it grows a little every day, and how much it grows depends on that day’s weather and on the genotype. This workshop shows how to learn that daily growth rule from data, using nothing but base R and a few lines per step.",
+    "text": "This workshop fits a daily growth equation for wheat biomass to simulated field-trial data, using base R. The growth rate is written as a sparse combination of candidate functions of the weather (SINDy), the coefficients are obtained by regression, and the resulting equation is validated on years that were not used for fitting.\nThe data are APSIM simulations for one site (Narrabri): 199 genotypes, 31 seasons (1983 to 2013), daily resolution. Each step below is a short function with a defined input and output, so that any step, in particular the regression method, can be replaced independently of the others.\n\n\n\nStep\nContent\n\n\n\n\nSet up\nFiles, packages, a test run\n\n\n1 · Method\nModel, regression formulation, solution, validation\n\n\n2 · Data\nWeather and biomass tables\n\n\n3 · Library and design matrix\nCandidate functions, design matrix, normal equations\n\n\n4 · Fitting\nOLS, ridge, sequential thresholding, lasso\n\n\n5 · Validation\nSimulation and leave-one-year-out cross-validation\n\n\n6 · Interpretation\nResponse curves\n\n\n7 · Genotypes\nShared coefficients and genotype deviations; ranking\n\n\n8 · Limitations\nLibrary choice, collinearity, error accumulation\n\n\n9 · Extensions\nCoupled states and further directions\n\n\nReference\nSymbols, functions, data, sources\n\n\n\nAll functions are in R/functions.R and use base R only; ggplot2 is used for the figures. The full pipeline, including cross-validation over all genotypes, runs in a few seconds.\nThe data are simulation output from APSIM (Bustos-Korts et al., 2019). The source and licence should be confirmed before reuse.\n\n\n\n Back to top",
     "crumbs": [
       "Overview"
     ]
   },
   {
-    "objectID": "index.html#the-question-we-follow",
-    "href": "index.html#the-question-we-follow",
-    "title": "Dynamic GxE from scratch",
-    "section": "The question we follow",
-    "text": "The question we follow\n\nCan we learn the daily growth rule of wheat from simulated field trials, and use it to predict a year the model has never seen?\n\nWe work with one site (Narrabri), 199 wheat genotypes and 31 years of daily data from the public APSIM wheat simulations. The method is SINDy (sparse identification of nonlinear dynamics): write the growth rate as a combination of a few candidate functions of the weather, and let the data decide which ones matter.",
-    "crumbs": [
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "index.html#the-pipeline",
-    "href": "index.html#the-pipeline",
-    "title": "Dynamic GxE from scratch",
-    "section": "The pipeline",
-    "text": "The pipeline\nEvery step is a small function with a clear input and output. Any step can be replaced without touching the others, for example a different fitting method or a different library of candidate functions.\n\n\n\n1 · The idea\n\n\nA model of change is a running total of daily growth. A toy example, solved with lm.\n\n\n\n\n2 · The data\n\n\nTwo plain tables: daily weather and daily biomass.\n\n\n\n\n3 · Library and design matrix\n\n\nCandidate functions of the weather, stacked into a regression problem.\n\n\n\n\n4 · Fitting\n\n\nOLS, ridge and sparse regression, all behind one signature.\n\n\n\n\n5 · Simulate and validate\n\n\nRoll the equation forward and test it on held-out years.\n\n\n\n\n6 · Reading the model\n\n\nResponse curves: what the equation says about weather and growth.\n\n\n\n\n7 · Genotypes\n\n\nA shared model plus genotype deviations, and ranking lines.\n\n\n\n\n8 · When it breaks\n\n\nWrong libraries, collinear drivers, one-step versus rollout fit.\n\n\n\n\n9 · Going further\n\n\nAdding crop knowledge, coupled states, and the Bayesian version.",
-    "crumbs": [
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "index.html#how-to-follow-along",
-    "href": "index.html#how-to-follow-along",
-    "title": "Dynamic GxE from scratch",
-    "section": "How to follow along",
-    "text": "How to follow along\nEvery page runs on its own and takes seconds. The whole pipeline, including leave-one-year-out cross-validation over all 199 genotypes, runs in about ten seconds.\n# base R is enough; ggplot2 is only used for the plots\ninstall.packages(\"ggplot2\")\nsource(\"R/functions.R\")      # all modelling functions, plain base R\nStart at Set up, or jump straight to the idea.\n\n\n\n\n\n\nNoteWhere the data come from\n\n\n\nThe data are simulated biomass and daily weather for four Australian sites, from Bustos-Korts et al. (2019), From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time, Frontiers in Plant Science 10:1540. Because the data are simulated, the true crop parameters are known, which lets us check what the method recovers.",
-    "crumbs": [
-      "Overview"
-    ]
-  },
-  {
-    "objectID": "01-idea.html",
-    "href": "01-idea.html",
-    "title": "1 · The idea",
+    "objectID": "01-method.html",
+    "href": "01-method.html",
+    "title": "1 · Method",
     "section": "",
-    "text": "You neednothing yet: this page uses a toy example, not the real data.You getthe core trick of the whole workshop: learning a rate equation is a regression.",
+    "text": "Let \\(y(t)\\) denote biomass and \\(u(t) = (\\mathrm{TT}, \\mathrm{DL}, \\mathrm{RAW}, \\mathrm{RAD})\\) the daily weather drivers: accumulated thermal time, day length, relative available water and solar radiation. The growth rate is modelled as\n\\[\n\\frac{\\mathrm{d}y}{\\mathrm{d}t} = \\sum_{j=1}^{K} \\xi_j\\,\\theta_j\\bigl(u(t)\\bigr),\n\\]\nwhere \\(\\theta_1,\\dots,\\theta_K\\) is a fixed library of candidate functions and \\(\\xi\\) is a vector of coefficients. The library used here contains a constant and the first three powers of each driver (\\(K=13\\)).",
     "crumbs": [
-      "The pipeline",
-      "1 · The idea"
+      "Steps",
+      "1 · Method"
     ]
   },
   {
-    "objectID": "01-idea.html#a-crop-as-a-running-total",
-    "href": "01-idea.html#a-crop-as-a-running-total",
-    "title": "1 · The idea",
-    "section": "A crop as a running total",
-    "text": "A crop as a running total\nThink of the biomass of a crop as a bank balance. Every day some growth is added, and how much is added depends on today’s balance (a bigger plant intercepts more light) and on today’s weather. Written as a rule for the daily change:\n\\[\ny_{t+1} = y_t + \\underbrace{f(y_t, u_t)}_{\\text{growth today}}\n\\]\nThis is a difference equation, and its continuous cousin is the ordinary differential equation (ODE) \\(\\mathrm{d}y/\\mathrm{d}t = f(y, u)\\). Crop models such as APSIM do exactly this, day by day. The whole question of the workshop is: what is \\(f\\)?",
+    "objectID": "01-method.html#model",
+    "href": "01-method.html#model",
+    "title": "1 · Method",
+    "section": "",
+    "text": "Let \\(y(t)\\) denote biomass and \\(u(t) = (\\mathrm{TT}, \\mathrm{DL}, \\mathrm{RAW}, \\mathrm{RAD})\\) the daily weather drivers: accumulated thermal time, day length, relative available water and solar radiation. The growth rate is modelled as\n\\[\n\\frac{\\mathrm{d}y}{\\mathrm{d}t} = \\sum_{j=1}^{K} \\xi_j\\,\\theta_j\\bigl(u(t)\\bigr),\n\\]\nwhere \\(\\theta_1,\\dots,\\theta_K\\) is a fixed library of candidate functions and \\(\\xi\\) is a vector of coefficients. The library used here contains a constant and the first three powers of each driver (\\(K=13\\)).",
     "crumbs": [
-      "The pipeline",
-      "1 · The idea"
+      "Steps",
+      "1 · Method"
     ]
   },
   {
-    "objectID": "01-idea.html#a-toy-crop",
-    "href": "01-idea.html#a-toy-crop",
-    "title": "1 · The idea",
-    "section": "A toy crop",
-    "text": "A toy crop\nLet growth be logistic (fast when small, slowing near a ceiling \\(K\\)) and let a stress period in the weather reduce it:\n\\[\n\\frac{\\mathrm{d}y}{\\mathrm{d}t} = r\\,y\\left(1 - \\frac{y}{K}\\right) S(t), \\qquad S(t) = 1 - \\alpha\\,(1 - e(t))\n\\]\nHere \\(e(t)\\) is a weather signal that dips during a stress event, and \\(\\alpha\\) is the sensitivity to it. We simulate one season with a daily step:\n\nr &lt;- 0.12; K &lt;- 5; alpha &lt;- 0.8          # growth rate, ceiling, stress sensitivity\nn &lt;- 100; day &lt;- 0:n\ne &lt;- 1 - 0.9 * exp(-((day - 40) / 12)^2)  # weather signal: stress around day 40\nS &lt;- 1 - alpha * (1 - e)                  # growth modulator\n\ny &lt;- numeric(n + 1); y[1] &lt;- 0.05\nfor (t in 1:n) y[t + 1] &lt;- y[t] + r * y[t] * (1 - y[t] / K) * S[t]\n\n\n\n\n\n\n\n\n\n\nThe crop slows down when the stress hits and recovers afterwards, so the curve has a shoulder.",
+    "objectID": "01-method.html#regression",
+    "href": "01-method.html#regression",
+    "title": "1 · Method",
+    "section": "Regression",
+    "text": "Regression\nWith daily data, the increments \\(z_t = y_{t+1}-y_t\\) are regressed on the library evaluated at day \\(t\\). Because \\(\\xi\\) enters linearly, this is an ordinary linear least-squares problem\n\\[\n\\min_{\\xi}\\ \\lVert z - X\\xi\\rVert_2^2, \\qquad X_{tj} = \\theta_j(u_t).\n\\]\nThe data enter only through \\(A = X^\\top X\\) and \\(b = X^\\top z\\). These are computed once per genotype and season, so that cross-validation reduces to adding and subtracting small matrices. Every fitting method in step 4 has the signature fit(A, b, ...).",
     "crumbs": [
-      "The pipeline",
-      "1 · The idea"
+      "Steps",
+      "1 · Method"
     ]
   },
   {
-    "objectID": "01-idea.html#the-trick-a-rate-equation-is-a-regression",
-    "href": "01-idea.html#the-trick-a-rate-equation-is-a-regression",
-    "title": "1 · The idea",
-    "section": "The trick: a rate equation is a regression",
-    "text": "The trick: a rate equation is a regression\nSuppose we did not know \\(f\\). We would observe \\(y\\) and \\(e\\) every day, and we would compute the daily increments \\(z_t = y_{t+1} - y_t\\). If we guess that \\(f\\) is a combination of simple candidate functions (a library),\n\\[\nz_t \\approx \\sum_{j} \\xi_j\\, \\theta_j(y_t, e_t),\n\\]\nthen the unknown coefficients \\(\\xi_j\\) enter linearly. This is an ordinary linear regression. Our library is every product of \\(y\\) and \\(e\\) up to second power:\n\nlibrary_toy &lt;- function(y, e) cbind(y = y, `y^2` = y^2, e = e, `e^2` = e^2,\n                                    `y*e` = y * e, `y^2*e` = y^2 * e, `y*e^2` = y * e^2, `y^2*e^2` = y^2 * e^2)\n\nX &lt;- library_toy(y[-(n + 1)], e[-(n + 1)])   # library on days 0 .. n-1\nz &lt;- diff(y)                                 # daily increments\nfit &lt;- lm(z ~ X - 1)                         # no intercept: no constant in the library\n\nExpanding the true equation gives the exact coefficients we should find: only \\(y\\), \\(y^2\\), \\(y\\,e\\) and \\(y^2 e\\) appear, and the four terms that do not belong are zero.\n\ntruth &lt;- c(r * (1 - alpha), -r * (1 - alpha) / K, 0, 0, r * alpha, -r * alpha / K, 0, 0)\nfitted &lt;- setNames(coef(fit), colnames(X))\nround(rbind(truth = truth, fitted = fitted), 5)\n\n           y     y^2 e e^2   y*e   y^2*e y*e^2 y^2*e^2\ntruth  0.024 -0.0048 0   0 0.096 -0.0192     0       0\nfitted 0.024 -0.0048 0   0 0.096 -0.0192     0       0\n\n\n\n\n\n\n\n\nNoteIdea\n\n\n\nThe regression found the equation exactly: four true terms recovered, four zero terms recovered as zero. Learning an ODE from data is just a linear regression of daily increments on a library of candidate functions. Everything else in this workshop (sparsity, genotypes, validation) builds on this one step.",
+    "objectID": "01-method.html#sparsity",
+    "href": "01-method.html#sparsity",
+    "title": "1 · Method",
+    "section": "Sparsity",
+    "text": "Sparsity\nSequential thresholding refits the model and removes the term with the smallest scaled coefficient until \\(k\\) terms remain. The retained set of terms (the support) is common to all genotypes.",
     "crumbs": [
-      "The pipeline",
-      "1 · The idea"
+      "Steps",
+      "1 · Method"
     ]
   },
   {
-    "objectID": "01-idea.html#make-it-break-add-noise",
-    "href": "01-idea.html#make-it-break-add-noise",
-    "title": "1 · The idea",
-    "section": "Make it break: add noise",
-    "text": "Make it break: add noise\nReal measurements are noisy. A small error in \\(y\\) becomes a large error in the increment \\(z_t = y_{t+1} - y_t\\) (a difference of two noisy numbers), and the library terms are strongly correlated, so ordinary least squares struggles.\n\nset.seed(1)\nyn &lt;- y + rnorm(n + 1, sd = 0.01)          # 0.01 t/ha of measurement noise\nXn &lt;- library_toy(yn[-(n + 1)], e[-(n + 1)]); zn &lt;- diff(yn)\nols &lt;- setNames(coef(lm(zn ~ Xn - 1)), colnames(Xn))\n\nA sparse fit keeps only the few terms that matter. Here is the simplest version, which repeatedly refits and removes the smallest coefficient until four terms are left (fit_ssr is defined in step 4):\n\nA &lt;- crossprod(Xn) / n                     # the regression, as normal equations\nb &lt;- as.numeric(crossprod(Xn, zn)) / n\nsparse &lt;- setNames(fit_ssr(A, b, k = 4)$coef, colnames(Xn))\n\n\nround(rbind(truth = truth, `ols (noisy)` = ols, `sparse, 4 terms` = sparse), 3)\n\n                    y    y^2      e   e^2   y*e  y^2*e  y*e^2 y^2*e^2\ntruth           0.024 -0.005  0.000 0.000 0.096 -0.019  0.000   0.000\nols (noisy)     0.030 -0.009 -0.024 0.024 0.116 -0.020 -0.025   0.004\nsparse, 4 terms 0.017  0.000  0.001 0.000 0.101 -0.024  0.000   0.000\n\n\nOLS spreads weight over all eight terms, including some that are truly zero. The sparse fit keeps three of the four true terms (\\(y\\), \\(y\\,e\\), \\(y^2 e\\)) and swaps the fourth (\\(y^2\\)) for a term that does not belong (\\(e\\), with a tiny coefficient). It is much closer to the truth than OLS, but not perfect. With three times more noise (sd = 0.03) even the sparse fit loses the structure: a model needs enough signal.\n\n\n\n\n\n\nImportantPitfall\n\n\n\nNoise in the state is amplified by differencing. With only 8–13 observations per season (typical for field trials) you should integrate the equation over each interval instead of differencing, which is what the research code does for field data. Here the data are simulated daily, so differencing is fine.\n\n\n\n\n\n\n\n\nCautionSwap\n\n\n\nTry changing sd = 0.01 to 0.005 or 0.02, or the number of terms k to 3 or 6. How many terms survive? At what noise level does the structure disappear?",
+    "objectID": "01-method.html#genotypes",
+    "href": "01-method.html#genotypes",
+    "title": "1 · Method",
+    "section": "Genotypes",
+    "text": "Genotypes\nThe coefficients of genotype \\(g\\) are \\(\\xi_g = \\mu + \\delta_g\\). The shared part \\(\\mu\\) is estimated from all genotypes on the common support, and each deviation \\(\\delta_g\\) is estimated from the data of genotype \\(g\\) with a ridge penalty.",
     "crumbs": [
-      "The pipeline",
-      "1 · The idea"
+      "Steps",
+      "1 · Method"
     ]
   },
   {
-    "objectID": "01-idea.html#what-comes-next",
-    "href": "01-idea.html#what-comes-next",
-    "title": "1 · The idea",
-    "section": "What comes next",
-    "text": "What comes next\nIn the real problem the “state” is biomass, the “weather” is four measured drivers (thermal time, day length, water availability and radiation), and there are 199 genotypes. The next page looks at those data.",
+    "objectID": "01-method.html#solution",
+    "href": "01-method.html#solution",
+    "title": "1 · Method",
+    "section": "Solution",
+    "text": "Solution\nSince the library depends on the weather only, the equation can be solved by a cumulative sum, without an ODE solver:\n\\[\ny(t) = y_0 + \\sum_{s&lt;t} \\sum_j \\xi_j\\,\\theta_j(u_s).\n\\]",
     "crumbs": [
-      "The pipeline",
-      "1 · The idea"
+      "Steps",
+      "1 · Method"
+    ]
+  },
+  {
+    "objectID": "01-method.html#validation",
+    "href": "01-method.html#validation",
+    "title": "1 · Method",
+    "section": "Validation",
+    "text": "Validation\nSeasons are the independent units, because the weather of neighbouring days is strongly correlated. The model is validated by leave-one-year-out cross-validation: each year is predicted from a model fitted to the other 30, starting from the mean initial biomass.",
+    "crumbs": [
+      "Steps",
+      "1 · Method"
+    ]
+  },
+  {
+    "objectID": "01-method.html#implementation",
+    "href": "01-method.html#implementation",
+    "title": "1 · Method",
+    "section": "Implementation",
+    "text": "Implementation\nfit_ols &lt;- function(A, b, ...) {\n  list(coef = solve(A, b), support = seq_along(b))\n}\nsimulate &lt;- function(xi, Theta_y, y0) {\n  inc &lt;- Theta_y[-nrow(Theta_y), , drop = FALSE] %*% t(xi)         # (days-1) x genotype increments\n  sweep(rbind(0, apply(inc, 2, cumsum)), 2, y0, \"+\")               # day x genotype\n}",
+    "crumbs": [
+      "Steps",
+      "1 · Method"
     ]
   },
   {
@@ -398,142 +379,142 @@
     "href": "03-design.html",
     "title": "3 · Library and design matrix",
     "section": "",
-    "text": "You needthe two tables wx and traj from step 2.You getthe library Theta, the trajectory array tr, the design matrix, and the normal equations.",
+    "text": "Each driver is standardised to mean 0 and unit standard deviation. Only weather is used in this step; the response does not enter.\nmake_drivers &lt;- function(wx, drivers = c(\"TT\", \"DL\", \"RAW\", \"RAD\")) {\n  years &lt;- sort(unique(wx$year)); das0 &lt;- min(wx$das); nd &lt;- max(wx$das) - das0 + 1\n  U &lt;- array(NA_real_, c(length(years), nd, length(drivers)), dimnames = list(years, NULL, drivers))\n  for (i in seq_along(years)) {\n    w &lt;- wx[wx$year == years[i], ]\n    U[i, w$das - das0 + 1, ] &lt;- as.matrix(w[, drivers])\n    last &lt;- max(w$das) - das0 + 1                       # years end on different days:\n    if (last &lt; nd) U[i, (last + 1):nd, ] &lt;- matrix(rep(U[i, last, ], each = nd - last), nd - last)  # carry last value (never used)\n  }\n  center &lt;- apply(U, 3, mean); scale &lt;- apply(U, 3, function(x) sqrt(mean((x - mean(x))^2)))\n  for (j in seq_along(drivers)) U[, , j] &lt;- (U[, , j] - center[j]) / scale[j]\n  list(U = U, years = years, das0 = das0, drivers = drivers, center = center, scale = scale)\n}\n\ndrv &lt;- make_drivers(wx)\ndim(drv$U)            # year x day x driver\n\n[1]  31 150   4\n\nround(drv$center, 1)\n\n    TT     DL    RAW    RAD \n1148.2   12.1    0.5   16.0",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "3 · Library and design matrix"
     ]
   },
   {
-    "objectID": "03-design.html#from-weather-to-drivers",
-    "href": "03-design.html#from-weather-to-drivers",
+    "objectID": "03-design.html#drivers",
+    "href": "03-design.html#drivers",
     "title": "3 · Library and design matrix",
-    "section": "From weather to drivers",
-    "text": "From weather to drivers\nEach driver is standardised (mean 0, standard deviation 1) so that coefficients are comparable and a cubic in a driver stays well behaved. We only use weather here, never biomass, so this step cannot leak anything about the response.\nmake_drivers &lt;- function (wx, drivers = c(\"TT\", \"DL\", \"RAW\", \"RAD\")) \n{\n    years &lt;- sort(unique(wx$year))\n    das0 &lt;- min(wx$das)\n    nd &lt;- max(wx$das) - das0 + 1\n    U &lt;- array(NA, c(length(years), nd, length(drivers)), dimnames = list(years, \n        NULL, drivers))\n    for (i in seq_along(years)) {\n        w &lt;- wx[wx$year == years[i], ]\n        U[i, w$das - das0 + 1, ] &lt;- as.matrix(w[, drivers])\n        last &lt;- max(w$das) - das0 + 1\n        if (last &lt; nd) \n            U[i, (last + 1):nd, ] &lt;- matrix(rep(U[i, last, ], \n                each = nd - last), nd - last)\n    }\n    center &lt;- apply(U, 3, mean)\n    scale &lt;- apply(U, 3, function(x) sqrt(mean((x - mean(x))^2)))\n    for (j in seq_along(drivers)) U[, , j] &lt;- (U[, , j] - center[j])/scale[j]\n    list(U = U, years = years, das0 = das0, drivers = drivers, \n        center = center, scale = scale)\n}\n\ndrv &lt;- make_drivers(wx)\ndim(drv$U)            # year x day x driver\n\n[1]  31 150   4\n\nround(drv$center, 1)  # the mean of each driver, used to standardise\n\n    TT     DL    RAW    RAD \n1148.2   12.1    0.5   16.0",
+    "section": "",
+    "text": "Each driver is standardised to mean 0 and unit standard deviation. Only weather is used in this step; the response does not enter.\nmake_drivers &lt;- function(wx, drivers = c(\"TT\", \"DL\", \"RAW\", \"RAD\")) {\n  years &lt;- sort(unique(wx$year)); das0 &lt;- min(wx$das); nd &lt;- max(wx$das) - das0 + 1\n  U &lt;- array(NA_real_, c(length(years), nd, length(drivers)), dimnames = list(years, NULL, drivers))\n  for (i in seq_along(years)) {\n    w &lt;- wx[wx$year == years[i], ]\n    U[i, w$das - das0 + 1, ] &lt;- as.matrix(w[, drivers])\n    last &lt;- max(w$das) - das0 + 1                       # years end on different days:\n    if (last &lt; nd) U[i, (last + 1):nd, ] &lt;- matrix(rep(U[i, last, ], each = nd - last), nd - last)  # carry last value (never used)\n  }\n  center &lt;- apply(U, 3, mean); scale &lt;- apply(U, 3, function(x) sqrt(mean((x - mean(x))^2)))\n  for (j in seq_along(drivers)) U[, , j] &lt;- (U[, , j] - center[j]) / scale[j]\n  list(U = U, years = years, das0 = das0, drivers = drivers, center = center, scale = scale)\n}\n\ndrv &lt;- make_drivers(wx)\ndim(drv$U)            # year x day x driver\n\n[1]  31 150   4\n\nround(drv$center, 1)\n\n    TT     DL    RAW    RAD \n1148.2   12.1    0.5   16.0",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "3 · Library and design matrix"
     ]
   },
   {
-    "objectID": "03-design.html#the-library-of-candidate-functions",
-    "href": "03-design.html#the-library-of-candidate-functions",
+    "objectID": "03-design.html#library",
+    "href": "03-design.html#library",
     "title": "3 · Library and design matrix",
-    "section": "The library of candidate functions",
-    "text": "The library of candidate functions\nThe growth rate on day \\(t\\) is modelled as a combination of candidate functions of that day’s drivers \\(u_t = (\\text{TT}, \\text{DL}, \\text{RAW}, \\text{RAD})\\):\n\\[\n\\frac{\\mathrm{d}y}{\\mathrm{d}t} \\approx \\sum_{j=1}^{K} \\xi_j\\,\\theta_j(u_t), \\qquad \\theta_j \\in \\{\\,1,\\ \\text{TT},\\ \\text{TT}^2,\\ \\text{TT}^3,\\ \\text{DL},\\ \\dots,\\ \\text{RAD}^3\\,\\}\n\\]\nThat is a constant and a cubic polynomial in each driver: \\(K = 1 + 3 \\times 4 = 13\\) terms.\nlibrary_matrix &lt;- function (Z, degree = 3, pairs = FALSE) \n{\n    pw &lt;- function(x, p) if (p == 1) \n        x\n    else paste0(x, \"^\", p)\n    d &lt;- colnames(Z)\n    cols &lt;- list(rep(1, nrow(Z)))\n    nm &lt;- \"1\"\n    for (j in seq_along(d)) for (p in seq_len(degree)) {\n        cols[[length(cols) + 1]] &lt;- Z[, j]^p\n        nm &lt;- c(nm, pw(d[j], p))\n    }\n    if (pairs) \n        for (i in 1:(length(d) - 1)) for (j in (i + 1):length(d)) for (p in 1:2) for (q in 1:2) {\n            cols[[length(cols) + 1]] &lt;- Z[, i]^p * Z[, j]^q\n            nm &lt;- c(nm, paste0(pw(d[i], p), \"*\", pw(d[j], q)))\n        }\n    L &lt;- do.call(cbind, cols)\n    colnames(L) &lt;- nm\n    L\n}\nmake_library &lt;- function (drv, degree = 3, pairs = FALSE) \n{\n    nd &lt;- dim(drv$U)\n    Z &lt;- matrix(drv$U, ncol = nd[3])\n    colnames(Z) &lt;- drv$drivers\n    L &lt;- library_matrix(Z, degree, pairs)\n    array(L, c(nd[1:2], ncol(L)), dimnames = list(NULL, NULL, \n        colnames(L)))\n}\n\nTheta &lt;- make_library(drv)\ndim(Theta)                   # year x day x term\n\n[1]  31 150  13\n\ndimnames(Theta)[[3]]\n\n [1] \"1\"     \"TT\"    \"TT^2\"  \"TT^3\"  \"DL\"    \"DL^2\"  \"DL^3\"  \"RAW\"   \"RAW^2\"\n[10] \"RAW^3\" \"RAD\"   \"RAD^2\" \"RAD^3\"\n\n\nThe library is the value of every candidate on every day of every year. Here it is for one year (each column is one term):\n\ny &lt;- 1; n &lt;- 120\nd &lt;- expand.grid(day = 1:n, term = factor(dimnames(Theta)[[3]], dimnames(Theta)[[3]]))\nd$value &lt;- as.vector(Theta[y, 1:n, ]); d$das &lt;- d$day + drv$das0 - 1\nggplot(d, aes(term, das, fill = value)) + geom_raster() + scale_y_reverse() +\n  scale_fill_gradient2(low = dgxe[[\"blue\"]], mid = \"white\", high = dgxe[[\"orange\"]], limits = c(-3, 3), oob = scales::squish) +\n  labs(x = NULL, y = \"days after sowing\", fill = \"value\") + theme_dgxe() + theme(axis.text.x = element_text(angle = 45, hjust = 1), panel.grid = element_blank())",
+    "section": "Library",
+    "text": "Library\nThe library contains a constant and the first three powers of each driver, \\(K = 13\\) terms.\nlibrary_matrix &lt;- function(Z, degree = 3, pairs = FALSE) {\n  pw &lt;- function(x, p) if (p == 1) x else paste0(x, \"^\", p)\n  d &lt;- colnames(Z); cols &lt;- list(rep(1, nrow(Z))); nm &lt;- \"1\"\n  for (j in seq_along(d)) for (p in seq_len(degree)) { cols[[length(cols) + 1]] &lt;- Z[, j]^p; nm &lt;- c(nm, pw(d[j], p)) }\n  if (pairs) for (i in 1:(length(d) - 1)) for (j in (i + 1):length(d)) for (p in 1:2) for (q in 1:2) {\n    cols[[length(cols) + 1]] &lt;- Z[, i]^p * Z[, j]^q; nm &lt;- c(nm, paste0(pw(d[i], p), \"*\", pw(d[j], q)))\n  }\n  L &lt;- do.call(cbind, cols); colnames(L) &lt;- nm; L\n}\nmake_library &lt;- function(drv, degree = 3, pairs = FALSE) {\n  nd &lt;- dim(drv$U); Z &lt;- matrix(drv$U, ncol = nd[3]); colnames(Z) &lt;- drv$drivers\n  L &lt;- library_matrix(Z, degree, pairs)\n  array(L, c(nd[1:2], ncol(L)), dimnames = list(NULL, NULL, colnames(L)))\n}\n\nTheta &lt;- make_library(drv)\ndim(Theta)            # year x day x term\n\n[1]  31 150  13\n\ndimnames(Theta)[[3]]\n\n [1] \"1\"     \"TT\"    \"TT^2\"  \"TT^3\"  \"DL\"    \"DL^2\"  \"DL^3\"  \"RAW\"   \"RAW^2\"\n[10] \"RAW^3\" \"RAD\"   \"RAD^2\" \"RAD^3\"",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "3 · Library and design matrix"
     ]
   },
   {
-    "objectID": "03-design.html#the-response-daily-growth-increments",
-    "href": "03-design.html#the-response-daily-growth-increments",
+    "objectID": "03-design.html#response",
+    "href": "03-design.html#response",
     "title": "3 · Library and design matrix",
-    "section": "The response: daily growth increments",
-    "text": "The response: daily growth increments\nFor every genotype-year we need the biomass trajectory as an array Y[genotype, year, day], with NA after maturity.\nmake_trajectories &lt;- function (traj, drv, var = \"biomass\") \n{\n    gen &lt;- sort(unique(traj$genotype))\n    nd &lt;- dim(drv$U)[2]\n    Y &lt;- array(NA, c(length(gen), length(drv$years), nd), dimnames = list(gen, \n        drv$years, NULL))\n    Y[cbind(match(traj$genotype, gen), match(traj$year, drv$years), \n        traj$das - drv$das0 + 1)] &lt;- traj[[var]]\n    nend &lt;- apply(Y, c(1, 2), function(v) sum(!is.na(v)) - 1)\n    list(Y = Y, nend = nend, genotypes = gen, years = drv$years, \n        das0 = drv$das0)\n}\n\ntr &lt;- make_trajectories(traj, drv)\ndim(tr$Y)\n\n[1] 199  31 150\n\nsummary(as.vector(tr$nend))     # number of daily steps per trajectory\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  125.0   133.0   137.0   136.7   140.0   149.0 \n\n\nThe increments are \\(z_t = y_{t+1} - y_t\\) and the regressors on that step are the library values on day \\(t\\).",
+    "section": "Response",
+    "text": "Response\nThe response is stored as an array Y[genotype, year, day], with NA after maturity. The number of daily steps of each trajectory is kept in nend.\nmake_trajectories &lt;- function(traj, drv, var = \"biomass\") {\n  gen &lt;- sort(unique(traj$genotype)); nd &lt;- dim(drv$U)[2]\n  Y &lt;- array(NA_real_, c(length(gen), length(drv$years), nd), dimnames = list(gen, drv$years, NULL))\n  Y[cbind(match(traj$genotype, gen), match(traj$year, drv$years), traj$das - drv$das0 + 1)] &lt;- traj[[var]]\n  nend &lt;- apply(Y, c(1, 2), function(v) sum(!is.na(v)) - 1)\n  list(Y = Y, nend = nend, genotypes = gen, years = drv$years, das0 = drv$das0)\n}\n\ntr &lt;- make_trajectories(traj, drv)\ndim(tr$Y)\n\n[1] 199  31 150\n\nsummary(as.vector(tr$nend))\n\n   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. \n  125.0   133.0   137.0   136.7   140.0   149.0",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "3 · Library and design matrix"
     ]
   },
   {
-    "objectID": "03-design.html#the-design-matrix",
-    "href": "03-design.html#the-design-matrix",
+    "objectID": "03-design.html#design-matrix",
+    "href": "03-design.html#design-matrix",
     "title": "3 · Library and design matrix",
-    "section": "The design matrix",
-    "text": "The design matrix\nStacking every step of every trajectory gives an ordinary regression problem \\(z \\approx X\\xi\\). Here it is for three genotypes:\nbuild_design &lt;- function (Theta, tr, genotypes = tr$genotypes) \n{\n    X &lt;- list()\n    z &lt;- list()\n    id &lt;- list()\n    for (g in genotypes) for (y in seq_along(tr$years)) {\n        gi &lt;- match(g, tr$genotypes)\n        n &lt;- tr$nend[gi, y]\n        v &lt;- tr$Y[gi, y, 1:(n + 1)]\n        X[[length(X) + 1]] &lt;- matrix(Theta[y, 1:n, ], n)\n        z[[length(z) + 1]] &lt;- diff(v)\n        id[[length(id) + 1]] &lt;- data.frame(genotype = g, year = tr$years[y], \n            day = 0:(n - 1))\n    }\n    X &lt;- do.call(rbind, X)\n    colnames(X) &lt;- dimnames(Theta)[[3]]\n    list(X = X, z = unlist(z), id = do.call(rbind, id))\n}\n\ndes &lt;- build_design(Theta, tr, tr$genotypes[1:3])\ndim(des$X)                      # rows = genotype x year x day, columns = library terms\n\n[1] 12499    13\n\nround(head(des$X, 3), 2)\n\n     1    TT TT^2  TT^3    DL DL^2  DL^3  RAW RAW^2 RAW^3   RAD RAD^2 RAD^3\n[1,] 1 -1.58 2.50 -3.95 -0.95 0.90 -0.86 0.85  0.73  0.62 -0.68  0.46 -0.31\n[2,] 1 -1.56 2.45 -3.83 -0.96 0.92 -0.89 0.83  0.69  0.58 -0.84  0.71 -0.60\n[3,] 1 -1.55 2.39 -3.69 -0.97 0.95 -0.92 0.81  0.65  0.53 -0.51  0.26 -0.13\n\nhead(des$z)                     # the daily increments (t/ha per day)\n\n[1] 0.0026 0.0038 0.0045 0.0053 0.0056 0.0063\n\n\nAn ordinary lm fits it directly:\n\nround(coef(lm(des$z ~ des$X - 1)), 3)\n\n    des$X1    des$XTT  des$XTT^2  des$XTT^3    des$XDL  des$XDL^2  des$XDL^3 \n     0.165     -0.045     -0.034      0.015      0.016     -0.058      0.022 \n  des$XRAW des$XRAW^2 des$XRAW^3   des$XRAD des$XRAD^2 des$XRAD^3 \n     0.020     -0.015     -0.003      0.006     -0.003      0.000",
+    "section": "Design matrix",
+    "text": "Design matrix\nThe increments \\(z_t = y_{t+1} - y_t\\) are regressed on the library at day \\(t\\). For three genotypes:\nbuild_design &lt;- function(Theta, tr, genotypes = tr$genotypes) {\n  X &lt;- list(); z &lt;- list(); id &lt;- list()\n  for (g in genotypes) for (y in seq_along(tr$years)) {\n    gi &lt;- match(g, tr$genotypes); n &lt;- tr$nend[gi, y]; v &lt;- tr$Y[gi, y, 1:(n + 1)]\n    X[[length(X) + 1]] &lt;- matrix(Theta[y, 1:n, ], n); z[[length(z) + 1]] &lt;- diff(v)\n    id[[length(id) + 1]] &lt;- data.frame(genotype = g, year = tr$years[y], day = 0:(n - 1))\n  }\n  X &lt;- do.call(rbind, X); colnames(X) &lt;- dimnames(Theta)[[3]]\n  list(X = X, z = unlist(z), id = do.call(rbind, id))\n}\n\ndes &lt;- build_design(Theta, tr, tr$genotypes[1:3])\ndim(des$X)\n\n[1] 12499    13\n\nround(head(des$X, 3), 2)\n\n     1    TT TT^2  TT^3    DL DL^2  DL^3  RAW RAW^2 RAW^3   RAD RAD^2 RAD^3\n[1,] 1 -1.58 2.50 -3.95 -0.95 0.90 -0.86 0.85  0.73  0.62 -0.68  0.46 -0.31\n[2,] 1 -1.56 2.45 -3.83 -0.96 0.92 -0.89 0.83  0.69  0.58 -0.84  0.71 -0.60\n[3,] 1 -1.55 2.39 -3.69 -0.97 0.95 -0.92 0.81  0.65  0.53 -0.51  0.26 -0.13\n\nround(coef(lm(des$z ~ des$X - 1)), 3)\n\n    des$X1    des$XTT  des$XTT^2  des$XTT^3    des$XDL  des$XDL^2  des$XDL^3 \n     0.165     -0.045     -0.034      0.015      0.016     -0.058      0.022 \n  des$XRAW des$XRAW^2 des$XRAW^3   des$XRAD des$XRAD^2 des$XRAD^3 \n     0.020     -0.015     -0.003      0.006     -0.003      0.000",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "3 · Library and design matrix"
     ]
   },
   {
-    "objectID": "03-design.html#the-normal-equations-everything-a-fit-needs",
-    "href": "03-design.html#the-normal-equations-everything-a-fit-needs",
+    "objectID": "03-design.html#normal-equations",
+    "href": "03-design.html#normal-equations",
     "title": "3 · Library and design matrix",
-    "section": "The normal equations: everything a fit needs",
-    "text": "The normal equations: everything a fit needs\nFor any linear method, the data enter only through \\(A = X^\\top X\\) and \\(b = X^\\top z\\). We compute them per genotype and per year, so that cross-validation later only needs to add and subtract small matrices (for 199 genotypes the full design matrix has 850,000 rows).\ngram_stats &lt;- function (Theta, tr) \n{\n    G &lt;- dim(tr$Y)[1]\n    ny &lt;- length(tr$years)\n    K &lt;- dim(Theta)[3]\n    A &lt;- array(0, c(G, ny, K, K))\n    b &lt;- array(0, c(G, ny, K))\n    for (g in seq_len(G)) for (y in seq_len(ny)) {\n        n &lt;- tr$nend[g, y]\n        X &lt;- matrix(Theta[y, 1:n, ], n)\n        A[g, y, , ] &lt;- crossprod(X)\n        b[g, y, ] &lt;- crossprod(X, diff(tr$Y[g, y, 1:(n + 1)]))\n    }\n    list(A = A, b = b, n = tr$nend, names = dimnames(Theta)[[3]])\n}\n\ngram &lt;- gram_stats(Theta, tr)\nA &lt;- apply(gram$A[1:3, , , ], c(3, 4), sum); b &lt;- apply(gram$b[1:3, , ], 3, sum)\nc(max_diff_A = max(abs(A - crossprod(des$X))), max_diff_b = max(abs(b - crossprod(des$X, des$z))))\n\n  max_diff_A   max_diff_b \n4.569301e-09 2.160050e-12 \n\nmax(abs(solve(A, b) - coef(lm(des$z ~ des$X - 1))))        # same coefficients as lm\n\n[1] 5.162537e-15\n\n\n\n\n\n\n\n\nNoteIdea\n\n\n\nThe library and the data are separate. Once A and b exist, a fitting method never sees weather or biomass again, only these two small objects. That is why any regression method (OLS, ridge, sparse, lasso) can be swapped in at the next step.\n\n\n\n\n\n\n\n\nTipCheck\n\n\n\nA and b built from the per-trajectory pieces equal crossprod(X) and crossprod(X, z) from the explicit design matrix up to rounding, and solve(A, b) equals lm.\n\n\n\n\n\n\n\n\nCautionSwap\n\n\n\nChange degree = 3 in make_library to 2 or 4, drop a driver from make_drivers(wx, drivers = c(\"TT\", \"DL\", \"RAW\")), or add products of drivers with pairs = TRUE (37 terms). Everything downstream adapts automatically.",
+    "section": "Normal equations",
+    "text": "Normal equations\nA linear fit needs only \\(A = X^\\top X\\) and \\(b = X^\\top z\\). These are computed per genotype and season, avoiding the full design matrix (about 850,000 rows for all genotypes).\ngram_stats &lt;- function(Theta, tr) {\n  G &lt;- dim(tr$Y)[1]; ny &lt;- length(tr$years); K &lt;- dim(Theta)[3]\n  A &lt;- array(0, c(G, ny, K, K)); b &lt;- array(0, c(G, ny, K))\n  for (g in seq_len(G)) for (y in seq_len(ny)) {\n    n &lt;- tr$nend[g, y]; X &lt;- matrix(Theta[y, 1:n, ], n)\n    A[g, y, , ] &lt;- crossprod(X); b[g, y, ] &lt;- crossprod(X, diff(tr$Y[g, y, 1:(n + 1)]))\n  }\n  list(A = A, b = b, n = tr$nend, names = dimnames(Theta)[[3]])\n}\n\ngram &lt;- gram_stats(Theta, tr)\nA &lt;- apply(gram$A[1:3, , , ], c(3, 4), sum); b &lt;- apply(gram$b[1:3, , ], 3, sum)\nc(max_diff_A = max(abs(A - crossprod(des$X))), max_diff_b = max(abs(b - crossprod(des$X, des$z))))\n\n  max_diff_A   max_diff_b \n4.569301e-09 2.160050e-12 \n\nmax(abs(solve(A, b) - coef(lm(des$z ~ des$X - 1))))\n\n[1] 5.162537e-15\n\n\nsolve(A, b) reproduces the lm coefficients. From here on the fitting methods only receive A and b.",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "3 · Library and design matrix"
     ]
   },
   {
     "objectID": "05-validate.html",
     "href": "05-validate.html",
-    "title": "5 · Roll forward and validate",
+    "title": "5 · Validation",
     "section": "",
-    "text": "You needTheta, tr, gram and a fitting method from step 4.You getpredicted biomass trajectories for held-out years, and a table comparing methods.",
+    "text": "The library depends on the weather only, so the solution is a cumulative sum:\nsimulate &lt;- function(xi, Theta_y, y0) {\n  inc &lt;- Theta_y[-nrow(Theta_y), , drop = FALSE] %*% t(xi)         # (days-1) x genotype increments\n  sweep(rbind(0, apply(inc, 2, cumsum)), 2, y0, \"+\")               # day x genotype\n}",
     "crumbs": [
-      "The pipeline",
-      "5 · Simulate and validate"
+      "Steps",
+      "5 · Validation"
     ]
   },
   {
-    "objectID": "05-validate.html#solving-the-equation-is-a-running-total",
-    "href": "05-validate.html#solving-the-equation-is-a-running-total",
-    "title": "5 · Roll forward and validate",
-    "section": "Solving the equation is a running total",
-    "text": "Solving the equation is a running total\nThe fitted rule says how fast biomass grows on each day, given that day’s weather. Because the library depends only on the weather, there is nothing to integrate numerically: biomass is the starting value plus the running sum of daily growth.\n\\[\ny(t) = y_0 + \\sum_{s&lt;t} \\Theta(u_s)\\,\\xi\n\\]\nsimulate &lt;- function(xi, Theta_y, y0) {\n  inc &lt;- Theta_y[-nrow(Theta_y), , drop = FALSE] %*% t(xi)         # (days-1) x genotype increments\n  sweep(rbind(0, apply(inc, 2, cumsum)), 2, y0, \"+\")               # day x genotype\n}",
+    "objectID": "05-validate.html#simulation",
+    "href": "05-validate.html#simulation",
+    "title": "5 · Validation",
+    "section": "",
+    "text": "The library depends on the weather only, so the solution is a cumulative sum:\nsimulate &lt;- function(xi, Theta_y, y0) {\n  inc &lt;- Theta_y[-nrow(Theta_y), , drop = FALSE] %*% t(xi)         # (days-1) x genotype increments\n  sweep(rbind(0, apply(inc, 2, cumsum)), 2, y0, \"+\")               # day x genotype\n}",
     "crumbs": [
-      "The pipeline",
-      "5 · Simulate and validate"
+      "Steps",
+      "5 · Validation"
     ]
   },
   {
-    "objectID": "05-validate.html#one-held-out-year",
-    "href": "05-validate.html#one-held-out-year",
-    "title": "5 · Roll forward and validate",
-    "section": "One held-out year",
-    "text": "One held-out year\nFit on all years except 1998, then predict 1998 from its weather alone. fit_years chooses the shared terms with the chosen method, then adds a small shrunk deviation for each genotype (step 7).\n\nyv    &lt;- match(1998, tr$years)\ntrain &lt;- setdiff(seq_along(tr$years), yv)\nf     &lt;- fit_years(gram, train, fit_ssr, k = 12)\ny0    &lt;- apply(tr$Y[, train, 1], 1, mean)                       # starting biomass: training mean\npred  &lt;- simulate(f$xi, Theta[yv, , ], y0)                      # day x genotype\nf$names[f$support]                                              # the 12 shared terms\n\n [1] \"1\"     \"TT\"    \"TT^2\"  \"TT^3\"  \"DL\"    \"DL^2\"  \"DL^3\"  \"RAW\"   \"RAW^2\"\n[10] \"RAD\"   \"RAD^2\" \"RAD^3\"\n\n\n\ngs &lt;- c(1, 70, 140, 199); rows &lt;- list()\nfor (g in gs) { n &lt;- tr$nend[g, yv] + 1\n  rows[[length(rows) + 1]] &lt;- data.frame(genotype = tr$genotypes[g], das = (1:n) + tr$das0 - 1,\n    APSIM = tr$Y[g, yv, 1:n], SINDy = pred[1:n, g]) }\nd &lt;- do.call(rbind, rows); d &lt;- reshape(d, direction = \"long\", varying = c(\"APSIM\", \"SINDy\"), v.names = \"biomass\", timevar = \"source\", times = c(\"APSIM\", \"SINDy\"), idvar = c(\"genotype\", \"das\"))\nggplot(d, aes(das, biomass, colour = source, linetype = source)) + geom_line(linewidth = 0.9) + facet_wrap(~genotype, nrow = 1) +\n  scale_colour_manual(values = unname(dgxe[c(\"blue\", \"orange\")])) + labs(x = \"days after sowing\", y = \"biomass (t/ha)\", colour = NULL, linetype = NULL) + theme_dgxe()",
+    "objectID": "05-validate.html#one-held-out-season",
+    "href": "05-validate.html#one-held-out-season",
+    "title": "5 · Validation",
+    "section": "One held-out season",
+    "text": "One held-out season\nThe model is fitted to all seasons except 1998 (shared support of 12 terms, plus genotype deviations) and used to predict 1998 from its weather. All 199 genotypes are shown.\n\nyv    &lt;- match(1998, tr$years)\ntrain &lt;- setdiff(seq_along(tr$years), yv)\nf     &lt;- fit_years(gram, train, fit_ssr, k = 12)\ny0    &lt;- apply(tr$Y[, train, 1], 1, mean)\npred  &lt;- simulate(f$xi, Theta[yv, , ], y0)\nf$names[f$support]\n\n [1] \"1\"     \"TT\"    \"TT^2\"  \"TT^3\"  \"DL\"    \"DL^2\"  \"DL^3\"  \"RAW\"   \"RAW^2\"\n[10] \"RAD\"   \"RAD^2\" \"RAD^3\"\n\n\n\nrows &lt;- lapply(seq_along(tr$genotypes), function(g) { n &lt;- tr$nend[g, yv] + 1\n  data.frame(genotype = g, das = 1:n + tr$das0 - 1, APSIM = tr$Y[g, yv, 1:n], Model = pred[1:n, g]) })\nd &lt;- do.call(rbind, rows)\nd &lt;- reshape(d, direction = \"long\", varying = c(\"APSIM\", \"Model\"), v.names = \"biomass\", timevar = \"source\", times = c(\"APSIM\", \"Model\"), idvar = c(\"genotype\", \"das\"))\nd$source &lt;- factor(d$source, c(\"APSIM\", \"Model\"))\nggplot(d, aes(das, biomass, group = genotype)) + geom_line(aes(colour = source), linewidth = 0.2, alpha = 0.3) + facet_wrap(~source) +\n  scale_colour_manual(values = unname(dgxe[c(\"grey\", \"blue\")])) + labs(x = \"days after sowing\", y = \"biomass (t/ha)\") + theme_dgxe()",
     "crumbs": [
-      "The pipeline",
-      "5 · Simulate and validate"
+      "Steps",
+      "5 · Validation"
     ]
   },
   {
     "objectID": "05-validate.html#leave-one-year-out-cross-validation",
     "href": "05-validate.html#leave-one-year-out-cross-validation",
-    "title": "5 · Roll forward and validate",
+    "title": "5 · Validation",
     "section": "Leave-one-year-out cross-validation",
-    "text": "Leave-one-year-out cross-validation\nRepeat for every year: each year is predicted by a model that never saw it. Seeing only weather forecasts, not APSIM biomass, is the point; this is the honest test.\ncv_blocked &lt;- function(Theta, tr, gram, fitter = fit_ssr, k = 12, lam_mu = 1e-4, lam_g = 0.01, ...) {\n  ny &lt;- length(tr$years); G &lt;- length(tr$genotypes); nd &lt;- dim(Theta)[2]\n  P &lt;- array(NA_real_, c(G, ny, nd)); S_all &lt;- vector(\"list\", ny)\n  for (yv in seq_len(ny)) {\n    train &lt;- setdiff(seq_len(ny), yv); f &lt;- fit_years(gram, train, fitter, k, lam_mu, lam_g, ...)\n    y0 &lt;- apply(tr$Y[, train, 1, drop = FALSE], 1, mean)                        # initial biomass: mean of training years\n    P[, yv, ] &lt;- t(simulate(f$xi, Theta[yv, , ], y0)); S_all[[yv]] &lt;- f$support\n  }\n  list(pred = P, support = S_all)\n}\nevaluate &lt;- function(P, tr, fixed_day = 99) {\n  G &lt;- dim(P)[1]; ny &lt;- dim(P)[2]; se &lt;- 0; cnt &lt;- 0; fin &lt;- numeric(0)\n  for (g in seq_len(G)) for (y in seq_len(ny)) {\n    n &lt;- tr$nend[g, y]; d &lt;- 2:(n + 1)                      # day index 1..n (day 0 is the given start)\n    se &lt;- se + sum((P[g, y, d] - tr$Y[g, y, d])^2); cnt &lt;- cnt + length(d)\n    fin &lt;- c(fin, P[g, y, n + 1] - tr$Y[g, y, n + 1])\n  }\n  c(trajectory_rmse = sqrt(se / cnt), fixed_day_rmse = sqrt(mean((P[, , fixed_day] - tr$Y[, , fixed_day])^2, na.rm = TRUE)),\n    maturity_rmse = sqrt(mean(fin^2)))\n}\n\nsystem.time(cv &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12))\n\n   user  system elapsed \n  3.430   0.004   3.491 \n\nround(evaluate(cv$pred, tr, fixed_day = 99), 3)       # array index 99 = day 113 after sowing\n\ntrajectory_rmse  fixed_day_rmse   maturity_rmse \n          0.521           0.689           0.747",
+    "text": "Leave-one-year-out cross-validation\nThe same procedure is repeated for each of the 31 seasons.\ncv_blocked &lt;- function(Theta, tr, gram, fitter = fit_ssr, k = 12, lam_mu = 1e-4, lam_g = 0.01, ...) {\n  ny &lt;- length(tr$years); G &lt;- length(tr$genotypes); nd &lt;- dim(Theta)[2]\n  P &lt;- array(NA_real_, c(G, ny, nd)); S_all &lt;- vector(\"list\", ny)\n  for (yv in seq_len(ny)) {\n    train &lt;- setdiff(seq_len(ny), yv); f &lt;- fit_years(gram, train, fitter, k, lam_mu, lam_g, ...)\n    y0 &lt;- apply(tr$Y[, train, 1, drop = FALSE], 1, mean)                        # initial biomass: mean of training years\n    P[, yv, ] &lt;- t(simulate(f$xi, Theta[yv, , ], y0)); S_all[[yv]] &lt;- f$support\n  }\n  list(pred = P, support = S_all)\n}\nevaluate &lt;- function(P, tr, fixed_day = 99) {\n  G &lt;- dim(P)[1]; ny &lt;- dim(P)[2]; se &lt;- 0; cnt &lt;- 0; fin &lt;- numeric(0)\n  for (g in seq_len(G)) for (y in seq_len(ny)) {\n    n &lt;- tr$nend[g, y]; d &lt;- 2:(n + 1)                      # day index 1..n (day 0 is the given start)\n    se &lt;- se + sum((P[g, y, d] - tr$Y[g, y, d])^2); cnt &lt;- cnt + length(d)\n    fin &lt;- c(fin, P[g, y, n + 1] - tr$Y[g, y, n + 1])\n  }\n  c(trajectory_rmse = sqrt(se / cnt), fixed_day_rmse = sqrt(mean((P[, , fixed_day] - tr$Y[, , fixed_day])^2, na.rm = TRUE)),\n    maturity_rmse = sqrt(mean(fin^2)))\n}\n\nsystem.time(cv &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12))\n\n   user  system elapsed \n  3.967   0.043   4.044 \n\nround(evaluate(cv$pred, tr, fixed_day = 99), 3)       # index 99 = day 113 after sowing\n\ntrajectory_rmse  fixed_day_rmse   maturity_rmse \n          0.521           0.689           0.747 \n\n\nPredicted against APSIM biomass at day 113, all genotype-season pairs:\n\nd &lt;- data.frame(obs = as.vector(tr$Y[, , 99]), pred = as.vector(cv$pred[, , 99]))\nr &lt;- sqrt(mean((d$obs - d$pred)^2, na.rm = TRUE))\nggplot(d, aes(obs, pred)) + geom_abline(colour = \"#9CA3AF\", linewidth = 0.4) + geom_point(colour = dgxe[[\"blue\"]], size = 0.5, alpha = 0.2) +\n  annotate(\"text\", x = min(d$obs, na.rm = TRUE), y = max(d$pred, na.rm = TRUE), label = sprintf(\"RMSE %.2f t/ha\", r), hjust = 0, vjust = 1, size = 3.4) +\n  coord_equal() + labs(x = \"APSIM biomass (t/ha)\", y = \"predicted biomass (t/ha)\") + theme_dgxe()",
     "crumbs": [
-      "The pipeline",
-      "5 · Simulate and validate"
+      "Steps",
+      "5 · Validation"
     ]
   },
   {
-    "objectID": "05-validate.html#a-baseline-that-uses-no-weather",
-    "href": "05-validate.html#a-baseline-that-uses-no-weather",
-    "title": "5 · Roll forward and validate",
-    "section": "A baseline that uses no weather",
-    "text": "A baseline that uses no weather\nHow much does the weather add? A simple competitor: predict each genotype’s biomass curve by the average of its own curves in the other years.\n\nbase &lt;- array(NA_real_, dim(tr$Y))\nfor (y in seq_along(tr$years)) base[, y, ] &lt;- apply(tr$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)\nfor (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {\n  v &lt;- base[g, y, ]; ok &lt;- which(!is.nan(v)); v[is.nan(v)] &lt;- v[max(ok)]               # after the last other year ends: hold the last mean\n  base[g, y, ] &lt;- v; base[g, y, 1] &lt;- tr$Y[g, y, 1]                                    # same start as the model\n}\nround(evaluate(base, tr, fixed_day = 99), 3)\n\ntrajectory_rmse  fixed_day_rmse   maturity_rmse \n          0.739           0.840           1.423",
+    "objectID": "05-validate.html#baseline-without-weather",
+    "href": "05-validate.html#baseline-without-weather",
+    "title": "5 · Validation",
+    "section": "Baseline without weather",
+    "text": "Baseline without weather\nAs a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons.\n\nbase &lt;- array(NA_real_, dim(tr$Y))\nfor (y in seq_along(tr$years)) base[, y, ] &lt;- apply(tr$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)\nfor (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {\n  v &lt;- base[g, y, ]; ok &lt;- which(!is.nan(v)); v[is.nan(v)] &lt;- v[max(ok)]      # hold the last mean after the last other season ends\n  base[g, y, ] &lt;- v; base[g, y, 1] &lt;- tr$Y[g, y, 1]\n}\nround(evaluate(base, tr, fixed_day = 99), 3)\n\ntrajectory_rmse  fixed_day_rmse   maturity_rmse \n          0.739           0.840           1.423 \n\n\nThe error as a function of time:\n\nerr &lt;- function(P) sapply(2:dim(P)[3], function(d) { ok &lt;- !is.na(tr$Y[, , d]); sqrt(mean((P[, , d][ok] - tr$Y[, , d][ok])^2)) })\nnd &lt;- dim(tr$Y)[3] - 1\nd &lt;- data.frame(das = rep(2:(nd + 1) + tr$das0 - 1, 2), rmse = c(err(cv$pred), err(base)),\n                model = factor(rep(c(\"model\", \"no-weather baseline\"), each = nd), c(\"model\", \"no-weather baseline\")))\nd &lt;- d[d$das &lt;= 15 + 140, ]\nggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +\n  scale_colour_manual(values = unname(dgxe[c(\"blue\", \"burgundy\")])) +\n  annotate(\"text\", x = 40, y = 0.5, label = \"model\", colour = dgxe[[\"blue\"]], size = 3.4, hjust = 0) +\n  annotate(\"text\", x = 40, y = 0.2, label = \"baseline\", colour = dgxe[[\"burgundy\"]], size = 3.4, hjust = 0) +\n  labs(x = \"days after sowing\", y = \"held-out RMSE (t/ha)\") + theme_dgxe()",
     "crumbs": [
-      "The pipeline",
-      "5 · Simulate and validate"
+      "Steps",
+      "5 · Validation"
     ]
   },
   {
-    "objectID": "05-validate.html#swap-the-fitting-method",
-    "href": "05-validate.html#swap-the-fitting-method",
-    "title": "5 · Roll forward and validate",
-    "section": "Swap the fitting method",
-    "text": "Swap the fitting method\nBecause every method has the signature fit(A, b, ...), comparing them is one loop:\n\nmethods &lt;- list(OLS = list(fit_ols), ridge = list(fit_ridge, lambda = 0.01),\n                SSR_8 = list(fit_ssr, k = 8), SSR_12 = list(fit_ssr, k = 12), lasso = list(fit_lasso, lambda = 2e-4))\nres &lt;- cached(\"swap_methods.rds\", do.call(rbind, lapply(names(methods), function(nm) {\n  m &lt;- methods[[nm]]; cv &lt;- do.call(cv_blocked, c(list(Theta, tr, gram, m[[1]]), m[-1]))\n  data.frame(method = nm, t(round(evaluate(cv$pred, tr), 3))) })))\nres &lt;- rbind(res, data.frame(method = \"no weather (lookup)\", t(round(evaluate(base, tr), 3))))\nres\n\n               method trajectory_rmse fixed_day_rmse maturity_rmse\n1                 OLS           0.516          0.684         0.750\n2               ridge           0.516          0.684         0.750\n3               SSR_8           0.612          0.784         0.884\n4              SSR_12           0.521          0.689         0.747\n5               lasso           0.532          0.718         0.764\n6 no weather (lookup)           0.739          0.840         1.423\n\n\nOLS and ridge are best on this small library, and the sparse fits reach the same accuracy with 12 of 13 terms; k = 8 is visibly worse. The lookup baseline is the reference: if a model cannot beat it, the weather is not helping.",
+    "objectID": "05-validate.html#choice-of-fitting-method",
+    "href": "05-validate.html#choice-of-fitting-method",
+    "title": "5 · Validation",
+    "section": "Choice of fitting method",
+    "text": "Choice of fitting method\nAll methods share the signature fit(A, b, ...), so they can be compared in one loop.\n\nmethods &lt;- list(OLS = list(fit_ols), ridge = list(fit_ridge, lambda = 0.01),\n                SSR_8 = list(fit_ssr, k = 8), SSR_12 = list(fit_ssr, k = 12), lasso = list(fit_lasso, lambda = 2e-4))\nres &lt;- cached(\"swap_methods.rds\", do.call(rbind, lapply(names(methods), function(nm) {\n  m &lt;- methods[[nm]]; cv &lt;- do.call(cv_blocked, c(list(Theta, tr, gram, m[[1]]), m[-1]))\n  data.frame(method = nm, t(round(evaluate(cv$pred, tr), 3))) })))\nres &lt;- rbind(res, data.frame(method = \"baseline\", t(round(evaluate(base, tr), 3))))\nres\n\n    method trajectory_rmse fixed_day_rmse maturity_rmse\n1      OLS           0.516          0.684         0.750\n2    ridge           0.516          0.684         0.750\n3    SSR_8           0.612          0.784         0.884\n4   SSR_12           0.521          0.689         0.747\n5    lasso           0.532          0.718         0.764\n6 baseline           0.739          0.840         1.423",
     "crumbs": [
-      "The pipeline",
-      "5 · Simulate and validate"
+      "Steps",
+      "5 · Validation"
     ]
   },
   {
-    "objectID": "05-validate.html#how-many-terms-a-larger-library",
-    "href": "05-validate.html#how-many-terms-a-larger-library",
-    "title": "5 · Roll forward and validate",
-    "section": "How many terms? A larger library",
-    "text": "How many terms? A larger library\nWith the 13-term library, sparsity buys little: it is already small. Add products of drivers (pairs = TRUE, 37 terms) and the picture changes:\n\nTheta2 &lt;- make_library(drv, pairs = TRUE); gram2 &lt;- gram_stats(Theta2, tr)\nks &lt;- c(6, 8, 12, 16, 20, 30, 37)\nrk &lt;- cached(\"rmse_vs_k_pairs.rds\", data.frame(k = ks, rmse = sapply(ks, function(k) evaluate(cv_blocked(Theta2, tr, gram2, fit_ssr, k = k)$pred, tr)[1])))\n\n\nggplot(rk, aes(k, rmse)) + geom_line(colour = dgxe[[\"blue\"]], linewidth = 0.9) + geom_point(colour = dgxe[[\"blue\"]], size = 2.4) +\n  geom_hline(yintercept = res$trajectory_rmse[res$method == \"OLS\"], colour = dgxe[[\"orange\"]], linetype = 2) +\n  annotate(\"text\", x = 37, y = res$trajectory_rmse[res$method == \"OLS\"], label = \"13-term OLS\", vjust = -0.6, hjust = 1, colour = dgxe[[\"orange\"]], size = 3.4) +\n  labs(x = \"number of terms kept (SSR)\", y = \"held-out trajectory RMSE (t/ha)\") + theme_dgxe()\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nNoteIdea\n\n\n\nPredicting forward is a running total, and it is judged on years the model never saw. Error accumulates along the rollout, so this is a stricter test than one-step prediction. A model can fit daily increments well and still drift.\n\n\n\n\n\n\n\n\nTipCheck\n\n\n\nThe model should beat the weather-free lookup, and the held-out error should be larger than the in-sample error. Plot a few trajectories: errors that grow steadily through the season point to a missing driver.\n\n\n\n\n\n\n\n\nImportantPitfall\n\n\n\nNever validate by randomly holding out days. Neighbouring days of one year are nearly identical, and a year is the unit of independent weather, so we hold out whole years. The same goes for genotypes of the same year when you ask about new weather.",
+    "objectID": "05-validate.html#number-of-terms",
+    "href": "05-validate.html#number-of-terms",
+    "title": "5 · Validation",
+    "section": "Number of terms",
+    "text": "Number of terms\nWith the 13-term library the sparse model has little room to reduce complexity. Adding products of drivers (pairs = TRUE, 37 terms) gives a larger dictionary:\n\nTheta2 &lt;- make_library(drv, pairs = TRUE); gram2 &lt;- gram_stats(Theta2, tr)\nks &lt;- c(6, 8, 12, 16, 20, 30, 37)\nrk &lt;- cached(\"rmse_vs_k_pairs.rds\", data.frame(k = ks, rmse = sapply(ks, function(k) evaluate(cv_blocked(Theta2, tr, gram2, fit_ssr, k = k)$pred, tr)[1])))\n\n\nols13 &lt;- res$trajectory_rmse[res$method == \"OLS\"]\nggplot(rk, aes(k, rmse)) + geom_hline(yintercept = ols13, colour = dgxe[[\"burgundy\"]], linewidth = 0.4, linetype = 2) +\n  geom_line(colour = dgxe[[\"blue\"]], linewidth = 0.8) + geom_point(colour = dgxe[[\"blue\"]], size = 2) +\n  annotate(\"text\", x = 37, y = ols13, label = \"13-term library, OLS\", vjust = -0.7, hjust = 1, colour = dgxe[[\"burgundy\"]], size = 3.3) +\n  labs(x = \"number of terms (37-term library)\", y = \"held-out trajectory RMSE (t/ha)\") + theme_dgxe()",
     "crumbs": [
-      "The pipeline",
-      "5 · Simulate and validate"
+      "Steps",
+      "5 · Validation"
     ]
   },
   {
@@ -541,109 +522,109 @@
     "href": "07-genotypes.html",
     "title": "7 · Genotypes",
     "section": "",
-    "text": "You needthe objects from step 5 and the final fit from step 6.You getgenotype-specific growth rules, and a test of whether they rank genotypes better than a table lookup.",
+    "text": "The coefficients of genotype \\(g\\) are \\(\\xi_g = \\mu + \\delta_g\\). The support is common to all genotypes. The shared vector \\(\\mu\\) is estimated from the pooled data; each \\(\\delta_g\\) is a ridge-penalised correction estimated from the data of genotype \\(g\\) only.\nfit_hier &lt;- function(Ag, bg, support, lam_mu = 1e-4, lam_g = 0.01) {\n  K &lt;- dim(Ag)[2]; k &lt;- length(support); G &lt;- dim(Ag)[1]\n  Apool &lt;- apply(Ag[, support, support, drop = FALSE], c(2, 3), sum); bpool &lt;- colSums(bg[, support, drop = FALSE])\n  mu &lt;- numeric(K); mu[support] &lt;- solve(Apool + lam_mu * mean(diag(Apool)) * diag(k), bpool)\n  delta &lt;- matrix(0, G, K)\n  for (g in seq_len(G)) {\n    Aq &lt;- Ag[g, support, support]; tr &lt;- sum(diag(Aq)) / k\n    delta[g, support] &lt;- solve(Aq + lam_g * tr * diag(k), bg[g, support] - Aq %*% mu[support])\n  }\n  list(mu = mu, delta = delta, xi = sweep(delta, 2, mu, \"+\"), support = support)\n}\n\nf &lt;- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)\ndim(f$xi)\n\n[1] 199  13",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "7 · Genotypes"
     ]
   },
   {
-    "objectID": "07-genotypes.html#shared-plus-deviation",
-    "href": "07-genotypes.html#shared-plus-deviation",
+    "objectID": "07-genotypes.html#shared-coefficients-and-deviations",
+    "href": "07-genotypes.html#shared-coefficients-and-deviations",
     "title": "7 · Genotypes",
-    "section": "Shared plus deviation",
-    "text": "Shared plus deviation\nAll 199 genotypes grow in a similar way, and each differs a little. We write the coefficient vector of genotype \\(g\\) as\n\\[\n\\xi_g = \\mu + \\delta_g,\n\\]\nwhere \\(\\mu\\) is shared (found in step 4 from the pooled data) and \\(\\delta_g\\) is a small, ridge-shrunk correction estimated from that genotype’s own 31 seasons. The support (which terms are active) is shared, so every genotype has the same equation form and only the numbers differ.\nfit_hier &lt;- function(Ag, bg, support, lam_mu = 1e-4, lam_g = 0.01) {\n  K &lt;- dim(Ag)[2]; k &lt;- length(support); G &lt;- dim(Ag)[1]\n  Apool &lt;- apply(Ag[, support, support, drop = FALSE], c(2, 3), sum); bpool &lt;- colSums(bg[, support, drop = FALSE])\n  mu &lt;- numeric(K); mu[support] &lt;- solve(Apool + lam_mu * mean(diag(Apool)) * diag(k), bpool)\n  delta &lt;- matrix(0, G, K)\n  for (g in seq_len(G)) {\n    Aq &lt;- Ag[g, support, support]; tr &lt;- sum(diag(Aq)) / k\n    delta[g, support] &lt;- solve(Aq + lam_g * tr * diag(k), bg[g, support] - Aq %*% mu[support])\n  }\n  list(mu = mu, delta = delta, xi = sweep(delta, 2, mu, \"+\"), support = support)\n}\n\nf &lt;- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)\ndim(f$xi)                                  # genotype x term\n\n[1] 199  13",
+    "section": "",
+    "text": "The coefficients of genotype \\(g\\) are \\(\\xi_g = \\mu + \\delta_g\\). The support is common to all genotypes. The shared vector \\(\\mu\\) is estimated from the pooled data; each \\(\\delta_g\\) is a ridge-penalised correction estimated from the data of genotype \\(g\\) only.\nfit_hier &lt;- function(Ag, bg, support, lam_mu = 1e-4, lam_g = 0.01) {\n  K &lt;- dim(Ag)[2]; k &lt;- length(support); G &lt;- dim(Ag)[1]\n  Apool &lt;- apply(Ag[, support, support, drop = FALSE], c(2, 3), sum); bpool &lt;- colSums(bg[, support, drop = FALSE])\n  mu &lt;- numeric(K); mu[support] &lt;- solve(Apool + lam_mu * mean(diag(Apool)) * diag(k), bpool)\n  delta &lt;- matrix(0, G, K)\n  for (g in seq_len(G)) {\n    Aq &lt;- Ag[g, support, support]; tr &lt;- sum(diag(Aq)) / k\n    delta[g, support] &lt;- solve(Aq + lam_g * tr * diag(k), bg[g, support] - Aq %*% mu[support])\n  }\n  list(mu = mu, delta = delta, xi = sweep(delta, 2, mu, \"+\"), support = support)\n}\n\nf &lt;- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)\ndim(f$xi)\n\n[1] 199  13",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "7 · Genotypes"
     ]
   },
   {
-    "objectID": "07-genotypes.html#what-differs-between-genotypes",
-    "href": "07-genotypes.html#what-differs-between-genotypes",
+    "objectID": "07-genotypes.html#growth-rate-by-genotype",
+    "href": "07-genotypes.html#growth-rate-by-genotype",
     "title": "7 · Genotypes",
-    "section": "What differs between genotypes?",
-    "text": "What differs between genotypes?\nGrowth rate along the average weather path, for the genotypes with the lowest, median and highest mean final biomass:\n\nfin &lt;- sapply(seq_along(tr$genotypes), function(g) mean(sapply(seq_along(tr$years), function(y) tr$Y[g, y, tr$nend[g, y] + 1])))\npick &lt;- order(fin)[c(1, 100, 199)]\nTbar &lt;- apply(Theta, c(2, 3), mean)                                   # average library over years\ndd &lt;- do.call(rbind, lapply(pick, function(g) data.frame(das = seq_len(nrow(Tbar)) + tr$das0 - 1,\n        rate = as.vector(Tbar %*% f$xi[g, ]), genotype = tr$genotypes[g],\n        group = c(\"lowest\", \"median\", \"highest\")[match(g, pick)])))\ndd &lt;- dd[dd$das &lt;= 15 + 140, ]\nggplot(dd, aes(das, rate, colour = group)) + geom_line(linewidth = 0.9) +\n  scale_colour_manual(values = unname(dgxe[c(\"orange\", \"blue\", \"cyan\")])) +\n  labs(x = \"days after sowing\", y = \"growth rate (t/ha/day)\", colour = \"final biomass\") + theme_dgxe()\n\n\n\n\n\n\n\n\nThe genotypes differ in when growth starts, how high the peak is, and how early it ends: the same shape, shifted and scaled.",
+    "section": "Growth rate by genotype",
+    "text": "Growth rate by genotype\nGrowth rate along the mean weather path for each genotype (grey) and for the shared model \\(\\mu\\) (blue).\n\nTbar &lt;- apply(Theta, c(2, 3), mean)\ndas  &lt;- seq_len(nrow(Tbar)) + tr$das0 - 1\nd &lt;- data.frame(das = rep(das, nrow(f$xi)), genotype = rep(seq_len(nrow(f$xi)), each = length(das)), rate = as.vector(Tbar %*% t(f$xi)))\nm &lt;- data.frame(das = das, rate = as.vector(Tbar %*% f$mu))\nd &lt;- d[d$das &lt;= 15 + 140, ]; m &lt;- m[m$das &lt;= 15 + 140, ]\nggplot(d, aes(das, rate)) + geom_line(aes(group = genotype), colour = dgxe[[\"grey\"]], linewidth = 0.2, alpha = 0.4) +\n  geom_line(data = m, colour = dgxe[[\"blue\"]], linewidth = 0.9) + labs(x = \"days after sowing\", y = \"growth rate (t/ha/day)\") + theme_dgxe()",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "7 · Genotypes"
     ]
   },
   {
-    "objectID": "07-genotypes.html#does-it-rank-genotypes-better-than-a-lookup",
-    "href": "07-genotypes.html#does-it-rank-genotypes-better-than-a-lookup",
+    "objectID": "07-genotypes.html#ranking-genotypes",
+    "href": "07-genotypes.html#ranking-genotypes",
     "title": "7 · Genotypes",
-    "section": "Does it rank genotypes better than a lookup?",
-    "text": "Does it rank genotypes better than a lookup?\nBreeders often care more about the ranking of genotypes in a given year than about absolute biomass. For every year, we compare the predicted and APSIM ranking of the 199 genotypes at a fixed day using the Spearman correlation, and by the overlap of the predicted and true top 10%. The competitor is again the no-weather lookup (the genotype’s mean in the other years).\nrank_scores &lt;- function(Pd, Yd, top = 0.1) {\n  k &lt;- max(1, round(top * nrow(Yd)))\n  do.call(rbind, lapply(seq_len(ncol(Yd)), function(y) data.frame(\n    year = y, rho = cor(Pd[, y], Yd[, y], method = \"spearman\"),\n    top = length(intersect(order(-Pd[, y])[1:k], order(-Yd[, y])[1:k])) / k)))\n}\nlookup_baseline &lt;- function(Yd) (rowSums(Yd) - Yd) / (ncol(Yd) - 1)\n\ncv   &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)\ndays &lt;- c(35, 50, 63, 84, 99)                         # day index; das = day index + 14\nout  &lt;- do.call(rbind, lapply(days, function(d) {\n  Yd &lt;- tr$Y[, , d]; a &lt;- rank_scores(cv$pred[, , d], Yd); b &lt;- rank_scores(lookup_baseline(Yd), Yd)\n  data.frame(das = d + tr$das0 - 1, method = c(\"SINDy\", \"lookup\"),\n             rho = c(mean(a$rho), mean(b$rho)), top10 = c(mean(a$top), mean(b$top))) }))\nout$rho &lt;- round(out$rho, 3); out$top10 &lt;- round(out$top10, 3); out\n\n   das method   rho top10\n1   49  SINDy 0.958 0.887\n2   49 lookup 1.000 1.000\n3   64  SINDy 0.983 0.902\n4   64 lookup 1.000 0.984\n5   77  SINDy 0.987 0.934\n6   77 lookup 0.998 0.982\n7   98  SINDy 0.983 0.913\n8   98 lookup 0.978 0.924\n9  113  SINDy 0.976 0.863\n10 113 lookup 0.951 0.818\n\n\n\no &lt;- reshape(out, direction = \"long\", varying = c(\"rho\", \"top10\"), v.names = \"score\", timevar = \"metric\", times = c(\"Spearman rho\", \"top-10% overlap\"), idvar = c(\"das\", \"method\"))\nggplot(o, aes(das, score, colour = method)) + geom_line(linewidth = 0.9) + geom_point(size = 2.2) + facet_wrap(~metric, scales = \"free_y\") +\n  scale_colour_manual(values = unname(dgxe[c(\"orange\", \"blue\")])) + labs(x = \"days after sowing\", y = NULL, colour = NULL) + theme_dgxe()\n\n\n\n\n\n\n\n\nEarly in the season the lookup wins: the ranking has not yet been shaped by the weather, so each genotype’s average curve already orders them well. Later, when the season’s weather has started to reorder genotypes, the model that uses the weather overtakes the lookup. This is what we would hope for from a model that responds to weather, but it is also an honest reminder that the lookup is hard to beat when there is nothing to learn from the weather.\n\n\n\n\n\n\nNoteIdea\n\n\n\nSharing strength across genotypes. One genotype has only 31 trajectories, which would not support a 12-term model on its own. Pooling fixes the form of the equation; shrinkage lets each genotype adjust the numbers only as far as its own data justify.\n\n\n\n\n\n\n\n\nTipCheck\n\n\n\nPlot the deviations \\(\\delta_g\\) for one term across genotypes: they should be small compared to \\(\\mu\\) and roughly centred on zero. If they are large, the shared structure is not capturing what genotypes have in common.\n\n\n\n\n\n\n\n\nImportantPitfall\n\n\n\nThese ranking results are for genotypes seen in training and predicted in held-out years. Predicting a brand-new genotype needs extra information (such as its parameters) and is not tested here.",
+    "section": "Ranking genotypes",
+    "text": "Ranking genotypes\nFor each season the predicted and APSIM biomass of the 199 genotypes at a fixed day are compared by the Spearman correlation and by the overlap of the top 10%. The reference is the mean of the genotype in the other seasons.\nrank_scores &lt;- function(Pd, Yd, top = 0.1) {\n  k &lt;- max(1, round(top * nrow(Yd)))\n  do.call(rbind, lapply(seq_len(ncol(Yd)), function(y) data.frame(\n    year = y, rho = cor(Pd[, y], Yd[, y], method = \"spearman\"),\n    top = length(intersect(order(-Pd[, y])[1:k], order(-Yd[, y])[1:k])) / k)))\n}\nlookup_baseline &lt;- function(Yd) (rowSums(Yd) - Yd) / (ncol(Yd) - 1)\n\ncv   &lt;- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)\ndays &lt;- c(35, 50, 63, 84, 99)                         # day index; das = index + 14\nout  &lt;- do.call(rbind, lapply(days, function(d) {\n  Yd &lt;- tr$Y[, , d]; a &lt;- rank_scores(cv$pred[, , d], Yd); b &lt;- rank_scores(lookup_baseline(Yd), Yd)\n  data.frame(das = d + tr$das0 - 1, method = c(\"model\", \"baseline\"),\n             rho = c(mean(a$rho), mean(b$rho)), top10 = c(mean(a$top), mean(b$top))) }))\nout$rho &lt;- round(out$rho, 3); out$top10 &lt;- round(out$top10, 3); out\n\n   das   method   rho top10\n1   49    model 0.958 0.887\n2   49 baseline 1.000 1.000\n3   64    model 0.983 0.902\n4   64 baseline 1.000 0.984\n5   77    model 0.987 0.934\n6   77 baseline 0.998 0.982\n7   98    model 0.983 0.913\n8   98 baseline 0.978 0.924\n9  113    model 0.976 0.863\n10 113 baseline 0.951 0.818\n\n\n\no &lt;- reshape(out, direction = \"long\", varying = c(\"rho\", \"top10\"), v.names = \"score\", timevar = \"metric\", times = c(\"Spearman correlation\", \"top-10% overlap\"), idvar = c(\"das\", \"method\"))\nggplot(o, aes(das, score, colour = method)) + geom_line(linewidth = 0.8) + geom_point(size = 1.8) + facet_wrap(~metric, scales = \"free_y\") +\n  scale_colour_manual(values = unname(dgxe[c(\"burgundy\", \"blue\")])) + labs(x = \"days after sowing\", y = NULL) + theme_dgxe() +\n  theme(legend.position = \"top\", legend.title = element_blank())\n\n\n\n\n\n\n\n\nEarly in the season the baseline ranks genotypes better, since the order is determined mainly by genotype and not yet by weather. From about day 100 the model is better. These results are for genotypes included in fitting and seasons that were held out.",
     "crumbs": [
-      "The pipeline",
+      "Steps",
       "7 · Genotypes"
     ]
   },
   {
     "objectID": "09-further.html",
     "href": "09-further.html",
-    "title": "9 · Going further",
+    "title": "9 · Extensions",
     "section": "",
-    "text": "WarningNot reproduced in R\n\n\n\nThe numbers and figures on this page come from the research code (Python) behind this workshop, not from the R functions on the previous pages. They are shown to indicate where the method goes next. They are static, and they are not part of the hands-on part.",
+    "text": "The numbers and figures on this page come from the research code (Python), not from the R functions of the previous steps, and are not reproduced in R.",
     "crumbs": [
-      "The pipeline",
-      "9 · Going further"
+      "Steps",
+      "9 · Extensions"
     ]
   },
   {
-    "objectID": "09-further.html#the-weather-only-model-has-a-limitation",
-    "href": "09-further.html#the-weather-only-model-has-a-limitation",
-    "title": "9 · Going further",
-    "section": "The weather-only model has a limitation",
-    "text": "The weather-only model has a limitation\nIn steps 4 to 8 growth depends on the weather and on the day, but not on the crop’s own state. That is why solving the equation is just a running total. Real crops are different: more leaf area means more light intercepted, which means faster biomass growth. A model that captures this is a coupled system with two states,\n\\[\n\\frac{\\mathrm{d}L}{\\mathrm{d}t} = f_L(L, B, u_t), \\qquad \\frac{\\mathrm{d}B}{\\mathrm{d}t} = f_B(L, B, u_t),\n\\]\nwith \\(L\\) the leaf area index and \\(B\\) the biomass. Now the state appears on the right-hand side, so solving needs a proper ODE solver and cannot be done with cumsum. The normal-equation machinery of steps 3 to 5 still applies for fitting (the regression is still linear in the coefficients), but the rollout is a numerical integration, and errors can feed back on themselves.",
+    "objectID": "09-further.html#coupled-states",
+    "href": "09-further.html#coupled-states",
+    "title": "9 · Extensions",
+    "section": "Coupled states",
+    "text": "Coupled states\nIn steps 4 to 8 the growth rate depends on the weather but not on the state of the crop, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. A model with this feedback is a coupled system in leaf area index \\(L\\) and biomass \\(B\\),\n\\[\n\\frac{\\mathrm{d}L}{\\mathrm{d}t} = f_L(L, B, u_t), \\qquad \\frac{\\mathrm{d}B}{\\mathrm{d}t} = f_B(L, B, u_t),\n\\]\nBecause the state appears on the right-hand side, the solution requires numerical integration. The regression remains linear in the coefficients, so steps 3 and 4 apply unchanged, but errors in the states feed back into the rates.",
     "crumbs": [
-      "The pipeline",
-      "9 · Going further"
+      "Steps",
+      "9 · Extensions"
     ]
   },
   {
-    "objectID": "09-further.html#use-physical-knowledge-in-the-library",
-    "href": "09-further.html#use-physical-knowledge-in-the-library",
-    "title": "9 · Going further",
-    "section": "Use physical knowledge in the library",
-    "text": "Use physical knowledge in the library\nA useful library term for biomass is the light intercepted by the canopy, \\(I = 1 - \\exp(-0.5\\,L)\\). This is plant physiology put into the dictionary as one candidate term: \\(\\mathrm{d}B/\\mathrm{d}t \\ni I \\cdot \\text{RAD}\\).",
+    "objectID": "09-further.html#physical-terms-in-the-library",
+    "href": "09-further.html#physical-terms-in-the-library",
+    "title": "9 · Extensions",
+    "section": "Physical terms in the library",
+    "text": "Physical terms in the library\nA candidate term for biomass growth is the light intercepted by the canopy, \\(I = 1 - \\exp(-0.5\\,L)\\), multiplied by radiation: \\(\\mathrm{d}B/\\mathrm{d}t \\ni I \\cdot \\mathrm{RAD}\\).",
     "crumbs": [
-      "The pipeline",
-      "9 · Going further"
+      "Steps",
+      "9 · Extensions"
     ]
   },
   {
-    "objectID": "09-further.html#what-we-found-at-narrabri",
-    "href": "09-further.html#what-we-found-at-narrabri",
-    "title": "9 · Going further",
-    "section": "What we found at Narrabri",
-    "text": "What we found at Narrabri\nFinal biomass error of coupled variants (leave-one-year-out, t/ha), from the research code:\n\n\n\nModel\nFinal biomass RMSE\n\n\n\n\nWeather-only (the model in this workshop)\n0.749\n\n\nCoupled, biomass driven by its own fitted polynomial LAI\n2.25\n\n\nSame, driven by a spline LAI fitted from weather\n0.90\n\n\nSame, driven by the true APSIM LAI\n0.45\n\n\n\nSo the coupled idea works well if the LAI is right: with the true LAI the biomass error falls to 0.45, below the weather-only model. When LAI itself must be predicted from weather, the error depends heavily on how good that LAI model is, and a poor LAI model (the polynomial one) is far worse than none. This is the same lesson as step 8: the library has to be able to express the target.",
+    "objectID": "09-further.html#results-at-narrabri",
+    "href": "09-further.html#results-at-narrabri",
+    "title": "9 · Extensions",
+    "section": "Results at Narrabri",
+    "text": "Results at Narrabri\nFinal biomass RMSE of coupled variants (leave-one-year-out, t/ha):\n\n\n\nModel\nFinal biomass RMSE\n\n\n\n\nWeather-only (the model in this workshop)\n0.749\n\n\nCoupled, biomass driven by its own fitted polynomial LAI\n2.25\n\n\nSame, driven by a spline LAI fitted from weather\n0.90\n\n\nSame, driven by the true APSIM LAI\n0.45\n\n\n\nWith the true LAI the biomass error is 0.45, below that of the weather-only model. When LAI has to be predicted from the weather, the error depends on the quality of the LAI model, and a poor LAI model (the polynomial) is worse than none, as in step 8.",
     "crumbs": [
-      "The pipeline",
-      "9 · Going further"
+      "Steps",
+      "9 · Extensions"
     ]
   },
   {
-    "objectID": "09-further.html#reading-the-learned-response",
-    "href": "09-further.html#reading-the-learned-response",
-    "title": "9 · Going further",
-    "section": "Reading the learned response",
-    "text": "Reading the learned response\nFitted LAI and biomass growth-rate response curves at Narrabri (ALE, as in step 6):\n\n\n\nLAI response\n\n\n\n\n\nBiomass response",
+    "objectID": "09-further.html#response-curves",
+    "href": "09-further.html#response-curves",
+    "title": "9 · Extensions",
+    "section": "Response curves",
+    "text": "Response curves\nResponse curves of the fitted LAI and biomass equations (ALE, as in step 6):\n\n\n\nLAI response\n\n\n\n\n\nBiomass response",
     "crumbs": [
-      "The pipeline",
-      "9 · Going further"
+      "Steps",
+      "9 · Extensions"
     ]
   },
   {
-    "objectID": "09-further.html#other-directions",
-    "href": "09-further.html#other-directions",
-    "title": "9 · Going further",
-    "section": "Other directions",
-    "text": "Other directions\n\nOther regression methods. Anything with the fit(A, b, ...) signature works. Bayesian versions of the regression, with sparsity-inducing priors, give uncertainty for the coefficients but are slower and need extra packages.\nOther sites. We used one site. Pooling sites adds site-level variation in the weather and is a natural next step.\nNew genotypes. Predicting an unseen genotype needs information about it, such as its parameter values, and has not been shown here.\nOther responses. The same pipeline applies to other state variables; step 8 showed one example (LAI).\n\n\n\n\n\n\n\nNoteIdea\n\n\n\nThe workflow of this workshop, a library of candidate terms, a regression, a rollout, and a validation on unseen years, does not change when the model becomes coupled. What changes is the rollout (a solver) and how carefully the library has to be built.",
+    "objectID": "09-further.html#further-directions",
+    "href": "09-further.html#further-directions",
+    "title": "9 · Extensions",
+    "section": "Further directions",
+    "text": "Further directions\n\nOther regression methods: any method with the signature fit(A, b, ...). Bayesian regression with sparsity-inducing priors provides uncertainty for the coefficients at higher computational cost.\nSeveral sites: pooling sites adds variation in the weather.\nNew genotypes: prediction for a genotype not used in fitting requires additional information about it, for example its parameter values. This is not treated here.\nOther responses: step 8 shows leaf area index as an example.",
     "crumbs": [
-      "The pipeline",
-      "9 · Going further"
+      "Steps",
+      "9 · Extensions"
     ]
   }
 ]

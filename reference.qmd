@@ -40,12 +40,10 @@ All functions are in `R/functions.R` and use base R only. Each page shows the co
 
 Daily simulated wheat growth from the APSIM model at Narrabri (NSW, Australia): 199 genotypes, 31 seasons (1983 to 2013). See [Data](02-data.qmd) for the columns. Files are in `data/`.
 
-::: {.callout-warning title="Data source and licence"}
-The data are simulation output. Please check the source and licence of the underlying APSIM simulations before reuse or redistribution; this repository does not grant any licence for them.
-:::
+The data are simulation output. The source and licence of the underlying APSIM simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.
 
 ## Sources
 
 - Brunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. *PNAS* 113(15), 3932–3937.
-- Bustos-Korts, D. et al. (2019). Combining crop growth modeling and statistical genetic modeling to evaluate phenotyping strategies. *Frontiers in Plant Science* 10, 1491.
+- Bustos-Korts, D. et al. (2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. *Frontiers in Plant Science* 10, 1540. doi:10.3389/fpls.2019.01540
 - Apley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. *Journal of the Royal Statistical Society B* 82(4), 1059–1086.

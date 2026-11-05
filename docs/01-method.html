@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>1 · The idea – Dynamic GxE from scratch</title>
+<title>1 · Method – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -158,7 +158,7 @@ window.Quarto = {
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-          <h1 class="quarto-secondary-nav-title">1 · The idea</h1>
+          <h1 class="quarto-secondary-nav-title">1 · Method</h1>
         </a>     
     </div>
   </nav>
@@ -169,7 +169,7 @@ window.Quarto = {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -189,19 +189,19 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -219,13 +219,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -236,14 +236,14 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -264,21 +264,22 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#a-crop-as-a-running-total" id="toc-a-crop-as-a-running-total" class="nav-link active" data-scroll-target="#a-crop-as-a-running-total">A crop as a running total</a></li>
-  <li><a href="#a-toy-crop" id="toc-a-toy-crop" class="nav-link" data-scroll-target="#a-toy-crop">A toy crop</a></li>
-  <li><a href="#the-trick-a-rate-equation-is-a-regression" id="toc-the-trick-a-rate-equation-is-a-regression" class="nav-link" data-scroll-target="#the-trick-a-rate-equation-is-a-regression">The trick: a rate equation is a regression</a></li>
-  <li><a href="#make-it-break-add-noise" id="toc-make-it-break-add-noise" class="nav-link" data-scroll-target="#make-it-break-add-noise">Make it break: add noise</a></li>
-  <li><a href="#what-comes-next" id="toc-what-comes-next" class="nav-link" data-scroll-target="#what-comes-next">What comes next</a></li>
+  <li><a href="#model" id="toc-model" class="nav-link active" data-scroll-target="#model">Model</a></li>
+  <li><a href="#regression" id="toc-regression" class="nav-link" data-scroll-target="#regression">Regression</a></li>
+  <li><a href="#sparsity" id="toc-sparsity" class="nav-link" data-scroll-target="#sparsity">Sparsity</a></li>
+  <li><a href="#genotypes" id="toc-genotypes" class="nav-link" data-scroll-target="#genotypes">Genotypes</a></li>
+  <li><a href="#solution" id="toc-solution" class="nav-link" data-scroll-target="#solution">Solution</a></li>
+  <li><a href="#validation" id="toc-validation" class="nav-link" data-scroll-target="#validation">Validation</a></li>
+  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation">Implementation</a></li>
   </ul>
-<div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/01-idea.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
+<div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/01-method.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content" tabindex="-1">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">1 · The idea</h1>
-<p class="subtitle lead">A model of change is a running total of daily growth</p>
+<h1 class="title d-none d-lg-block">1 · Method</h1>
 </div>
 
 
@@ -295,137 +296,50 @@ window.Quarto = {
 </header>
 
 
-<div class="stepmeta"><b>You need</b><span>nothing yet: this page uses a toy example, not the real data.</span><b>You get</b><span>the core trick of the whole workshop: learning a rate equation is a regression.</span></div>
-<section id="a-crop-as-a-running-total" class="level2">
-<h2 class="anchored" data-anchor-id="a-crop-as-a-running-total">A crop as a running total</h2>
-<p>Think of the biomass of a crop as a bank balance. Every day some growth is added, and how much is added depends on today’s balance (a bigger plant intercepts more light) and on today’s weather. Written as a rule for the daily change:</p>
+<section id="model" class="level2">
+<h2 class="anchored" data-anchor-id="model">Model</h2>
+<p>Let <span class="math inline">\(y(t)\)</span> denote biomass and <span class="math inline">\(u(t) = (\mathrm{TT}, \mathrm{DL}, \mathrm{RAW}, \mathrm{RAD})\)</span> the daily weather drivers: accumulated thermal time, day length, relative available water and solar radiation. The growth rate is modelled as</p>
 <p><span class="math display">\[
-y_{t+1} = y_t + \underbrace{f(y_t, u_t)}_{\text{growth today}}
+\frac{\mathrm{d}y}{\mathrm{d}t} = \sum_{j=1}^{K} \xi_j\,\theta_j\bigl(u(t)\bigr),
 \]</span></p>
-<p>This is a difference equation, and its continuous cousin is the <strong>ordinary differential equation (ODE)</strong> <span class="math inline">\(\mathrm{d}y/\mathrm{d}t = f(y, u)\)</span>. Crop models such as APSIM do exactly this, day by day. The whole question of the workshop is: <em>what is <span class="math inline">\(f\)</span>?</em></p>
+<p>where <span class="math inline">\(\theta_1,\dots,\theta_K\)</span> is a fixed library of candidate functions and <span class="math inline">\(\xi\)</span> is a vector of coefficients. The library used here contains a constant and the first three powers of each driver (<span class="math inline">\(K=13\)</span>).</p>
 </section>
-<section id="a-toy-crop" class="level2">
-<h2 class="anchored" data-anchor-id="a-toy-crop">A toy crop</h2>
-<p>Let growth be logistic (fast when small, slowing near a ceiling <span class="math inline">\(K\)</span>) and let a stress period in the weather reduce it:</p>
+<section id="regression" class="level2">
+<h2 class="anchored" data-anchor-id="regression">Regression</h2>
+<p>With daily data, the increments <span class="math inline">\(z_t = y_{t+1}-y_t\)</span> are regressed on the library evaluated at day <span class="math inline">\(t\)</span>. Because <span class="math inline">\(\xi\)</span> enters linearly, this is an ordinary linear least-squares problem</p>
 <p><span class="math display">\[
-\frac{\mathrm{d}y}{\mathrm{d}t} = r\,y\left(1 - \frac{y}{K}\right) S(t), \qquad S(t) = 1 - \alpha\,(1 - e(t))
+\min_{\xi}\ \lVert z - X\xi\rVert_2^2, \qquad X_{tj} = \theta_j(u_t).
 \]</span></p>
-<p>Here <span class="math inline">\(e(t)\)</span> is a weather signal that dips during a stress event, and <span class="math inline">\(\alpha\)</span> is the sensitivity to it. We simulate one season with a daily step:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fl">0.12</span>; K <span class="ot">&lt;-</span> <span class="dv">5</span>; alpha <span class="ot">&lt;-</span> <span class="fl">0.8</span>          <span class="co"># growth rate, ceiling, stress sensitivity</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">100</span>; day <span class="ot">&lt;-</span> <span class="dv">0</span><span class="sc">:</span>n</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>e <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fl">0.9</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="sc">-</span>((day <span class="sc">-</span> <span class="dv">40</span>) <span class="sc">/</span> <span class="dv">12</span>)<span class="sc">^</span><span class="dv">2</span>)  <span class="co"># weather signal: stress around day 40</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> alpha <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> e)                  <span class="co"># growth modulator</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">numeric</span>(n <span class="sc">+</span> <span class="dv">1</span>); y[<span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fl">0.05</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (t <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>n) y[t <span class="sc">+</span> <span class="dv">1</span>] <span class="ot">&lt;-</span> y[t] <span class="sc">+</span> r <span class="sc">*</span> y[t] <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> y[t] <span class="sc">/</span> K) <span class="sc">*</span> S[t]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="01-idea_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="1036"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>The crop slows down when the stress hits and recovers afterwards, so the curve has a shoulder.</p>
+<p>The data enter only through <span class="math inline">\(A = X^\top X\)</span> and <span class="math inline">\(b = X^\top z\)</span>. These are computed once per genotype and season, so that cross-validation reduces to adding and subtracting small matrices. Every fitting method in step 4 has the signature <code>fit(A, b, ...)</code>.</p>
 </section>
-<section id="the-trick-a-rate-equation-is-a-regression" class="level2">
-<h2 class="anchored" data-anchor-id="the-trick-a-rate-equation-is-a-regression">The trick: a rate equation is a regression</h2>
-<p>Suppose we did not know <span class="math inline">\(f\)</span>. We would observe <span class="math inline">\(y\)</span> and <span class="math inline">\(e\)</span> every day, and we would compute the daily increments <span class="math inline">\(z_t = y_{t+1} - y_t\)</span>. If we guess that <span class="math inline">\(f\)</span> is a combination of simple candidate functions (a <strong>library</strong>),</p>
+<section id="sparsity" class="level2">
+<h2 class="anchored" data-anchor-id="sparsity">Sparsity</h2>
+<p>Sequential thresholding refits the model and removes the term with the smallest scaled coefficient until <span class="math inline">\(k\)</span> terms remain. The retained set of terms (the support) is common to all genotypes.</p>
+</section>
+<section id="genotypes" class="level2">
+<h2 class="anchored" data-anchor-id="genotypes">Genotypes</h2>
+<p>The coefficients of genotype <span class="math inline">\(g\)</span> are <span class="math inline">\(\xi_g = \mu + \delta_g\)</span>. The shared part <span class="math inline">\(\mu\)</span> is estimated from all genotypes on the common support, and each deviation <span class="math inline">\(\delta_g\)</span> is estimated from the data of genotype <span class="math inline">\(g\)</span> with a ridge penalty.</p>
+</section>
+<section id="solution" class="level2">
+<h2 class="anchored" data-anchor-id="solution">Solution</h2>
+<p>Since the library depends on the weather only, the equation can be solved by a cumulative sum, without an ODE solver:</p>
 <p><span class="math display">\[
-z_t \approx \sum_{j} \xi_j\, \theta_j(y_t, e_t),
+y(t) = y_0 + \sum_{s&lt;t} \sum_j \xi_j\,\theta_j(u_s).
 \]</span></p>
-<p>then the unknown coefficients <span class="math inline">\(\xi_j\)</span> enter <strong>linearly</strong>. This is an ordinary linear regression. Our library is every product of <span class="math inline">\(y\)</span> and <span class="math inline">\(e\)</span> up to second power:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>library_toy <span class="ot">&lt;-</span> <span class="cf">function</span>(y, e) <span class="fu">cbind</span>(<span class="at">y =</span> y, <span class="st">`</span><span class="at">y^2</span><span class="st">`</span> <span class="ot">=</span> y<span class="sc">^</span><span class="dv">2</span>, <span class="at">e =</span> e, <span class="st">`</span><span class="at">e^2</span><span class="st">`</span> <span class="ot">=</span> e<span class="sc">^</span><span class="dv">2</span>,</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">`</span><span class="at">y*e</span><span class="st">`</span> <span class="ot">=</span> y <span class="sc">*</span> e, <span class="st">`</span><span class="at">y^2*e</span><span class="st">`</span> <span class="ot">=</span> y<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> e, <span class="st">`</span><span class="at">y*e^2</span><span class="st">`</span> <span class="ot">=</span> y <span class="sc">*</span> e<span class="sc">^</span><span class="dv">2</span>, <span class="st">`</span><span class="at">y^2*e^2</span><span class="st">`</span> <span class="ot">=</span> y<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> e<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>X <span class="ot">&lt;-</span> <span class="fu">library_toy</span>(y[<span class="sc">-</span>(n <span class="sc">+</span> <span class="dv">1</span>)], e[<span class="sc">-</span>(n <span class="sc">+</span> <span class="dv">1</span>)])   <span class="co"># library on days 0 .. n-1</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">diff</span>(y)                                 <span class="co"># daily increments</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">&lt;-</span> <span class="fu">lm</span>(z <span class="sc">~</span> X <span class="sc">-</span> <span class="dv">1</span>)                         <span class="co"># no intercept: no constant in the library</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>Expanding the true equation gives the exact coefficients we should find: only <span class="math inline">\(y\)</span>, <span class="math inline">\(y^2\)</span>, <span class="math inline">\(y\,e\)</span> and <span class="math inline">\(y^2 e\)</span> appear, and the four terms that do not belong are zero.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>truth <span class="ot">&lt;-</span> <span class="fu">c</span>(r <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> alpha), <span class="sc">-</span>r <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">-</span> alpha) <span class="sc">/</span> K, <span class="dv">0</span>, <span class="dv">0</span>, r <span class="sc">*</span> alpha, <span class="sc">-</span>r <span class="sc">*</span> alpha <span class="sc">/</span> K, <span class="dv">0</span>, <span class="dv">0</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>fitted <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">coef</span>(fit), <span class="fu">colnames</span>(X))</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(<span class="at">truth =</span> truth, <span class="at">fitted =</span> fitted), <span class="dv">5</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>           y     y^2 e e^2   y*e   y^2*e y*e^2 y^2*e^2
-truth  0.024 -0.0048 0   0 0.096 -0.0192     0       0
-fitted 0.024 -0.0048 0   0 0.096 -0.0192     0       0</code></pre>
-</div>
-</div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Idea
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The regression found the equation exactly: four true terms recovered, four zero terms recovered as zero. <strong>Learning an ODE from data is just a linear regression of daily increments on a library of candidate functions.</strong> Everything else in this workshop (sparsity, genotypes, validation) builds on this one step.</p>
-</div>
-</div>
 </section>
-<section id="make-it-break-add-noise" class="level2">
-<h2 class="anchored" data-anchor-id="make-it-break-add-noise">Make it break: add noise</h2>
-<p>Real measurements are noisy. A small error in <span class="math inline">\(y\)</span> becomes a large error in the increment <span class="math inline">\(z_t = y_{t+1} - y_t\)</span> (a difference of two noisy numbers), and the library terms are strongly correlated, so ordinary least squares struggles.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>yn <span class="ot">&lt;-</span> y <span class="sc">+</span> <span class="fu">rnorm</span>(n <span class="sc">+</span> <span class="dv">1</span>, <span class="at">sd =</span> <span class="fl">0.01</span>)          <span class="co"># 0.01 t/ha of measurement noise</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>Xn <span class="ot">&lt;-</span> <span class="fu">library_toy</span>(yn[<span class="sc">-</span>(n <span class="sc">+</span> <span class="dv">1</span>)], e[<span class="sc">-</span>(n <span class="sc">+</span> <span class="dv">1</span>)]); zn <span class="ot">&lt;-</span> <span class="fu">diff</span>(yn)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">coef</span>(<span class="fu">lm</span>(zn <span class="sc">~</span> Xn <span class="sc">-</span> <span class="dv">1</span>)), <span class="fu">colnames</span>(Xn))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<p>A <strong>sparse</strong> fit keeps only the few terms that matter. Here is the simplest version, which repeatedly refits and removes the smallest coefficient until four terms are left (<code>fit_ssr</code> is defined in step 4):</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>A <span class="ot">&lt;-</span> <span class="fu">crossprod</span>(Xn) <span class="sc">/</span> n                     <span class="co"># the regression, as normal equations</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">crossprod</span>(Xn, zn)) <span class="sc">/</span> n</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>sparse <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">fit_ssr</span>(A, b, <span class="at">k =</span> <span class="dv">4</span>)<span class="sc">$</span>coef, <span class="fu">colnames</span>(Xn))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(<span class="at">truth =</span> truth, <span class="st">`</span><span class="at">ols (noisy)</span><span class="st">`</span> <span class="ot">=</span> ols, <span class="st">`</span><span class="at">sparse, 4 terms</span><span class="st">`</span> <span class="ot">=</span> sparse), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>                    y    y^2      e   e^2   y*e  y^2*e  y*e^2 y^2*e^2
-truth           0.024 -0.005  0.000 0.000 0.096 -0.019  0.000   0.000
-ols (noisy)     0.030 -0.009 -0.024 0.024 0.116 -0.020 -0.025   0.004
-sparse, 4 terms 0.017  0.000  0.001 0.000 0.101 -0.024  0.000   0.000</code></pre>
-</div>
-</div>
-<p>OLS spreads weight over all eight terms, including some that are truly zero. The sparse fit keeps three of the four true terms (<span class="math inline">\(y\)</span>, <span class="math inline">\(y\,e\)</span>, <span class="math inline">\(y^2 e\)</span>) and swaps the fourth (<span class="math inline">\(y^2\)</span>) for a term that does not belong (<span class="math inline">\(e\)</span>, with a tiny coefficient). It is much closer to the truth than OLS, but not perfect. With three times more noise (<code>sd = 0.03</code>) even the sparse fit loses the structure: a model needs enough signal.</p>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Pitfall
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Noise in the state is amplified by differencing. With only 8–13 observations per season (typical for field trials) you should integrate the equation over each interval instead of differencing, which is what the research code does for field data. Here the data are simulated daily, so differencing is fine.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Swap
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Try changing <code>sd = 0.01</code> to <code>0.005</code> or <code>0.02</code>, or the number of terms <code>k</code> to 3 or 6. How many terms survive? At what noise level does the structure disappear?</p>
-</div>
-</div>
+<section id="validation" class="level2">
+<h2 class="anchored" data-anchor-id="validation">Validation</h2>
+<p>Seasons are the independent units, because the weather of neighbouring days is strongly correlated. The model is validated by leave-one-year-out cross-validation: each year is predicted from a model fitted to the other 30, starting from the mean initial biomass.</p>
 </section>
-<section id="what-comes-next" class="level2">
-<h2 class="anchored" data-anchor-id="what-comes-next">What comes next</h2>
-<p>In the real problem the “state” is biomass, the “weather” is four measured drivers (thermal time, day length, water availability and radiation), and there are 199 genotypes. The next page looks at those data.</p>
+<section id="implementation" class="level2">
+<h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>fit_ols <span class="ot">&lt;-</span> <span class="cf">function</span>(A, b, ...) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> <span class="fu">solve</span>(A, b), <span class="at">support =</span> <span class="fu">seq_along</span>(b))</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>simulate <span class="ot">&lt;-</span> <span class="cf">function</span>(xi, Theta_y, y0) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  inc <span class="ot">&lt;-</span> Theta_y[<span class="sc">-</span><span class="fu">nrow</span>(Theta_y), , drop <span class="ot">=</span> <span class="cn">FALSE</span>] <span class="sc">%*%</span> <span class="fu">t</span>(xi)         <span class="co"># (days-1) x genotype increments</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sweep</span>(<span class="fu">rbind</span>(<span class="dv">0</span>, <span class="fu">apply</span>(inc, <span class="dv">2</span>, cumsum)), <span class="dv">2</span>, y0, <span class="st">"+"</span>)               <span class="co"># day x genotype</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
@@ -914,8 +828,8 @@ sparse, 4 terms 0.017  0.000  0.001 0.000 0.101 -0.024  0.000   0.000</code></pr
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./02-data.html" class="pagination-link" aria-label="2 · The data">
-        <span class="nav-page-text">2 · The data</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./02-data.html" class="pagination-link" aria-label="2 · Data">
+        <span class="nav-page-text">2 · Data</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -923,11 +837,11 @@ sparse, 4 terms 0.017  0.000  0.001 0.000 0.101 -0.024  0.000   0.000</code></pr
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;
-    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/01-idea.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/01-method.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>C. Verburg · TU Delft · CropXR</p>
 </div>

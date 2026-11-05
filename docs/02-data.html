@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>2 · The data – Dynamic GxE from scratch</title>
+<title>2 · Data – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -72,7 +72,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href="./03-design.html" rel="next">
-<link href="./01-idea.html" rel="prev">
+<link href="./01-method.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -129,7 +129,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
         <a class="flex-grow-1 no-decor" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-          <h1 class="quarto-secondary-nav-title">2 · The data</h1>
+          <h1 class="quarto-secondary-nav-title">2 · Data</h1>
         </a>     
     </div>
   </nav>
@@ -140,7 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -160,19 +160,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -190,13 +190,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -207,14 +207,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -235,9 +235,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#what-the-data-are" id="toc-what-the-data-are" class="nav-link active" data-scroll-target="#what-the-data-are">What the data are</a></li>
-  <li><a href="#biomass-trajectories" id="toc-biomass-trajectories" class="nav-link" data-scroll-target="#biomass-trajectories">Biomass trajectories</a></li>
-  <li><a href="#the-weather-the-crop-experienced" id="toc-the-weather-the-crop-experienced" class="nav-link" data-scroll-target="#the-weather-the-crop-experienced">The weather the crop experienced</a></li>
+  <li><a href="#biomass" id="toc-biomass" class="nav-link active" data-scroll-target="#biomass">Biomass</a></li>
+  <li><a href="#weather" id="toc-weather" class="nav-link" data-scroll-target="#weather">Weather</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/02-data.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -246,8 +245,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title d-none d-lg-block">2 · The data</h1>
-<p class="subtitle lead">Two plain tables: daily weather and daily biomass</p>
+<h1 class="title d-none d-lg-block">2 · Data</h1>
 </div>
 
 
@@ -264,47 +262,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<div class="stepmeta"><b>You need</b><span>nothing from earlier pages.</span><b>You get</b><span>the two data frames used everywhere else, <code>wx</code> and <code>traj</code>.</span></div>
-<section id="what-the-data-are" class="level2">
-<h2 class="anchored" data-anchor-id="what-the-data-are">What the data are</h2>
-<p>The data come from APSIM wheat simulations at <strong>Narrabri</strong>, a site in northern New South Wales: <strong>199 genotypes</strong> grown in <strong>31 years</strong> (1983 to 2013). Every genotype-year has daily biomass from 15 days after sowing until that genotype’s own maturity. Because weather is the same for all genotypes in a given year, we keep weather and biomass in <strong>separate tables</strong>.</p>
+<p>The data are APSIM simulations of wheat at Narrabri (New South Wales): 199 genotypes in 31 seasons (1983 to 2013), daily from 15 days after sowing to maturity. Weather is common to all genotypes within a season and is stored in a separate table.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>wx   <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)        <span class="co"># one row per year x day</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)     <span class="co"># one row per genotype x year x day</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wx, <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>wx   <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wx, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  year das     TT     DL    RAW RAD
 1 1983  15 247.50 11.191 0.7966  12
 2 1983  16 256.75 11.180 0.7909  11
-3 1983  17 267.50 11.169 0.7838  13
-4 1983  18 278.00 11.158 0.7762  14</code></pre>
+3 1983  17 267.50 11.169 0.7838  13</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(traj[traj<span class="sc">$</span>genotype <span class="sc">==</span> <span class="st">"g001"</span> <span class="sc">&amp;</span> traj<span class="sc">$</span>year <span class="sc">==</span> <span class="dv">1983</span>, ], <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(traj, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  genotype year das biomass   lai
 1     g001 1983  15  0.0164 0.039
 2     g001 1983  16  0.0190 0.043
-3     g001 1983  17  0.0228 0.049
-4     g001 1983  18  0.0273 0.056</code></pre>
+3     g001 1983  17  0.0228 0.049</code></pre>
 </div>
 </div>
 <table class="caption-top table">
 <thead>
 <tr class="header">
 <th>Column</th>
-<th>Meaning</th>
+<th>Description</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>das</code></td>
-<td>days after sowing (the data start at day 15)</td>
+<td>days after sowing</td>
 </tr>
 <tr class="even">
 <td><code>TT</code></td>
-<td>thermal time: accumulated degree-days since sowing (°C d)</td>
+<td>accumulated thermal time since sowing (°C d)</td>
 </tr>
 <tr class="odd">
 <td><code>DL</code></td>
@@ -312,7 +303,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><code>RAW</code></td>
-<td>relative available water, 0 (dry) to 1 (wet)</td>
+<td>relative available soil water (0 to 1)</td>
 </tr>
 <tr class="odd">
 <td><code>RAD</code></td>
@@ -320,97 +311,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><code>biomass</code></td>
-<td>above-ground dry matter (t/ha)</td>
+<td>above-ground dry matter (t ha⁻¹)</td>
 </tr>
 <tr class="odd">
 <td><code>lai</code></td>
-<td>leaf area index (m² m⁻²), used later</td>
+<td>leaf area index (m² m⁻²)</td>
 </tr>
 </tbody>
 </table>
+<section id="biomass" class="level2">
+<h2 class="anchored" data-anchor-id="biomass">Biomass</h2>
+<p>Each line is one genotype. The four seasons were chosen to span the range of weather.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">genotypes =</span> <span class="fu">length</span>(<span class="fu">unique</span>(traj<span class="sc">$</span>genotype)), <span class="at">years =</span> <span class="fu">length</span>(<span class="fu">unique</span>(traj<span class="sc">$</span>year)),</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">rows_weather =</span> <span class="fu">nrow</span>(wx), <span class="at">rows_biomass =</span> <span class="fu">nrow</span>(traj))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   genotypes        years rows_weather rows_biomass 
-         199           31         4453       849234 </code></pre>
-</div>
-</div>
-</section>
-<section id="biomass-trajectories" class="level2">
-<h2 class="anchored" data-anchor-id="biomass-trajectories">Biomass trajectories</h2>
-<p>Three genotypes in four different years. All genotypes follow the same season, but they differ in how fast they grow and when they finish.</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sel <span class="ot">&lt;-</span> traj[traj<span class="sc">$</span>genotype <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"g001"</span>, <span class="st">"g080"</span>, <span class="st">"g160"</span>) <span class="sc">&amp;</span> traj<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(sel, <span class="fu">aes</span>(das, biomass, <span class="at">colour =</span> genotype)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>year, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"cyan"</span>, <span class="st">"orange"</span>)])) <span class="sc">+</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"biomass (t/ha)"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sel <span class="ot">&lt;-</span> traj[traj<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(sel, <span class="fu">aes</span>(das, biomass, <span class="at">group =</span> genotype)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.2</span>, <span class="at">alpha =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>year, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span> <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"biomass (t/ha)"</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="02-data_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="1036"></p>
+<p><img src="02-data_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="1036"></p>
 </figure>
 </div>
 </div>
 </div>
 </section>
-<section id="the-weather-the-crop-experienced" class="level2">
-<h2 class="anchored" data-anchor-id="the-weather-the-crop-experienced">The weather the crop experienced</h2>
-<p>Four drivers over the same years. They look very different from year to year, and this variation is what lets us learn how growth responds to weather.</p>
+<section id="weather" class="level2">
+<h2 class="anchored" data-anchor-id="weather">Weather</h2>
+<p>Each grey line is one season; the blue line is the mean over seasons.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> <span class="fu">reshape</span>(wx[wx<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ], <span class="at">direction =</span> <span class="st">"long"</span>, <span class="at">varying =</span> <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>),</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">v.names =</span> <span class="st">"value"</span>, <span class="at">timevar =</span> <span class="st">"driver"</span>, <span class="at">times =</span> <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>), <span class="at">idvar =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"das"</span>))</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>w<span class="sc">$</span>driver <span class="ot">&lt;-</span> <span class="fu">factor</span>(w<span class="sc">$</span>driver, <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>))</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(w, <span class="fu">aes</span>(das, value, <span class="at">colour =</span> <span class="fu">factor</span>(year))) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"cyan"</span>, <span class="st">"green"</span>, <span class="st">"orange"</span>)])) <span class="sc">+</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> <span class="fu">reshape</span>(wx, <span class="at">direction =</span> <span class="st">"long"</span>, <span class="at">varying =</span> <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>), <span class="at">v.names =</span> <span class="st">"value"</span>, <span class="at">timevar =</span> <span class="st">"driver"</span>,</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">times =</span> <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>), <span class="at">idvar =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"das"</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>w<span class="sc">$</span>driver <span class="ot">&lt;-</span> <span class="fu">factor</span>(w<span class="sc">$</span>driver, <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>))</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>m <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(value <span class="sc">~</span> driver <span class="sc">+</span> das, w, mean)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(w, <span class="fu">aes</span>(das, value)) <span class="sc">+</span> <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> year), <span class="at">colour =</span> dgxe[[<span class="st">"grey"</span>]], <span class="at">linewidth =</span> <span class="fl">0.25</span>, <span class="at">alpha =</span> <span class="fl">0.6</span>) <span class="sc">+</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> m, <span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span> <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="02-data_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="1036"></p>
+<p><img src="02-data_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="1036"></p>
 </figure>
 </div>
 </div>
 </div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Idea
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Two things to remember from this page. First, <strong>weather is identical for all genotypes within a year</strong>, so genotypes can only differ through the <em>coefficients</em> of the growth rule, not through their weather. Second, <strong>thermal time keeps rising through the season</strong>, so it also acts as a clock that tells the model how far along the crop is.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Check
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Do you get 199 genotypes and 31 years? Is the weather the same for every genotype? (It is: the weather table has no genotype column.)</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Pitfall
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Trajectories end on different days (each genotype matures at its own time). Keep track of where each one stops, as we do in the next step; padding with zeros or repeating the last value silently corrupts the regression.</p>
-</div>
-</div>
+<p>Trajectories end on different days, since genotypes mature at different times. The end of each trajectory is tracked in step 3.</p>
 
 
 </section>
@@ -894,8 +838,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="./01-idea.html" class="pagination-link" aria-label="1 · The idea">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">1 · The idea</span>
+      <a href="./01-method.html" class="pagination-link" aria-label="1 · Method">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">1 · Method</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">
@@ -908,7 +852,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;

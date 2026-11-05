@@ -1,54 +1,48 @@
 ---
-title: "9 · Going further"
-subtitle: "Coupling the equations, and what the R code here does not cover"
+title: "9 · Extensions"
 ---
 
-::: {.callout-warning title="Not reproduced in R"}
-The numbers and figures on this page come from the research code (Python) behind this workshop, not from the R functions on the previous pages. They are shown to indicate where the method goes next. They are static, and they are not part of the hands-on part.
-:::
+The numbers and figures on this page come from the research code (Python), not from the R functions of the previous steps, and are not reproduced in R.
 
-## The weather-only model has a limitation
+## Coupled states
 
-In steps 4 to 8 growth depends on the weather and on the day, but **not on the crop's own state**. That is why solving the equation is just a running total. Real crops are different: more leaf area means more light intercepted, which means faster biomass growth. A model that captures this is a **coupled** system with two states,
+In steps 4 to 8 the growth rate depends on the weather but not on the state of the crop, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. A model with this feedback is a coupled system in leaf area index $L$ and biomass $B$,
 
 $$
 \frac{\mathrm{d}L}{\mathrm{d}t} = f_L(L, B, u_t), \qquad \frac{\mathrm{d}B}{\mathrm{d}t} = f_B(L, B, u_t),
 $$
 
-with $L$ the leaf area index and $B$ the biomass. Now the state appears on the right-hand side, so solving needs a proper ODE solver and cannot be done with `cumsum`. The normal-equation machinery of steps 3 to 5 still applies for fitting (the regression is still linear in the coefficients), but the rollout is a numerical integration, and errors can feed back on themselves.
+Because the state appears on the right-hand side, the solution requires numerical integration. The regression remains linear in the coefficients, so steps 3 and 4 apply unchanged, but errors in the states feed back into the rates.
 
-## Use physical knowledge in the library
+## Physical terms in the library
 
-A useful library term for biomass is the **light intercepted by the canopy**, $I = 1 - \exp(-0.5\,L)$. This is plant physiology put into the dictionary as one candidate term: $\mathrm{d}B/\mathrm{d}t \ni I \cdot \text{RAD}$.
+A candidate term for biomass growth is the light intercepted by the canopy, $I = 1 - \exp(-0.5\,L)$, multiplied by radiation: $\mathrm{d}B/\mathrm{d}t \ni I \cdot \mathrm{RAD}$.
 
-## What we found at Narrabri
+## Results at Narrabri
 
-Final biomass error of coupled variants (leave-one-year-out, t/ha), from the research code:
+Final biomass RMSE of coupled variants (leave-one-year-out, t/ha):
 
 | Model | Final biomass RMSE |
 |---|---|
 | Weather-only (the model in this workshop) | 0.749 |
 | Coupled, biomass driven by its own fitted polynomial LAI | 2.25 |
 | Same, driven by a spline LAI fitted from weather | 0.90 |
-| Same, driven by the **true** APSIM LAI | 0.45 |
+| Same, driven by the true APSIM LAI | 0.45 |
 
-So the coupled idea works well **if the LAI is right**: with the true LAI the biomass error falls to 0.45, below the weather-only model. When LAI itself must be predicted from weather, the error depends heavily on how good that LAI model is, and a poor LAI model (the polynomial one) is far worse than none. This is the same lesson as step 8: the library has to be able to express the target.
+With the true LAI the biomass error is 0.45, below that of the weather-only model. When LAI has to be predicted from the weather, the error depends on the quality of the LAI model, and a poor LAI model (the polynomial) is worse than none, as in step 8.
 
-## Reading the learned response
+## Response curves
 
-Fitted LAI and biomass growth-rate response curves at Narrabri (ALE, as in step 6):
+Response curves of the fitted LAI and biomass equations (ALE, as in step 6):
 
 ![LAI response](images/narrabri_lai_response.png){width=100%}
 
 ![Biomass response](images/narrabri_biomass_response.png){width=100%}
 
-## Other directions
+## Further directions
 
-- **Other regression methods.** Anything with the `fit(A, b, ...)` signature works. Bayesian versions of the regression, with sparsity-inducing priors, give uncertainty for the coefficients but are slower and need extra packages.
-- **Other sites.** We used one site. Pooling sites adds site-level variation in the weather and is a natural next step.
-- **New genotypes.** Predicting an unseen genotype needs information about it, such as its parameter values, and has not been shown here.
-- **Other responses.** The same pipeline applies to other state variables; step 8 showed one example (LAI).
+- Other regression methods: any method with the signature `fit(A, b, ...)`. Bayesian regression with sparsity-inducing priors provides uncertainty for the coefficients at higher computational cost.
+- Several sites: pooling sites adds variation in the weather.
+- New genotypes: prediction for a genotype not used in fitting requires additional information about it, for example its parameter values. This is not treated here.
+- Other responses: step 8 shows leaf area index as an example.
 
-::: {.callout-note title="Idea"}
-The workflow of this workshop, a **library of candidate terms, a regression, a rollout, and a validation on unseen years**, does not change when the model becomes coupled. What changes is the rollout (a solver) and how carefully the library has to be built.
-:::

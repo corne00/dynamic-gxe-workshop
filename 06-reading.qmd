@@ -1,61 +1,50 @@
 ---
-title: "6 · Reading the model"
-subtitle: "The fitted rule is an equation you can read, and curves you can plot"
+title: "6 · Interpretation"
 ---
-
-```{=html}
-<div class="stepmeta"><b>You need</b><span>a fitting method and the objects from step 5.</span><b>You get</b><span>the final equation, and one curve per driver showing how it affects growth.</span></div>
-```
 
 ```{r}
 #| echo: false
 library(ggplot2); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
 ```
 
-## The final model
+## Final model
 
-For reading (not for validating) we fit once on **all** years. Validation told us the model generalises; now we look at what it learned.
+For interpretation the model is fitted once to all seasons. The shared coefficients on the 12-term support, in standardised drivers, are:
 
 ```{r}
 f  <- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)
-mu <- f$mu                                      # shared coefficients (all genotypes)
+mu <- f$mu
 round(setNames(mu[f$support], f$names[f$support]), 4)
+rate <- function(Z) as.vector(library_matrix(Z) %*% mu)
 ```
 
-This is the shared growth rule, written in standardised drivers (mean 0, standard deviation 1):
+Individual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.
 
-$$
-\frac{\mathrm{d}\,\text{biomass}}{\mathrm{d}t} = 0.155 \;-\; 0.036\,\text{TT} - 0.029\,\text{TT}^2 + 0.012\,\text{TT}^3 + 0.019\,\text{DL} - 0.054\,\text{DL}^2 + \dots
-$$
+## Growth rate over the season
 
-The coefficients of a polynomial are hard to interpret one by one, so we plot what the equation does instead.
-
-## Growth rate through the season
-
-Apply the rule to the weather of each year. Each thin line is one year; the thick line is the average.
+Predicted growth rate for the weather of each season (grey) and the mean (blue).
 
 ```{r}
-#| fig-height: 3.6
-rate <- function(Z) as.vector(library_matrix(Z) %*% mu)                  # Z: n x 4 matrix of standardised drivers
+#| fig-height: 2.8
 ny <- length(tr$years); nd <- dim(Theta)[2]
-R  <- sapply(seq_len(ny), function(y) as.vector(Theta[y, , ] %*% mu))       # day x year
+R  <- sapply(seq_len(ny), function(y) as.vector(Theta[y, , ] %*% mu))
 d  <- data.frame(das = rep(seq_len(nd) + tr$das0 - 1, ny), year = rep(tr$years, each = nd), rate = as.vector(R))
 d  <- d[d$das <= 15 + max(tr$nend) - 1, ]
-ggplot(d, aes(das, rate, group = year)) + geom_line(colour = dgxe[["sky"]], linewidth = 0.4, alpha = 0.7) +
-  stat_summary(aes(group = 1), fun = mean, geom = "line", colour = dgxe[["blue"]], linewidth = 1.2) +
-  labs(x = "days after sowing", y = "biomass growth rate (t/ha/day)") + theme_dgxe()
+ggplot(d, aes(das, rate)) + geom_line(aes(group = year), colour = dgxe[["grey"]], linewidth = 0.3, alpha = 0.7) +
+  stat_summary(fun = mean, geom = "line", colour = dgxe[["blue"]], linewidth = 0.9) +
+  labs(x = "days after sowing", y = "growth rate (t/ha/day)") + theme_dgxe()
 ```
 
-## The effect of one driver: accumulated local effects
+## Effect of a single driver
 
-To see how growth responds to one driver (say radiation), we cannot simply vary it in the equation while holding the others at their mean, because in real weather the drivers move together. Here thermal time and day length have correlation 0.97:
+The effect of one driver cannot be read by varying it alone while the others are held fixed, since the drivers are correlated in real weather:
 
 ```{r}
-Z <- observed_points(drv, tr)                   # the weather that actually occurred (rows = year x day)
+Z <- observed_points(drv, tr)
 round(cor(Z), 2)
 ```
 
-**Accumulated local effects (ALE)** avoid asking the model about weather that never happens: within each small interval of the driver they compare the model with the driver at the two ends of the interval, using the real values of the other drivers, then add up the changes.
+Accumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the rate.
 
 ```{r}
 #| echo: false
@@ -63,61 +52,47 @@ round(cor(Z), 2)
 show_fun("ale_curve")
 ```
 
-For contrast, the classical **partial dependence** (PDP) sets the driver to a value for all observations at once:
+```{r}
+curves <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
+  a <- ale_curve(rate, Z, j)
+  data.frame(driver = drv$drivers[j], x = a$z * drv$scale[j] + drv$center[j], effect = a$effect)
+}))
+pts <- do.call(rbind, lapply(seq_along(drv$drivers), function(j)
+  data.frame(driver = drv$drivers[j], x = Z[, j] * drv$scale[j] + drv$center[j])))
+curves$driver <- factor(curves$driver, drv$drivers); pts$driver <- factor(pts$driver, drv$drivers)
+```
+
+```{r}
+#| fig-height: 3.4
+ggplot(curves, aes(x, effect)) + geom_hline(yintercept = 0, colour = "#D1D5DB", linewidth = 0.3) +
+  geom_line(colour = dgxe[["blue"]], linewidth = 0.9) +
+  geom_rug(data = pts, aes(x = x), inherit.aes = FALSE, sides = "b", alpha = 0.03, colour = dgxe[["ink"]]) +
+  facet_wrap(~driver, scales = "free_x") +
+  labs(x = "TT (°C d) · DL (h) · RAW (0 to 1) · RAD (MJ/m²/day)", y = "effect on growth rate (t/ha/day)") + theme_dgxe()
+```
+
+The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the season, not a response to temperature. TT and DL are correlated at 0.97 and are best read together.
+
+## Interactions and partial dependence
+
+The 13-term library is additive in the drivers, so partial dependence and ALE coincide. With products of drivers (37 terms) they differ:
 
 ```{r}
 pdp <- function(rate, Z, j, grid) sapply(grid, function(v) { Zv <- Z; Zv[, j] <- v; mean(rate(Zv)) })
-
-curves <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
-  a <- ale_curve(rate, Z, j); p <- pdp(rate, Z, j, a$z)
-  x <- a$z * drv$scale[j] + drv$center[j]                                     # back to natural units
-  rbind(data.frame(driver = drv$drivers[j], x = x, effect = a$effect, method = "ALE"),
-        data.frame(driver = drv$drivers[j], x = x, effect = p - mean(p) + 0, method = "PDP"))
-}))
-curves$driver <- factor(curves$driver, c("TT", "DL", "RAW", "RAD"))
-```
-
-```{r}
-#| fig-height: 4.4
-ggplot(curves, aes(x, effect, colour = method, linetype = method)) + geom_line(linewidth = 0.9) +
-  facet_wrap(~driver, scales = "free_x") +
-  scale_colour_manual(values = unname(dgxe[c("blue", "orange")])) +
-  labs(x = "driver value (TT: degree-days, DL: hours, RAW: 0 to 1, RAD: MJ/m2/day)", y = "effect on growth rate (t/ha/day)", colour = NULL, linetype = NULL) + theme_dgxe()
-```
-
-For this library the two curves lie on top of each other. That is expected: the library is a sum of one-driver polynomials, so the effect of one driver does not depend on the others. The methods only differ once the model contains **interactions**. Refit with the 37-term library, which adds products of drivers:
-
-```{r}
 Theta2 <- make_library(drv, pairs = TRUE); gram2 <- gram_stats(Theta2, tr)
 f2 <- fit_years(gram2, seq_along(tr$years), fit_ssr, k = 20)
 rate2 <- function(Z) as.vector(library_matrix(Z, pairs = TRUE) %*% f2$mu)
 curves2 <- do.call(rbind, lapply(1:2, function(j) {
   a <- ale_curve(rate2, Z, j); p <- pdp(rate2, Z, j, a$z); x <- a$z * drv$scale[j] + drv$center[j]
   rbind(data.frame(driver = drv$drivers[j], x = x, effect = a$effect, method = "ALE"),
-        data.frame(driver = drv$drivers[j], x = x, effect = p - mean(p), method = "PDP")) }))
+        data.frame(driver = drv$drivers[j], x = x, effect = p - mean(p), method = "partial dependence")) }))
 ```
 
 ```{r}
-#| fig-height: 3.2
-ggplot(curves2, aes(x, effect, colour = method, linetype = method)) + geom_line(linewidth = 0.9) + facet_wrap(~driver, scales = "free_x") +
-  scale_colour_manual(values = unname(dgxe[c("blue", "orange")])) +
-  labs(x = "driver value", y = "effect on growth rate (t/ha/day)", colour = NULL, linetype = NULL) + theme_dgxe()
+#| fig-height: 2.8
+ggplot(curves2, aes(x, effect, colour = method, linetype = method)) + geom_line(linewidth = 0.8) + facet_wrap(~driver, scales = "free_x") +
+  scale_colour_manual(values = unname(dgxe[c("blue", "burgundy")])) +
+  labs(x = "driver value", y = "effect on growth rate (t/ha/day)") + theme_dgxe() + theme(legend.position = "top", legend.title = element_blank())
 ```
 
-Where the curves now differ, partial dependence is averaging over weather combinations that do not occur (for example a cold season with very long days), so the ALE curve is the one to interpret.
-
-::: {.callout-note title="Idea"}
-**A fitted equation is a model you can interrogate.** The coefficients are a way to *store* the equation; the curves are how you *read* it. Each curve answers one question: "if this driver were a bit higher on a day like those in the data, how would growth change?"
-:::
-
-::: {.callout-important title="Pitfall"}
-**Thermal time is a clock, not a temperature.** Its curve shows how growth changes as the season advances (as degree-days accumulate), not how the crop responds to a hot day. Do not read the TT curve as a temperature response. Because TT and DL are 0.97 correlated, the model cannot separate them well; read their curves together.
-:::
-
-::: {.callout-tip title="Check"}
-Do the curves look agronomically plausible? Water (RAW) should not reduce growth as it rises, and radiation should not reduce growth as it increases. A curve that goes the wrong way is a prompt to look at the data, not to publish.
-:::
-
-::: {.callout-caution title="Swap"}
-Replace `mu` with the coefficients of any other fit (`fit_years(gram, years, fit_ridge)`, or the 37-term library) and re-run the plotting code unchanged; `rate()` is the only place the model enters.
-:::
+Partial dependence evaluates the model at combinations of drivers that do not occur in the data (for example a short day late in a high thermal-time season), whereas ALE does not.

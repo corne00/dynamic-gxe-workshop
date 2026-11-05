@@ -4,14 +4,14 @@ project:
   render:
     - index.qmd
     - setup.qmd
-    - 01-idea.qmd
+    - 01-method.qmd
     - 02-data.qmd
     - 03-design.qmd
     - 04-fitting.qmd
     - 05-validate.qmd
     - 06-reading.qmd
     - 07-genotypes.qmd
-    - 08-pitfalls.qmd
+    - 08-limitations.qmd
     - 09-further.qmd
     - reference.qmd
 
@@ -22,7 +22,7 @@ execute:
   message: false
 
 website:
-  title: "Dynamic GxE from scratch"
+  title: "Sparse identification of crop growth"
   page-navigation: true
   back-to-top-navigation: true
   bread-crumbs: false
@@ -36,30 +36,30 @@ website:
         href: index.qmd
       - text: "Set up"
         href: setup.qmd
-      - section: "The pipeline"
+      - section: "Steps"
         contents:
-          - text: "1 · The idea"
-            href: 01-idea.qmd
-          - text: "2 · The data"
+          - text: "1 · Method"
+            href: 01-method.qmd
+          - text: "2 · Data"
             href: 02-data.qmd
           - text: "3 · Library and design matrix"
             href: 03-design.qmd
           - text: "4 · Fitting"
             href: 04-fitting.qmd
-          - text: "5 · Simulate and validate"
+          - text: "5 · Validation"
             href: 05-validate.qmd
-          - text: "6 · Reading the model"
+          - text: "6 · Interpretation"
             href: 06-reading.qmd
           - text: "7 · Genotypes"
             href: 07-genotypes.qmd
-          - text: "8 · When it breaks"
-            href: 08-pitfalls.qmd
-          - text: "9 · Going further"
+          - text: "8 · Limitations"
+            href: 08-limitations.qmd
+          - text: "9 · Extensions"
             href: 09-further.qmd
       - text: "Reference"
         href: reference.qmd
   page-footer:
-    left: "Dynamic GxE from scratch · AAGI Symposium 2026"
+    left: "AAGI Symposium 2026"
     right: "C. Verburg · TU Delft · CropXR"
 
 format:

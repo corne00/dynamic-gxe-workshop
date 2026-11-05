@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>4 · Fitting – Dynamic GxE from scratch</title>
+<title>4 · Fitting – Sparse identification of crop growth</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8c29294e466af35597a7be13214139bf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -115,35 +115,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
 
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -169,7 +140,7 @@ window.Quarto = {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto" aria-label="Site">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Dynamic GxE from scratch</a> 
+      <a href="./">Sparse identification of crop growth</a> 
     </div>
       </div>
     <div class="sidebar-menu-container"> 
@@ -189,19 +160,19 @@ window.Quarto = {
         <li class="sidebar-item sidebar-item-section">
       <div class="sidebar-item-container"> 
             <button type="button" class="sidebar-item-text sidebar-item-toggle sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-controls="quarto-sidebar-section-1" aria-expanded="true">
- <span class="menu-text" id="quarto-sidebar-section-1-label">The pipeline</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
+ <span class="menu-text" id="quarto-sidebar-section-1-label">Steps</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button>
       </div>
       <ul id="quarto-sidebar-section-1" aria-labelledby="quarto-sidebar-section-1-label" class="collapse list-unstyled sidebar-section depth1 show">  
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./01-idea.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">1 · The idea</span></a>
+  <a href="./01-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">1 · Method</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./02-data.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">2 · The data</span></a>
+ <span class="menu-text">2 · Data</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -219,13 +190,13 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./05-validate.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">5 · Simulate and validate</span></a>
+ <span class="menu-text">5 · Validation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./06-reading.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">6 · Reading the model</span></a>
+ <span class="menu-text">6 · Interpretation</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -236,14 +207,14 @@ window.Quarto = {
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./08-pitfalls.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · When it breaks</span></a>
+  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">8 · Limitations</span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Going further</span></a>
+ <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -264,10 +235,10 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#one-pooled-problem" id="toc-one-pooled-problem" class="nav-link active" data-scroll-target="#one-pooled-problem">One pooled problem</a></li>
-  <li><a href="#a-fitting-method-is-a-function-fita-b-..." id="toc-a-fitting-method-is-a-function-fita-b-..." class="nav-link" data-scroll-target="#a-fitting-method-is-a-function-fita-b-...">A fitting method is a function <code>fit(A, b, ...)</code></a></li>
-  <li><a href="#watching-the-sparse-fit-decide" id="toc-watching-the-sparse-fit-decide" class="nav-link" data-scroll-target="#watching-the-sparse-fit-decide">Watching the sparse fit decide</a></li>
-  <li><a href="#writing-your-own-method-lasso-in-ten-lines" id="toc-writing-your-own-method-lasso-in-ten-lines" class="nav-link" data-scroll-target="#writing-your-own-method-lasso-in-ten-lines">Writing your own method: lasso in ten lines</a></li>
+  <li><a href="#pooled-normal-equations" id="toc-pooled-normal-equations" class="nav-link active" data-scroll-target="#pooled-normal-equations">Pooled normal equations</a></li>
+  <li><a href="#fitting-methods" id="toc-fitting-methods" class="nav-link" data-scroll-target="#fitting-methods">Fitting methods</a></li>
+  <li><a href="#order-of-elimination" id="toc-order-of-elimination" class="nav-link" data-scroll-target="#order-of-elimination">Order of elimination</a></li>
+  <li><a href="#another-method-lasso" id="toc-another-method-lasso" class="nav-link" data-scroll-target="#another-method-lasso">Another method: lasso</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/04-fitting.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -277,7 +248,6 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
 <h1 class="title d-none d-lg-block">4 · Fitting</h1>
-<p class="subtitle lead">Any regression method can be used: they all read the same two objects, A and b</p>
 </div>
 
 
@@ -294,21 +264,20 @@ window.Quarto = {
 </header>
 
 
-<div class="stepmeta"><b>You need</b><span><code>gram</code> (A and b per genotype and year) from step 3.</span><b>You get</b><span>coefficients from OLS, ridge, sparse (SSR) and lasso fits, and a feel for which terms matter.</span></div>
-<section id="one-pooled-problem" class="level2">
-<h2 class="anchored" data-anchor-id="one-pooled-problem">One pooled problem</h2>
-<p>To start simply, pool <strong>all genotypes and all years</strong> into one regression. We add up the per-trajectory statistics and put every library column on a common scale (unit root-mean-square), so coefficient sizes are comparable.</p>
+<section id="pooled-normal-equations" class="level2">
+<h2 class="anchored" data-anchor-id="pooled-normal-equations">Pooled normal equations</h2>
+<p>For this step all genotypes and seasons are pooled. The statistics are summed and the library columns scaled to unit root-mean-square, so that coefficients are comparable.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>st <span class="ot">&lt;-</span> <span class="fu">sum_years</span>(gram, <span class="fu">seq_along</span>(tr<span class="sc">$</span>years))        <span class="co"># add up all years, keep genotypes apart</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>A  <span class="ot">&lt;-</span> <span class="fu">apply</span>(st<span class="sc">$</span>A, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), sum)                   <span class="co"># add up genotypes too</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>st <span class="ot">&lt;-</span> <span class="fu">sum_years</span>(gram, <span class="fu">seq_along</span>(tr<span class="sc">$</span>years))</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>A  <span class="ot">&lt;-</span> <span class="fu">apply</span>(st<span class="sc">$</span>A, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), sum)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>b  <span class="ot">&lt;-</span> <span class="fu">colSums</span>(st<span class="sc">$</span>b)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">scale_gram</span>(A, b, <span class="at">n =</span> <span class="fu">sum</span>(st<span class="sc">$</span>n))             <span class="co"># scaled normal equations</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>sc <span class="ot">&lt;-</span> <span class="fu">scale_gram</span>(A, b, <span class="at">n =</span> <span class="fu">sum</span>(st<span class="sc">$</span>n))</span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>terms <span class="ot">&lt;-</span> gram<span class="sc">$</span>names</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
-<section id="a-fitting-method-is-a-function-fita-b-..." class="level2">
-<h2 class="anchored" data-anchor-id="a-fitting-method-is-a-function-fita-b-...">A fitting method is a function <code>fit(A, b, ...)</code></h2>
-<p>Every method takes the same two objects and returns <code>list(coef, support)</code>.</p>
+<section id="fitting-methods" class="level2">
+<h2 class="anchored" data-anchor-id="fitting-methods">Fitting methods</h2>
+<p>Each method takes <code>(A, b)</code> and returns <code>list(coef, support)</code>.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>fit_ols <span class="ot">&lt;-</span> <span class="cf">function</span>(A, b, ...) {</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> <span class="fu">solve</span>(A, b), <span class="at">support =</span> <span class="fu">seq_along</span>(b))</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -325,13 +294,13 @@ window.Quarto = {
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  coef <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(b)); coef[S] <span class="ot">&lt;-</span> co</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> coef, <span class="at">support =</span> S)</span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Ordinary least squares</strong> uses every term. <strong>Ridge</strong> shrinks them. <strong>Sequential thresholding</strong> (SSR) refits, removes the smallest coefficient, and repeats until <span class="math inline">\(k\)</span> terms remain.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>rdg <span class="ot">&lt;-</span> <span class="fu">fit_ridge</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">lambda =</span> <span class="fl">0.01</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>ssr <span class="ot">&lt;-</span> <span class="fu">fit_ssr</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">k =</span> <span class="dv">8</span>)</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">term =</span> terms, <span class="at">OLS =</span> ols<span class="sc">$</span>coef, <span class="at">ridge =</span> rdg<span class="sc">$</span>coef, <span class="at">SSR_8 =</span> ssr<span class="sc">$</span>coef)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>tab[, <span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">round</span>(tab[, <span class="sc">-</span><span class="dv">1</span>], <span class="dv">3</span>); tab</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>tab[, <span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">round</span>(tab[, <span class="sc">-</span><span class="dv">1</span>], <span class="dv">3</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>tab</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>    term    OLS  ridge  SSR_8
 1      1  0.156  0.143  0.154
@@ -352,9 +321,10 @@ window.Quarto = {
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">reshape</span>(tab, <span class="at">direction =</span> <span class="st">"long"</span>, <span class="at">varying =</span> <span class="fu">list</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>), <span class="at">v.names =</span> <span class="st">"coef"</span>, <span class="at">timevar =</span> <span class="st">"method"</span>, <span class="at">times =</span> <span class="fu">names</span>(tab)[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>], <span class="at">idvar =</span> <span class="st">"term"</span>)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>d<span class="sc">$</span>term <span class="ot">&lt;-</span> <span class="fu">factor</span>(d<span class="sc">$</span>term, <span class="fu">rev</span>(terms)); d<span class="sc">$</span>method <span class="ot">&lt;-</span> <span class="fu">factor</span>(d<span class="sc">$</span>method, <span class="fu">names</span>(tab)[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(coef, term, <span class="at">fill =</span> method)) <span class="sc">+</span> <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="st">"dodge"</span>, <span class="at">width =</span> <span class="fl">0.75</span>) <span class="sc">+</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"cyan"</span>, <span class="st">"orange"</span>)])) <span class="sc">+</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"coefficient (scaled library)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(coef, term, <span class="at">colour =</span> method, <span class="at">shape =</span> method)) <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.2</span>, <span class="at">alpha =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"grey"</span>, <span class="st">"burgundy"</span>)])) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"coefficient (scaled library)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>, <span class="at">legend.title =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -364,101 +334,48 @@ window.Quarto = {
 </div>
 </div>
 </section>
-<section id="watching-the-sparse-fit-decide" class="level2">
-<h2 class="anchored" data-anchor-id="watching-the-sparse-fit-decide">Watching the sparse fit decide</h2>
-<p>SSR removes terms one at a time. The order shows what the data cannot do without:</p>
+<section id="order-of-elimination" class="level2">
+<h2 class="anchored" data-anchor-id="order-of-elimination">Order of elimination</h2>
+<p>Sequential thresholding removes one term at a time; the order is the following.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(terms); out <span class="ot">&lt;-</span> <span class="fu">character</span>(<span class="dv">0</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> (<span class="fu">length</span>(S) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  co <span class="ot">&lt;-</span> <span class="fu">solve</span>(sc<span class="sc">$</span>A[S, S, <span class="at">drop =</span> <span class="cn">FALSE</span>] <span class="sc">+</span> <span class="fl">1e-6</span> <span class="sc">*</span> <span class="fu">diag</span>(<span class="fu">length</span>(S)), sc<span class="sc">$</span>b[S])</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  w <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(co)); out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, terms[S[w]]); S <span class="ot">&lt;-</span> S[<span class="sc">-</span>w]</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">data.frame</span>(<span class="at">removed_in_order =</span> out, <span class="at">terms_left_after =</span> <span class="dv">12</span><span class="sc">:</span><span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">removed =</span> out, <span class="at">last =</span> terms[S])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>   removed_in_order terms_left_after
-1             RAW^3               12
-2             RAD^3               11
-3             RAD^2               10
-4               RAD                9
-5               RAW                8
-6                DL                7
-7              TT^3                6
-8                TT                5
-9             RAW^2                4
-10             DL^3                3
-11             DL^2                2
-12             TT^2                1</code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">last_standing =</span> terms[S])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>last_standing 
-          "1" </code></pre>
+<pre><code> removed1  removed2  removed3  removed4  removed5  removed6  removed7  removed8 
+  "RAW^3"   "RAD^3"   "RAD^2"     "RAD"     "RAW"      "DL"    "TT^3"      "TT" 
+ removed9 removed10 removed11 removed12      last 
+  "RAW^2"    "DL^3"    "DL^2"    "TT^2"       "1" </code></pre>
 </div>
 </div>
-<p>The first terms to go are the high powers of radiation and water, and what survives longest are the constant and the powers of thermal time and day length. Be careful with this ranking: it is not an importance measure. A term can be dropped because its effect is shared with correlated powers of the same driver, and the order depends on the library. The honest question is how many terms the model needs to predict well on unseen years, which is the topic of step 5; step 6 then reads the fitted <em>curves</em> rather than individual coefficients.</p>
+<p>The order depends on the library and on correlations among its terms, and is not a ranking of importance. The number of terms is chosen by validation (step 5).</p>
 </section>
-<section id="writing-your-own-method-lasso-in-ten-lines" class="level2">
-<h2 class="anchored" data-anchor-id="writing-your-own-method-lasso-in-ten-lines">Writing your own method: lasso in ten lines</h2>
-<p>Nothing above is special. Any method that turns <code>(A, b)</code> into coefficients works. As an example, the lasso written as coordinate descent on the same scaled normal equations:</p>
+<section id="another-method-lasso" class="level2">
+<h2 class="anchored" data-anchor-id="another-method-lasso">Another method: lasso</h2>
+<p>Any method that maps <code>(A, b)</code> to coefficients can be used. As an example, the lasso by coordinate descent on the same scaled normal equations:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="cf">function</span>(A, b, <span class="at">lambda =</span> <span class="fl">0.01</span>, <span class="at">iters =</span> <span class="dv">2000</span>, ...) {</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  xi <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(b))</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (it <span class="cf">in</span> <span class="fu">seq_len</span>(iters)) {</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    old <span class="ot">&lt;-</span> xi</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(b)) {</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>      r <span class="ot">&lt;-</span> b[j] <span class="sc">-</span> <span class="fu">sum</span>(A[j, <span class="sc">-</span>j] <span class="sc">*</span> xi[<span class="sc">-</span>j])                         <span class="co"># partial residual</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>      xi[j] <span class="ot">&lt;-</span> <span class="fu">sign</span>(r) <span class="sc">*</span> <span class="fu">max</span>(<span class="fu">abs</span>(r) <span class="sc">-</span> lambda, <span class="dv">0</span>) <span class="sc">/</span> A[j, j]       <span class="co"># soft threshold</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">max</span>(<span class="fu">abs</span>(xi <span class="sc">-</span> old)) <span class="sc">&lt;</span> <span class="fl">1e-9</span>) <span class="cf">break</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> xi, <span class="at">support =</span> <span class="fu">which</span>(xi <span class="sc">!=</span> <span class="dv">0</span>))</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>las <span class="ot">&lt;-</span> <span class="fu">fit_lasso</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">lambda =</span> <span class="fl">2e-4</span>)</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="fu">setNames</span>(<span class="fu">round</span>(las<span class="sc">$</span>coef, <span class="dv">3</span>), terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="cf">function</span>(A, b, <span class="at">lambda =</span> <span class="fl">0.01</span>, <span class="at">iters =</span> <span class="dv">2000</span>, ...) {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  xi <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(b))</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (it <span class="cf">in</span> <span class="fu">seq_len</span>(iters)) {</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    old <span class="ot">&lt;-</span> xi</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_along</span>(b)) {</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>      r <span class="ot">&lt;-</span> b[j] <span class="sc">-</span> <span class="fu">sum</span>(A[j, <span class="sc">-</span>j] <span class="sc">*</span> xi[<span class="sc">-</span>j])</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>      xi[j] <span class="ot">&lt;-</span> <span class="fu">sign</span>(r) <span class="sc">*</span> <span class="fu">max</span>(<span class="fu">abs</span>(r) <span class="sc">-</span> lambda, <span class="dv">0</span>) <span class="sc">/</span> A[j, j]</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">max</span>(<span class="fu">abs</span>(xi <span class="sc">-</span> old)) <span class="sc">&lt;</span> <span class="fl">1e-9</span>) <span class="cf">break</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> xi, <span class="at">support =</span> <span class="fu">which</span>(xi <span class="sc">!=</span> <span class="dv">0</span>))</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>las <span class="ot">&lt;-</span> <span class="fu">fit_lasso</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">lambda =</span> <span class="fl">2e-4</span>)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="fu">setNames</span>(<span class="fu">round</span>(las<span class="sc">$</span>coef, <span class="dv">3</span>), terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     1     TT   TT^2   TT^3     DL   DL^2   DL^3    RAW  RAW^2  RAW^3    RAD 
  0.149  0.000 -0.034  0.004 -0.003 -0.045  0.023  0.010 -0.017  0.000  0.005 
  RAD^2  RAD^3 
 -0.003  0.000 </code></pre>
-</div>
-</div>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Idea
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The method is a <strong>plug-in</strong>. Steps 2 and 3 produced <code>A</code> and <code>b</code>; step 4 turns them into coefficients; steps 5 to 8 only need <code>coef</code> and <code>support</code>. Replace the fitting function and nothing else changes.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Check
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>OLS and ridge should be close (the problem is well conditioned). Sparse fits should agree with OLS on the terms they keep. If a sparse fit changes sign on a large coefficient, the library has collinear terms.</p>
-</div>
-</div>
-<div class="callout callout-style-default callout-caution callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Caution</span>Swap
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Try <code>fit_ssr(sc$A, sc$b, k = 5)</code>, <code>fit_ridge(..., lambda = 1)</code>, or <code>fit_lasso(..., lambda = 1e-3)</code>. The next step shows how to judge them honestly: on years the model has never seen.</p>
 </div>
 </div>
 
@@ -949,8 +866,8 @@ window.Quarto = {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./05-validate.html" class="pagination-link" aria-label="5 · Simulate and validate">
-        <span class="nav-page-text">5 · Simulate and validate</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./05-validate.html" class="pagination-link" aria-label="5 · Validation">
+        <span class="nav-page-text">5 · Validation</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
@@ -958,7 +875,7 @@ window.Quarto = {
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>Dynamic GxE from scratch · AAGI Symposium 2026</p>
+<p>AAGI Symposium 2026</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;
