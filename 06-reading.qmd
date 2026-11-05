@@ -201,6 +201,8 @@ The same decomposition for any genotype and season:
 
 ```{ojs}
 //| echo: false
+d3 = window.d3          // local copies, see js/
+Plot = window.Plot
 contrib = FileAttachment("data/interactive/contrib.json").json()
 viewof genotype2 = select("Genotype", contrib.genotypes, "g114")
 viewof season2 = slider("Season", contrib.years, contrib.years.indexOf(1998))

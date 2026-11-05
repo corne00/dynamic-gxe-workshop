@@ -175,6 +175,8 @@ Each method has one hyperparameter: the threshold of STLSQ, the penalty $\lambda
 
 ```{ojs}
 //| echo: false
+d3 = window.d3          // local copies, see js/
+Plot = window.Plot
 hyper = FileAttachment("data/interactive/hyper.json").json()
 viewof method = select("Method", Object.keys(hyper.methods), "STLSQ")
 spec = hyper.methods[method]
@@ -186,12 +188,12 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
 {
   const all = Object.values(hyper.methods);
   const reach = d3.max(all.flatMap(m => m.effect.flat().map(Math.abs)));
-  const rmse = d3.extent(all.flatMap(m => m.rmse));
+  const rmse = [d3.min(all.flatMap(m => m.rmse)), 0.8];   // cap: very large penalties are off scale
   const rows = hyper.terms.map((term, i) => ({term, effect: spec.effect[step][i]}));
   const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
   const scale = spec.param === "terms" ? "linear" : "log";
   const coefficients = Plot.plot({
-    width: 420, height: 300, marginLeft: 50,
+    width: 340, height: 300, marginLeft: 50,
     x: {domain: [-reach, reach], label: "scaled coefficient"},
     y: {domain: hyper.terms, label: null},
     marks: [Plot.barX(rows, {x: "effect", y: "term",
@@ -199,12 +201,12 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
             Plot.ruleX([0])]
   });
   const error = Plot.plot({
-    width: 420, height: 300,
-    x: {type: scale, label: spec.param},
+    width: 340, height: 300,
+    x: {type: scale, label: spec.param, tickFormat: ".2~g"},
     y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE (t/ha)"},
-    marks: [Plot.line(curve, {x: "value", y: "rmse", stroke: "#9CA3AF"}),
-            Plot.dot(curve, {x: "value", y: "rmse", fill: "#9CA3AF", r: 3}),
-            Plot.dot([curve[step]], {x: "value", y: "rmse", fill: "#8B1E3F", r: 6})]
+    marks: [Plot.line(curve, {x: "value", y: "rmse", stroke: "#9CA3AF", clip: true}),
+            Plot.dot(curve, {x: "value", y: "rmse", fill: "#9CA3AF", r: 3, clip: true}),
+            Plot.dot([curve[step]], {x: "value", y: "rmse", fill: "#8B1E3F", r: 6, clip: true})]
   });
   return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${coefficients}${error}</div>
     <p class="interactive-note">${spec.nterms[step]} of ${hyper.terms.length} terms retained.</p>`;

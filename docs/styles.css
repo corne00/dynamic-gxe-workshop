@@ -1,3 +1,13 @@
 /* intentionally minimal */
 figure img, .cell-output-display img { max-width: 100%; }
 .quarto-title-meta { margin-top: .5rem; }
+
+/* interactive figures */
+.dgxe-control { display: flex; align-items: center; gap: .8rem;
+  margin: .25rem 0; font-size: .9rem; }
+.dgxe-control label { min-width: 7rem; color: #374151; }
+.dgxe-control input[type=range] { flex: 0 1 18rem; accent-color: #014E81; }
+.dgxe-control select { padding: .1rem .4rem; border: 1px solid #9CA3AF;
+  border-radius: 3px; background: white; }
+.dgxe-control output { min-width: 5rem; color: #014E81; font-weight: 500; }
+.interactive-note { font-size: .85rem; color: #6B7280; }

@@ -35,3 +35,11 @@ function select(label, options, start = options[0]) {
   input.value = start;
   return control(label, input, () => "");
 }
+
+// Remove the copy buttons of hidden code cells (outside the language tabs).
+window.addEventListener("load", () => {
+  for (const box of document.querySelectorAll(".code-copy-outer-scaffold")) {
+    const pre = box.querySelector("pre");
+    if (!box.closest(".tab-pane") && !(pre && pre.offsetHeight)) box.remove();
+  }
+});

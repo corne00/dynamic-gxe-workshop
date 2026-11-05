@@ -24,6 +24,10 @@ quarto render      # writes docs/ ; computed outputs are cached in _freeze/ and 
 
 Publish with GitHub Pages: Settings → Pages → Deploy from a branch → `main`, folder `/docs`.
 
+## Interactive figures
+
+Pages 4–7 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute_interactive.R` (a few minutes; writes `data/interactive/*.json`).
+
 ## Layout
 
 - `*.qmd`: the pages · `R/functions.R` and `python/dgxe.py`: all workshop functions · `R/pipeline.R`: steps 2–3 in one script

@@ -241,6 +241,8 @@ Predicted against APSIM biomass of the 199 genotypes in one season on one day, f
 
 ```{ojs}
 //| echo: false
+d3 = window.d3          // local copies, see js/
+Plot = window.Plot
 rank = FileAttachment("data/interactive/ranking.json").json()
 viewof season3 = slider("Season", rank.years, rank.years.indexOf(1998))
 viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
@@ -268,7 +270,7 @@ viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
     const rows = obs.map((o, i) => ({obs: o, pred: pred[i], best: best.has(i)}));
     const [lo, hi] = d3.extent([...obs, ...pred]);
     const plot = Plot.plot({
-      width: 330, height: 330, marginLeft: 45,
+      width: 320, height: 320, marginLeft: 45,
       x: {domain: [lo, hi], label: "APSIM biomass (t/ha)"},
       y: {domain: [lo, hi], label: "predicted (t/ha)"},
       marks: [Plot.line([[lo, lo], [hi, hi]], {stroke: "#9CA3AF"}),

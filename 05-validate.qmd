@@ -282,6 +282,8 @@ Held-out prediction of the sparse model (STLSQ, fitted to the other seasons) and
 
 ```{ojs}
 //| echo: false
+d3 = window.d3          // local copies, see js/
+Plot = window.Plot
 traj = FileAttachment("data/interactive/trajectories.json").json()
 viewof genotype = select("Genotype", traj.genotypes, "g114")
 viewof season = slider("Season", traj.years, traj.years.indexOf(1998))

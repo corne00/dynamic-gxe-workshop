@@ -112,6 +112,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<script type="module" src="site_libs/quarto-ojs/quarto-ojs-runtime.js"></script>
+<link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
+<script src="js/d3.min.js"></script>
+<script src="js/plot.umd.min.js"></script>
+<script src="js/controls.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -237,6 +242,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#equations-of-different-genotypes" id="toc-equations-of-different-genotypes" class="nav-link active" data-scroll-target="#equations-of-different-genotypes">Equations of different genotypes</a></li>
   <li><a href="#ranking-genotypes" id="toc-ranking-genotypes" class="nav-link" data-scroll-target="#ranking-genotypes">Ranking genotypes</a></li>
+  <li><a href="#exploring-the-ranking" id="toc-exploring-the-ranking" class="nav-link" data-scroll-target="#exploring-the-ranking">Exploring the ranking</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/07-genotypes.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -495,11 +501,107 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Early in the season the baseline ranks genotypes better, since the order is determined mainly by genotype and not yet by weather. Around day 98 (after sowing) the two are similar, and on day 113 the model is better on both measures. These results are for genotypes whose trajectories in other seasons are available for fitting.</p>
+</section>
+<section id="exploring-the-ranking" class="level2">
+<h2 class="anchored" data-anchor-id="exploring-the-ranking">Exploring the ranking</h2>
+<p>Predicted against APSIM biomass of the 199 genotypes in one season on one day, for the sparse model and for the baseline. Red points are the true top 10%.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb14" data-startfrom="244" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 243;"><span id="cb14-244"><a href="#cb14-244" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span>          <span class="co">// local copies, see js/</span></span>
+<span id="cb14-245"><a href="#cb14-245" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
+<span id="cb14-246"><a href="#cb14-246" aria-hidden="true" tabindex="-1"></a>rank <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/ranking.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
+<span id="cb14-247"><a href="#cb14-247" aria-hidden="true" tabindex="-1"></a>viewof season3 <span class="op">=</span> <span class="fu">slider</span>(<span class="st">"Season"</span><span class="op">,</span> rank<span class="op">.</span><span class="at">years</span><span class="op">,</span> rank<span class="op">.</span><span class="at">years</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="dv">1998</span>))</span>
+<span id="cb14-248"><a href="#cb14-248" aria-hidden="true" tabindex="-1"></a>viewof day <span class="op">=</span> <span class="fu">slider</span>(<span class="st">"Day after sowing"</span><span class="op">,</span> rank<span class="op">.</span><span class="at">days</span><span class="op">,</span> rank<span class="op">.</span><span class="at">days</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="dv">113</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-1" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-2" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-3" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-4" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-5" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb15" data-startfrom="252" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 251;"><span id="cb15-252"><a href="#cb15-252" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb15-253"><a href="#cb15-253" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> obs <span class="op">=</span> rank<span class="op">.</span><span class="at">observed</span>[season3][day]<span class="op">;</span></span>
+<span id="cb15-254"><a href="#cb15-254" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> ranks <span class="op">=</span> a <span class="kw">=&gt;</span> {</span>
+<span id="cb15-255"><a href="#cb15-255" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> order <span class="op">=</span> d3<span class="op">.</span><span class="fu">range</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">sort</span>((i<span class="op">,</span> j) <span class="kw">=&gt;</span> a[i] <span class="op">-</span> a[j])<span class="op">;</span></span>
+<span id="cb15-256"><a href="#cb15-256" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> r <span class="op">=</span> <span class="kw">new</span> <span class="bu">Array</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">;</span></span>
+<span id="cb15-257"><a href="#cb15-257" aria-hidden="true" tabindex="-1"></a>    order<span class="op">.</span><span class="fu">forEach</span>((i<span class="op">,</span> k) <span class="kw">=&gt;</span> r[i] <span class="op">=</span> k)<span class="op">;</span></span>
+<span id="cb15-258"><a href="#cb15-258" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r<span class="op">;</span></span>
+<span id="cb15-259"><a href="#cb15-259" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb15-260"><a href="#cb15-260" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> spearman <span class="op">=</span> (a<span class="op">,</span> b) <span class="kw">=&gt;</span> d3<span class="op">.</span><span class="fu">mean</span>(d3<span class="op">.</span><span class="fu">zip</span>(<span class="fu">ranks</span>(a)<span class="op">,</span> <span class="fu">ranks</span>(b))<span class="op">,</span></span>
+<span id="cb15-261"><a href="#cb15-261" aria-hidden="true" tabindex="-1"></a>    ([x<span class="op">,</span> y]) <span class="kw">=&gt;</span> (x <span class="op">-</span> (a<span class="op">.</span><span class="at">length</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>) <span class="op">*</span> (y <span class="op">-</span> (a<span class="op">.</span><span class="at">length</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>))</span>
+<span id="cb15-262"><a href="#cb15-262" aria-hidden="true" tabindex="-1"></a>    <span class="op">/</span> ((a<span class="op">.</span><span class="at">length</span> <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">12</span>)<span class="op">;</span></span>
+<span id="cb15-263"><a href="#cb15-263" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> top <span class="op">=</span> a <span class="kw">=&gt;</span> <span class="kw">new</span> <span class="bu">Set</span>(d3<span class="op">.</span><span class="fu">range</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">sort</span>((i<span class="op">,</span> j) <span class="kw">=&gt;</span> a[j] <span class="op">-</span> a[i])</span>
+<span id="cb15-264"><a href="#cb15-264" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">slice</span>(<span class="dv">0</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">round</span>(<span class="fl">0.1</span> <span class="op">*</span> a<span class="op">.</span><span class="at">length</span>)))<span class="op">;</span></span>
+<span id="cb15-265"><a href="#cb15-265" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> panel <span class="op">=</span> key <span class="kw">=&gt;</span> {</span>
+<span id="cb15-266"><a href="#cb15-266" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> pred <span class="op">=</span> rank[key][season3][day]<span class="op">;</span></span>
+<span id="cb15-267"><a href="#cb15-267" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> best <span class="op">=</span> <span class="fu">top</span>(obs)<span class="op">,</span> chosen <span class="op">=</span> <span class="fu">top</span>(pred)<span class="op">;</span></span>
+<span id="cb15-268"><a href="#cb15-268" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> overlap <span class="op">=</span> [<span class="op">...</span>best]<span class="op">.</span><span class="fu">filter</span>(i <span class="kw">=&gt;</span> chosen<span class="op">.</span><span class="fu">has</span>(i))<span class="op">.</span><span class="at">length</span> <span class="op">/</span> best<span class="op">.</span><span class="at">size</span><span class="op">;</span></span>
+<span id="cb15-269"><a href="#cb15-269" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> rows <span class="op">=</span> obs<span class="op">.</span><span class="fu">map</span>((o<span class="op">,</span> i) <span class="kw">=&gt;</span> ({<span class="dt">obs</span><span class="op">:</span> o<span class="op">,</span> <span class="dt">pred</span><span class="op">:</span> pred[i]<span class="op">,</span> <span class="dt">best</span><span class="op">:</span> best<span class="op">.</span><span class="fu">has</span>(i)}))<span class="op">;</span></span>
+<span id="cb15-270"><a href="#cb15-270" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> [lo<span class="op">,</span> hi] <span class="op">=</span> d3<span class="op">.</span><span class="fu">extent</span>([<span class="op">...</span>obs<span class="op">,</span> <span class="op">...</span>pred])<span class="op">;</span></span>
+<span id="cb15-271"><a href="#cb15-271" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> plot <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb15-272"><a href="#cb15-272" aria-hidden="true" tabindex="-1"></a>      <span class="dt">width</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">45</span><span class="op">,</span></span>
+<span id="cb15-273"><a href="#cb15-273" aria-hidden="true" tabindex="-1"></a>      <span class="dt">x</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [lo<span class="op">,</span> hi]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"APSIM biomass (t/ha)"</span>}<span class="op">,</span></span>
+<span id="cb15-274"><a href="#cb15-274" aria-hidden="true" tabindex="-1"></a>      <span class="dt">y</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [lo<span class="op">,</span> hi]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"predicted (t/ha)"</span>}<span class="op">,</span></span>
+<span id="cb15-275"><a href="#cb15-275" aria-hidden="true" tabindex="-1"></a>      <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">line</span>([[lo<span class="op">,</span> lo]<span class="op">,</span> [hi<span class="op">,</span> hi]]<span class="op">,</span> {<span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span>})<span class="op">,</span></span>
+<span id="cb15-276"><a href="#cb15-276" aria-hidden="true" tabindex="-1"></a>              Plot<span class="op">.</span><span class="fu">dot</span>(rows<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"obs"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"pred"</span><span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="fl">2.5</span><span class="op">,</span> <span class="dt">fillOpacity</span><span class="op">:</span> <span class="fl">0.7</span><span class="op">,</span></span>
+<span id="cb15-277"><a href="#cb15-277" aria-hidden="true" tabindex="-1"></a>                <span class="dt">fill</span><span class="op">:</span> d <span class="kw">=&gt;</span> d<span class="op">.</span><span class="at">best</span> <span class="op">?</span> <span class="st">"#8B1E3F"</span> <span class="op">:</span> <span class="st">"#014E81"</span>})]</span>
+<span id="cb15-278"><a href="#cb15-278" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-279"><a href="#cb15-279" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div&gt;</span><span class="sc">${</span>plot<span class="sc">}</span><span class="vs">&lt;p class="interactive-note"&gt;</span><span class="sc">${</span>key<span class="sc">}</span><span class="vs">: Spearman ρ = </span><span class="sc">${</span><span class="fu">spearman</span>(obs<span class="op">,</span> pred)<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs">, top-10% overlap </span><span class="sc">${</span>overlap<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs">&lt;/p&gt;&lt;/div&gt;`</span><span class="op">;</span></span>
+<span id="cb15-280"><a href="#cb15-280" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb15-281"><a href="#cb15-281" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div style="display:flex;flex-wrap:wrap;gap:1rem"&gt;</span><span class="sc">${</span><span class="fu">panel</span>(<span class="st">"model"</span>)<span class="sc">}${</span><span class="fu">panel</span>(<span class="st">"baseline"</span>)<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span><span class="op">;</span></span>
+<span id="cb15-282"><a href="#cb15-282" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="ojs-cell-2" data-nodetype="expression">
+
+</div>
+</div>
+</div>
+<p>The figure uses results computed beforehand (<a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R"><code>scripts/precompute_interactive.R</code></a>).</p>
 
 
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script type="ojs-module-contents">
+eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzICAgICAgICAgIC8vIGxvY2FsIGNvcGllcywgc2VlIGpzL1xuUGxvdCA9IHdpbmRvdy5QbG90XG5yYW5rID0gRmlsZUF0dGFjaG1lbnQoXCJkYXRhL2ludGVyYWN0aXZlL3JhbmtpbmcuanNvblwiKS5qc29uKClcbnZpZXdvZiBzZWFzb24zID0gc2xpZGVyKFwiU2Vhc29uXCIsIHJhbmsueWVhcnMsIHJhbmsueWVhcnMuaW5kZXhPZigxOTk4KSlcbnZpZXdvZiBkYXkgPSBzbGlkZXIoXCJEYXkgYWZ0ZXIgc293aW5nXCIsIHJhbmsuZGF5cywgcmFuay5kYXlzLmluZGV4T2YoMTEzKSlcbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMiIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IntcbiAgY29uc3Qgb2JzID0gcmFuay5vYnNlcnZlZFtzZWFzb24zXVtkYXldO1xuICBjb25zdCByYW5rcyA9IGEgPT4ge1xuICAgIGNvbnN0IG9yZGVyID0gZDMucmFuZ2UoYS5sZW5ndGgpLnNvcnQoKGksIGopID0+IGFbaV0gLSBhW2pdKTtcbiAgICBjb25zdCByID0gbmV3IEFycmF5KGEubGVuZ3RoKTtcbiAgICBvcmRlci5mb3JFYWNoKChpLCBrKSA9PiByW2ldID0gayk7XG4gICAgcmV0dXJuIHI7XG4gIH07XG4gIGNvbnN0IHNwZWFybWFuID0gKGEsIGIpID0+IGQzLm1lYW4oZDMuemlwKHJhbmtzKGEpLCByYW5rcyhiKSksXG4gICAgKFt4LCB5XSkgPT4gKHggLSAoYS5sZW5ndGggLSAxKSAvIDIpICogKHkgLSAoYS5sZW5ndGggLSAxKSAvIDIpKVxuICAgIC8gKChhLmxlbmd0aCAqKiAyIC0gMSkgLyAxMik7XG4gIGNvbnN0IHRvcCA9IGEgPT4gbmV3IFNldChkMy5yYW5nZShhLmxlbmd0aCkuc29ydCgoaSwgaikgPT4gYVtqXSAtIGFbaV0pXG4gICAgLnNsaWNlKDAsIE1hdGgucm91bmQoMC4xICogYS5sZW5ndGgpKSk7XG4gIGNvbnN0IHBhbmVsID0ga2V5ID0+IHtcbiAgICBjb25zdCBwcmVkID0gcmFua1trZXldW3NlYXNvbjNdW2RheV07XG4gICAgY29uc3QgYmVzdCA9IHRvcChvYnMpLCBjaG9zZW4gPSB0b3AocHJlZCk7XG4gICAgY29uc3Qgb3ZlcmxhcCA9IFsuLi5iZXN0XS5maWx0ZXIoaSA9PiBjaG9zZW4uaGFzKGkpKS5sZW5ndGggLyBiZXN0LnNpemU7XG4gICAgY29uc3Qgcm93cyA9IG9icy5tYXAoKG8sIGkpID0+ICh7b2JzOiBvLCBwcmVkOiBwcmVkW2ldLCBiZXN0OiBiZXN0LmhhcyhpKX0pKTtcbiAgICBjb25zdCBbbG8sIGhpXSA9IGQzLmV4dGVudChbLi4ub2JzLCAuLi5wcmVkXSk7XG4gICAgY29uc3QgcGxvdCA9IFBsb3QucGxvdCh7XG4gICAgICB3aWR0aDogMzIwLCBoZWlnaHQ6IDMyMCwgbWFyZ2luTGVmdDogNDUsXG4gICAgICB4OiB7ZG9tYWluOiBbbG8sIGhpXSwgbGFiZWw6IFwiQVBTSU0gYmlvbWFzcyAodC9oYSlcIn0sXG4gICAgICB5OiB7ZG9tYWluOiBbbG8sIGhpXSwgbGFiZWw6IFwicHJlZGljdGVkICh0L2hhKVwifSxcbiAgICAgIG1hcmtzOiBbUGxvdC5saW5lKFtbbG8sIGxvXSwgW2hpLCBoaV1dLCB7c3Ryb2tlOiBcIiM5Q0EzQUZcIn0pLFxuICAgICAgICAgICAgICBQbG90LmRvdChyb3dzLCB7eDogXCJvYnNcIiwgeTogXCJwcmVkXCIsIHI6IDIuNSwgZmlsbE9wYWNpdHk6IDAuNyxcbiAgICAgICAgICAgICAgICBmaWxsOiBkID0+IGQuYmVzdCA/IFwiIzhCMUUzRlwiIDogXCIjMDE0RTgxXCJ9KV1cbiAgICB9KTtcbiAgICByZXR1cm4gaHRtbGA8ZGl2PiR7cGxvdH08cCBjbGFzcz1cImludGVyYWN0aXZlLW5vdGVcIj4ke2tleX06IFNwZWFybWFuIM+BID0gJHtzcGVhcm1hbihvYnMsIHByZWQpLnRvRml4ZWQoMil9LCB0b3AtMTAlIG92ZXJsYXAgJHtvdmVybGFwLnRvRml4ZWQoMil9PC9wPjwvZGl2PmA7XG4gIH07XG4gIHJldHVybiBodG1sYDxkaXYgc3R5bGU9XCJkaXNwbGF5OmZsZXg7ZmxleC13cmFwOndyYXA7Z2FwOjFyZW1cIj4ke3BhbmVsKFwibW9kZWxcIil9JHtwYW5lbChcImJhc2VsaW5lXCIpfTwvZGl2PmA7XG59XG4ifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXRRdWlldCIsInNvdXJjZSI6InNoaW55SW5wdXQoJ3NlYXNvbjMnKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnZGF5JykifV19
+</script>
+<script type="module">
+if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }
+window._ojs.paths.runtimeToDoc = "../..";
+window._ojs.paths.runtimeToRoot = "../..";
+window._ojs.paths.docToRoot = "";
+window._ojs.selfContained = false;
+window._ojs.runtime.interpretFromScriptTags();
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
