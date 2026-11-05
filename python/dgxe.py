@@ -95,42 +95,54 @@ def fit_ols(X, dy):
                            rcond=None)[0]
 
 
-# Ridge (alpha = 0), lasso (alpha = 1) and elastic net with the penalty of
-# glmnet, lam * ((1 - alpha) / 2 * b'b / sd(dy) + alpha * |b|_1), on terms
-# scaled to unit variance (glmnet scales the squared penalty by sd(dy)).
+# Lasso (alpha = 1) and elastic net with the penalty of glmnet,
+# lam * ((1 - alpha) / 2 * b'b / sd(dy) + alpha * |b|_1), on terms scaled to
+# unit variance (glmnet scales the squared penalty by sd(dy)).
 def fit_glmnet(X, dy, alpha, lam):
     sx = X.std(axis=0)
     l1, l2 = lam * alpha, lam * (1 - alpha) / dy.std()
     model = ElasticNet(alpha=l1 + l2, l1_ratio=l1 / (l1 + l2), tol=1e-12,
-                       max_iter=100000)
+                       max_iter=100000, precompute=True)
     model.fit((X - X.mean(axis=0)) / sx, dy - dy.mean())
     b = model.coef_ / sx
     return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
 
 
-def fit_ridge(X, dy, lam=1e-3): return fit_glmnet(X, dy, 0, lam)
-def fit_lasso(X, dy, lam=3e-4): return fit_glmnet(X, dy, 1, lam)
-def fit_enet(X, dy, lam=6e-4): return fit_glmnet(X, dy, 0.5, lam)
+# Ridge (alpha = 0) has a closed form, with the same scaling as above.
+def fit_ridge(X, dy, lam=1e-3):
+    sx = X.std(axis=0)
+    Z = (X - X.mean(axis=0)) / sx
+    A = Z.T @ Z / len(dy) + lam / dy.std() * np.eye(X.shape[1])
+    b = np.linalg.solve(A, Z.T @ (dy - dy.mean()) / len(dy)) / sx
+    return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
 
 
-# Best subset (exhaustive) or backward elimination with k terms. Residual sums
-# of squares come from the centred Gram matrix, so no refit is needed.
+def fit_lasso(X, dy, lam=3e-4):
+    return fit_glmnet(X, dy, 1, lam)
+
+
+def fit_enet(X, dy, lam=6e-4):
+    return fit_glmnet(X, dy, 0.5, lam)
+
+
+# Best subset (exhaustive) or backward elimination with k terms. Everything is
+# computed from the centred Gram matrix G and c = X'dy: a subset S has
+# residual sum of squares dy'dy - c_S' G_SS^-1 c_S, and removing term j from S
+# increases it by b_j^2 / (G_SS^-1)_jj.
 def fit_subset(X, dy, k=8, method="exhaustive"):
     Xc, yc = X - X.mean(axis=0), dy - dy.mean()
     G, c = Xc.T @ Xc, Xc.T @ yc
-
-    def rss(s):
-        s = list(s)
-        return yc @ yc - c[s] @ np.linalg.solve(G[np.ix_(s, s)], c[s])
-
     if method == "exhaustive":
-        keep = min(combinations(range(X.shape[1]), k), key=rss)
+        subsets = np.array(list(combinations(range(X.shape[1]), k)))
+        blocks = G[subsets[:, :, None], subsets[:, None, :]]
+        b = np.linalg.solve(blocks, c[subsets][..., None])[..., 0]
+        keep = subsets[np.argmax((b * c[subsets]).sum(axis=1))]
     else:
-        keep = list(range(X.shape[1]))
+        keep = np.arange(X.shape[1])
         while len(keep) > k:
-            keep.remove(min(keep, key=lambda j: rss([i for i in keep
-                                                     if i != j])))
-    keep = list(keep)
+            inv = np.linalg.inv(G[np.ix_(keep, keep)])
+            increase = (inv @ c[keep]) ** 2 / np.diag(inv)
+            keep = np.delete(keep, np.argmin(increase))
     b = np.zeros(X.shape[1])
     b[keep] = np.linalg.solve(G[np.ix_(keep, keep)], c[keep])
     return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
@@ -204,7 +216,9 @@ def evaluate(P, tr, fixed_day=113):
     err[:, :, 0] = np.nan                        # the initial value is given
     g, s = np.indices(tr.nend.shape)
 
-    def rmse(e): return np.sqrt(np.nanmean(e ** 2))
+    def rmse(e):
+        return np.sqrt(np.nanmean(e ** 2))
+
     return {"trajectory_rmse": rmse(err),
             "fixed_day_rmse": rmse(err[:, :, fixed_day - tr.das0]),
             "maturity_rmse": rmse(err[g, s, tr.nend])}
@@ -219,17 +233,14 @@ def rmse_by_day(P, tr):
 # genotype in the other seasons (held at its last value once all other
 # seasons have ended), with the true initial value.
 def lookup_trajectory(tr):
-    P = np.full(tr.Y.shape, np.nan)
-    for s in range(len(tr.years)):
-        others = np.delete(tr.Y, s, axis=1)
-        with np.errstate(invalid="ignore", divide="ignore"):
-            m = np.nansum(others, axis=1) / (~np.isnan(others)).sum(axis=1)
-        m[(~np.isnan(others)).sum(axis=1) == 0] = np.nan
-        for g in range(m.shape[0]):
-            ok = ~np.isnan(m[g])
-            m[g, ~ok] = m[g, ok][-1]
-        P[:, s] = m
-        P[:, s, 0] = tr.Y[:, s, 0]
+    seen = ~np.isnan(tr.Y)
+    total, count = np.nansum(tr.Y, axis=1), seen.sum(axis=1)  # genotype x day
+    n = count[:, None, :] - seen                              # other seasons
+    with np.errstate(invalid="ignore", divide="ignore"):
+        P = (total[:, None, :] - np.nan_to_num(tr.Y)) / n
+    last = (n > 0).sum(axis=2, keepdims=True) - 1             # last day seen
+    P = np.where(n > 0, P, np.take_along_axis(P, last, axis=2))
+    P[:, :, 0] = tr.Y[:, :, 0]
     return P
 
 

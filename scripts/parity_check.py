@@ -2,7 +2,14 @@
 methods (counterpart of parity_check.R). Run from the repository root with
 PYTHONPATH=python."""
 import pandas as pd
-from dgxe import *
+from dgxe import (
+    cross_validate,
+    evaluate,
+    fit_methods,
+    make_drivers,
+    make_library,
+    make_trajectories,
+)
 
 wx = pd.read_csv("data/narrabri_weather.csv")
 traj = pd.read_csv("data/narrabri_biomass.csv.gz")

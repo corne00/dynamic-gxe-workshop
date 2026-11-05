@@ -62,7 +62,7 @@ d <- make_design(Theta, tr, "g001")
 
 ## Least squares and penalised regression
 
-Ordinary least squares uses `lm.fit` (Python: `numpy.linalg.lstsq`). Ridge, lasso and elastic net are provided by `glmnet` (Python: scikit-learn `ElasticNet`, with the penalty scaled as in `glmnet`); they differ in the penalty (squared, absolute value, and a mixture of both). The lasso sets coefficients to zero.
+Ordinary least squares uses `lm.fit` (Python: `numpy.linalg.lstsq`). Ridge, lasso and elastic net are provided by `glmnet` (Python: scikit-learn `ElasticNet` for lasso and elastic net and a closed form for ridge, with the penalty scaled as in `glmnet`); they differ in the penalty (squared, absolute value, and a mixture of both). The lasso sets coefficients to zero.
 
 ```{r}
 #| echo: false
