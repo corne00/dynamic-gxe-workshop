@@ -234,3 +234,51 @@ ggplot(long, aes(das, score, colour = method)) +
 ```
 
 Early in the season the baseline ranks genotypes better, since the order is determined mainly by genotype and not yet by weather. Around day 98 (after sowing) the two are similar, and on day 113 the model is better on both measures. These results are for genotypes whose trajectories in other seasons are available for fitting.
+
+## Exploring the ranking
+
+Predicted against APSIM biomass of the 199 genotypes in one season on one day, for the sparse model and for the baseline. Red points are the true top 10%.
+
+```{ojs}
+//| echo: false
+rank = FileAttachment("data/interactive/ranking.json").json()
+viewof season3 = slider("Season", rank.years, rank.years.indexOf(1998))
+viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
+```
+
+```{ojs}
+//| echo: false
+{
+  const obs = rank.observed[season3][day];
+  const ranks = a => {
+    const order = d3.range(a.length).sort((i, j) => a[i] - a[j]);
+    const r = new Array(a.length);
+    order.forEach((i, k) => r[i] = k);
+    return r;
+  };
+  const spearman = (a, b) => d3.mean(d3.zip(ranks(a), ranks(b)),
+    ([x, y]) => (x - (a.length - 1) / 2) * (y - (a.length - 1) / 2))
+    / ((a.length ** 2 - 1) / 12);
+  const top = a => new Set(d3.range(a.length).sort((i, j) => a[j] - a[i])
+    .slice(0, Math.round(0.1 * a.length)));
+  const panel = key => {
+    const pred = rank[key][season3][day];
+    const best = top(obs), chosen = top(pred);
+    const overlap = [...best].filter(i => chosen.has(i)).length / best.size;
+    const rows = obs.map((o, i) => ({obs: o, pred: pred[i], best: best.has(i)}));
+    const [lo, hi] = d3.extent([...obs, ...pred]);
+    const plot = Plot.plot({
+      width: 330, height: 330, marginLeft: 45,
+      x: {domain: [lo, hi], label: "APSIM biomass (t/ha)"},
+      y: {domain: [lo, hi], label: "predicted (t/ha)"},
+      marks: [Plot.line([[lo, lo], [hi, hi]], {stroke: "#9CA3AF"}),
+              Plot.dot(rows, {x: "obs", y: "pred", r: 2.5, fillOpacity: 0.7,
+                fill: d => d.best ? "#8B1E3F" : "#014E81"})]
+    });
+    return html`<div>${plot}<p class="interactive-note">${key}: Spearman ρ = ${spearman(obs, pred).toFixed(2)}, top-10% overlap ${overlap.toFixed(2)}</p></div>`;
+  };
+  return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${panel("model")}${panel("baseline")}</div>`;
+}
+```
+
+The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).

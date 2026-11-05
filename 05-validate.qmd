@@ -276,6 +276,40 @@ ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) +
   theme_dgxe()
 ```
 
+## Individual trajectories
+
+Held-out prediction of the sparse model (STLSQ, fitted to the other seasons) and of the baseline for one genotype and season. Forty genotypes are available.
+
+```{ojs}
+//| echo: false
+traj = FileAttachment("data/interactive/trajectories.json").json()
+viewof genotype = select("Genotype", traj.genotypes, "g114")
+viewof season = slider("Season", traj.years, traj.years.indexOf(1998))
+```
+
+```{ojs}
+//| echo: false
+{
+  const g = traj.genotypes.indexOf(genotype);
+  const line = key => traj[key][g][season].map((y, i) => ({das: traj.das0 + i, y}));
+  const [observed, model, baseline] = ["observed", "model", "baseline"].map(line);
+  const rmse = a => Math.sqrt(d3.mean(a.slice(1), (d, i) => (d.y - observed[i + 1].y) ** 2));
+  const plot = Plot.plot({
+    width: 640, height: 320, marginLeft: 50,
+    x: {label: "days after sowing"},
+    y: {domain: [0, 18], label: "biomass (t/ha)"},
+    marks: [
+      Plot.line(observed, {x: "das", y: "y", stroke: "#9CA3AF", strokeWidth: 4}),
+      Plot.line(baseline, {x: "das", y: "y", stroke: "#8B1E3F", strokeDasharray: "4 3"}),
+      Plot.line(model, {x: "das", y: "y", stroke: "#014E81", strokeWidth: 2})
+    ]
+  });
+  return html`${plot}<p class="interactive-note">Grey: APSIM. Blue: model (RMSE ${rmse(model).toFixed(2)} t/ha). Dashed: baseline (RMSE ${rmse(baseline).toFixed(2)} t/ha).</p>`;
+}
+```
+
+The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).
+
 ## Comparison of fitting methods
 
 All methods of step 4 are evaluated in the same way:

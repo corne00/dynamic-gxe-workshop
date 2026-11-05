@@ -168,3 +168,47 @@ ggplot(long, aes(method, term, fill = ifelse(effect == 0, NA, effect))) +
 ```
 
 The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen seasons in step 5.
+
+## Exploring a method
+
+Each method has one hyperparameter: the threshold of STLSQ, the penalty $\lambda$ of ridge, lasso and elastic net, or the number of terms $k$ of subset selection. The left panel shows the scaled coefficients of `g001` for the chosen setting, and the right panel the held-out trajectory error (20 genotypes) for all settings of the method.
+
+```{ojs}
+//| echo: false
+hyper = FileAttachment("data/interactive/hyper.json").json()
+viewof method = select("Method", Object.keys(hyper.methods), "STLSQ")
+spec = hyper.methods[method]
+viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2), v => (+v).toPrecision(2))
+```
+
+```{ojs}
+//| echo: false
+{
+  const all = Object.values(hyper.methods);
+  const reach = d3.max(all.flatMap(m => m.effect.flat().map(Math.abs)));
+  const rmse = d3.extent(all.flatMap(m => m.rmse));
+  const rows = hyper.terms.map((term, i) => ({term, effect: spec.effect[step][i]}));
+  const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
+  const scale = spec.param === "terms" ? "linear" : "log";
+  const coefficients = Plot.plot({
+    width: 420, height: 300, marginLeft: 50,
+    x: {domain: [-reach, reach], label: "scaled coefficient"},
+    y: {domain: hyper.terms, label: null},
+    marks: [Plot.barX(rows, {x: "effect", y: "term",
+              fill: d => d.effect > 0 ? "#014E81" : "#8B1E3F"}),
+            Plot.ruleX([0])]
+  });
+  const error = Plot.plot({
+    width: 420, height: 300,
+    x: {type: scale, label: spec.param},
+    y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE (t/ha)"},
+    marks: [Plot.line(curve, {x: "value", y: "rmse", stroke: "#9CA3AF"}),
+            Plot.dot(curve, {x: "value", y: "rmse", fill: "#9CA3AF", r: 3}),
+            Plot.dot([curve[step]], {x: "value", y: "rmse", fill: "#8B1E3F", r: 6})]
+  });
+  return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${coefficients}${error}</div>
+    <p class="interactive-note">${spec.nterms[step]} of ${hyper.terms.length} terms retained.</p>`;
+}
+```
+
+The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).
