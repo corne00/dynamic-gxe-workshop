@@ -1,0 +1,54 @@
+---
+title: "Set up"
+subtitle: "What you need, and how to check it works"
+---
+
+```{=html}
+<div class="stepmeta"><b>You need</b><span>R 4.1 or later. Nothing else for the modelling.</span><b>You get</b><span>the data in memory, and a quick test that the whole pipeline runs.</span></div>
+```
+
+## Get the files
+
+```sh
+git clone https://github.com/corne00/dynamic-gxe-workshop.git
+cd dynamic-gxe-workshop
+```
+
+The folder has three parts you will use:
+
+| Folder | Content |
+|---|---|
+| `R/functions.R` | every function in the workshop, plain base R |
+| `data/` | the Narrabri weather, biomass trajectories and APSIM cultivar parameters |
+| `scripts/` | a command-line version of the full pipeline |
+
+## Packages
+
+The modelling uses base R only. The plots use `ggplot2`:
+
+```r
+install.packages("ggplot2")
+```
+
+## Check that it works
+
+```r
+source("R/functions.R")
+
+wx   <- read.csv("data/narrabri_weather.csv")        # daily weather
+traj <- read.csv("data/narrabri_biomass.csv.gz")     # daily biomass, one row per genotype x year x day
+
+drv   <- make_drivers(wx)
+Theta <- make_library(drv)
+tr    <- make_trajectories(traj, drv)
+gram  <- gram_stats(Theta, tr)
+
+cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)    # leave-one-year-out, 31 fits
+round(evaluate(cv$pred, tr), 3)
+```
+
+You should see a trajectory RMSE of about 0.52 t/ha on years the model never saw. If you do, everything is in place.
+
+::: {.callout-tip title="Check"}
+The same numbers come out of the original research code (Python): trajectory RMSE 0.520, RMSE at day 113 of 0.688 and at maturity of 0.749 t/ha. The base-R version gives 0.521, 0.689 and 0.747.
+:::

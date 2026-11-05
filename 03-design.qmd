@@ -1,0 +1,134 @@
+---
+title: "3 · Library and design matrix"
+subtitle: "Candidate functions of the weather, stacked into one regression problem"
+---
+
+```{=html}
+<div class="stepmeta"><b>You need</b><span>the two tables <code>wx</code> and <code>traj</code> from step 2.</span><b>You get</b><span>the library <code>Theta</code>, the trajectory array <code>tr</code>, the design matrix, and the normal equations.</span></div>
+```
+
+```{r}
+#| echo: false
+library(ggplot2); source("R/functions.R"); source("R/theme_dgxe.R"); source("R/show.R")
+wx   <- read.csv("data/narrabri_weather.csv"); traj <- read.csv("data/narrabri_biomass.csv.gz")
+```
+
+## From weather to drivers
+
+Each driver is **standardised** (mean 0, standard deviation 1) so that coefficients are comparable and a cubic in a driver stays well behaved. We only use weather here, never biomass, so this step cannot leak anything about the response.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("make_drivers")
+```
+
+```{r}
+drv <- make_drivers(wx)
+dim(drv$U)            # year x day x driver
+round(drv$center, 1)  # the mean of each driver, used to standardise
+```
+
+## The library of candidate functions
+
+The growth rate on day $t$ is modelled as a combination of candidate functions of that day's drivers $u_t = (\text{TT}, \text{DL}, \text{RAW}, \text{RAD})$:
+
+$$
+\frac{\mathrm{d}y}{\mathrm{d}t} \approx \sum_{j=1}^{K} \xi_j\,\theta_j(u_t), \qquad \theta_j \in \{\,1,\ \text{TT},\ \text{TT}^2,\ \text{TT}^3,\ \text{DL},\ \dots,\ \text{RAD}^3\,\}
+$$
+
+That is a constant and a cubic polynomial in each driver: $K = 1 + 3 \times 4 = 13$ terms.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("library_matrix", "make_library")
+```
+
+```{r}
+Theta <- make_library(drv)
+dim(Theta)                   # year x day x term
+dimnames(Theta)[[3]]
+```
+
+The library is the value of every candidate on every day of every year. Here it is for one year (each column is one term):
+
+```{r}
+#| fig-height: 3.6
+y <- 1; n <- 120
+d <- expand.grid(day = 1:n, term = factor(dimnames(Theta)[[3]], dimnames(Theta)[[3]]))
+d$value <- as.vector(Theta[y, 1:n, ]); d$das <- d$day + drv$das0 - 1
+ggplot(d, aes(term, das, fill = value)) + geom_raster() + scale_y_reverse() +
+  scale_fill_gradient2(low = dgxe[["blue"]], mid = "white", high = dgxe[["orange"]], limits = c(-3, 3), oob = scales::squish) +
+  labs(x = NULL, y = "days after sowing", fill = "value") + theme_dgxe() + theme(axis.text.x = element_text(angle = 45, hjust = 1), panel.grid = element_blank())
+```
+
+## The response: daily growth increments
+
+For every genotype-year we need the biomass trajectory as an array `Y[genotype, year, day]`, with `NA` after maturity.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("make_trajectories")
+```
+
+```{r}
+tr <- make_trajectories(traj, drv)
+dim(tr$Y)
+summary(as.vector(tr$nend))     # number of daily steps per trajectory
+```
+
+The increments are $z_t = y_{t+1} - y_t$ and the regressors on that step are the library values on day $t$.
+
+## The design matrix
+
+Stacking every step of every trajectory gives an ordinary regression problem $z \approx X\xi$. Here it is for three genotypes:
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("build_design")
+```
+
+```{r}
+des <- build_design(Theta, tr, tr$genotypes[1:3])
+dim(des$X)                      # rows = genotype x year x day, columns = library terms
+round(head(des$X, 3), 2)
+head(des$z)                     # the daily increments (t/ha per day)
+```
+
+An ordinary `lm` fits it directly:
+
+```{r}
+round(coef(lm(des$z ~ des$X - 1)), 3)
+```
+
+## The normal equations: everything a fit needs
+
+For any linear method, the data enter only through $A = X^\top X$ and $b = X^\top z$. We compute them **per genotype and per year**, so that cross-validation later only needs to add and subtract small matrices (for 199 genotypes the full design matrix has 850,000 rows).
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("gram_stats")
+```
+
+```{r}
+gram <- gram_stats(Theta, tr)
+A <- apply(gram$A[1:3, , , ], c(3, 4), sum); b <- apply(gram$b[1:3, , ], 3, sum)
+c(max_diff_A = max(abs(A - crossprod(des$X))), max_diff_b = max(abs(b - crossprod(des$X, des$z))))
+max(abs(solve(A, b) - coef(lm(des$z ~ des$X - 1))))        # same coefficients as lm
+```
+
+::: {.callout-note title="Idea"}
+**The library and the data are separate.** Once `A` and `b` exist, a fitting method never sees weather or biomass again, only these two small objects. That is why any regression method (OLS, ridge, sparse, lasso) can be swapped in at the next step.
+:::
+
+::: {.callout-tip title="Check"}
+`A` and `b` built from the per-trajectory pieces equal `crossprod(X)` and `crossprod(X, z)` from the explicit design matrix up to rounding, and `solve(A, b)` equals `lm`.
+:::
+
+::: {.callout-caution title="Swap"}
+Change `degree = 3` in `make_library` to 2 or 4, drop a driver from `make_drivers(wx, drivers = c("TT", "DL", "RAW"))`, or add products of drivers with `pairs = TRUE` (37 terms). Everything downstream adapts automatically.
+:::

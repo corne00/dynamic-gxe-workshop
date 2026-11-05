@@ -1,0 +1,83 @@
+project:
+  type: website
+  output-dir: docs
+  render:
+    - index.qmd
+    - setup.qmd
+    - 01-idea.qmd
+    - 02-data.qmd
+    - 03-design.qmd
+    - 04-fitting.qmd
+    - 05-validate.qmd
+    - 06-reading.qmd
+    - 07-genotypes.qmd
+    - 08-pitfalls.qmd
+    - 09-further.qmd
+    - reference.qmd
+
+execute:
+  freeze: auto
+  echo: true
+  warning: false
+  message: false
+
+website:
+  title: "Dynamic GxE from scratch"
+  page-navigation: true
+  back-to-top-navigation: true
+  bread-crumbs: false
+  repo-url: https://github.com/corne00/dynamic-gxe-workshop
+  repo-actions: [source]
+  sidebar:
+    style: docked
+    search: false
+    contents:
+      - text: "Overview"
+        href: index.qmd
+      - text: "Set up"
+        href: setup.qmd
+      - section: "The pipeline"
+        contents:
+          - text: "1 · The idea"
+            href: 01-idea.qmd
+          - text: "2 · The data"
+            href: 02-data.qmd
+          - text: "3 · Library and design matrix"
+            href: 03-design.qmd
+          - text: "4 · Fitting"
+            href: 04-fitting.qmd
+          - text: "5 · Simulate and validate"
+            href: 05-validate.qmd
+          - text: "6 · Reading the model"
+            href: 06-reading.qmd
+          - text: "7 · Genotypes"
+            href: 07-genotypes.qmd
+          - text: "8 · When it breaks"
+            href: 08-pitfalls.qmd
+          - text: "9 · Going further"
+            href: 09-further.qmd
+      - text: "Reference"
+        href: reference.qmd
+  page-footer:
+    left: "Dynamic GxE from scratch · AAGI Symposium 2026"
+    right: "C. Verburg · TU Delft · CropXR"
+
+format:
+  html:
+    theme: theme.scss
+    css: styles.css
+    toc: true
+    toc-title: "On this page"
+    toc-depth: 2
+    code-copy: true
+    code-overflow: wrap
+    highlight-style: github
+    fig-dpi: 144
+    fig-width: 7.2
+    fig-height: 3.8
+    fig-align: center
+    smooth-scroll: true
+    include-in-header:
+      text: |
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">

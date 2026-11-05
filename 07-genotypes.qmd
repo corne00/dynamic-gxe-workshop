@@ -1,0 +1,95 @@
+---
+title: "7 · Genotypes"
+subtitle: "One shared rule, plus a small deviation for each genotype"
+---
+
+```{=html}
+<div class="stepmeta"><b>You need</b><span>the objects from step 5 and the final fit from step 6.</span><b>You get</b><span>genotype-specific growth rules, and a test of whether they rank genotypes better than a table lookup.</span></div>
+```
+
+```{r}
+#| echo: false
+library(ggplot2); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
+```
+
+## Shared plus deviation
+
+All 199 genotypes grow in a similar way, and each differs a little. We write the coefficient vector of genotype $g$ as
+
+$$
+\xi_g = \mu + \delta_g,
+$$
+
+where $\mu$ is shared (found in step 4 from the pooled data) and $\delta_g$ is a small, **ridge-shrunk** correction estimated from that genotype's own 31 seasons. The support (which terms are active) is shared, so every genotype has the same equation form and only the numbers differ.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_hier")
+```
+
+```{r}
+f <- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)
+dim(f$xi)                                  # genotype x term
+```
+
+## What differs between genotypes?
+
+Growth rate along the **average weather path**, for the genotypes with the lowest, median and highest mean final biomass:
+
+```{r}
+#| fig-height: 3.6
+fin <- sapply(seq_along(tr$genotypes), function(g) mean(sapply(seq_along(tr$years), function(y) tr$Y[g, y, tr$nend[g, y] + 1])))
+pick <- order(fin)[c(1, 100, 199)]
+Tbar <- apply(Theta, c(2, 3), mean)                                   # average library over years
+dd <- do.call(rbind, lapply(pick, function(g) data.frame(das = seq_len(nrow(Tbar)) + tr$das0 - 1,
+        rate = as.vector(Tbar %*% f$xi[g, ]), genotype = tr$genotypes[g],
+        group = c("lowest", "median", "highest")[match(g, pick)])))
+dd <- dd[dd$das <= 15 + 140, ]
+ggplot(dd, aes(das, rate, colour = group)) + geom_line(linewidth = 0.9) +
+  scale_colour_manual(values = unname(dgxe[c("orange", "blue", "cyan")])) +
+  labs(x = "days after sowing", y = "growth rate (t/ha/day)", colour = "final biomass") + theme_dgxe()
+```
+
+The genotypes differ in when growth starts, how high the peak is, and how early it ends: the same shape, shifted and scaled.
+
+## Does it rank genotypes better than a lookup?
+
+Breeders often care more about the *ranking* of genotypes in a given year than about absolute biomass. For every year, we compare the predicted and APSIM ranking of the 199 genotypes at a fixed day using the Spearman correlation, and by the overlap of the predicted and true top 10%. The competitor is again the no-weather lookup (the genotype's mean in the other years).
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("rank_scores", "lookup_baseline")
+```
+
+```{r}
+cv   <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)
+days <- c(35, 50, 63, 84, 99)                         # day index; das = day index + 14
+out  <- do.call(rbind, lapply(days, function(d) {
+  Yd <- tr$Y[, , d]; a <- rank_scores(cv$pred[, , d], Yd); b <- rank_scores(lookup_baseline(Yd), Yd)
+  data.frame(das = d + tr$das0 - 1, method = c("SINDy", "lookup"),
+             rho = c(mean(a$rho), mean(b$rho)), top10 = c(mean(a$top), mean(b$top))) }))
+out$rho <- round(out$rho, 3); out$top10 <- round(out$top10, 3); out
+```
+
+```{r}
+#| fig-height: 3.4
+o <- reshape(out, direction = "long", varying = c("rho", "top10"), v.names = "score", timevar = "metric", times = c("Spearman rho", "top-10% overlap"), idvar = c("das", "method"))
+ggplot(o, aes(das, score, colour = method)) + geom_line(linewidth = 0.9) + geom_point(size = 2.2) + facet_wrap(~metric, scales = "free_y") +
+  scale_colour_manual(values = unname(dgxe[c("orange", "blue")])) + labs(x = "days after sowing", y = NULL, colour = NULL) + theme_dgxe()
+```
+
+Early in the season the lookup wins: the ranking has not yet been shaped by the weather, so each genotype's average curve already orders them well. Later, when the season's weather has started to reorder genotypes, the model that uses the weather overtakes the lookup. This is what we would hope for from a model that responds to weather, but it is also an honest reminder that the lookup is hard to beat when there is nothing to learn from the weather.
+
+::: {.callout-note title="Idea"}
+**Sharing strength across genotypes.** One genotype has only 31 trajectories, which would not support a 12-term model on its own. Pooling fixes the *form* of the equation; shrinkage lets each genotype adjust the numbers only as far as its own data justify.
+:::
+
+::: {.callout-tip title="Check"}
+Plot the deviations $\delta_g$ for one term across genotypes: they should be small compared to $\mu$ and roughly centred on zero. If they are large, the shared structure is not capturing what genotypes have in common.
+:::
+
+::: {.callout-important title="Pitfall"}
+These ranking results are for genotypes **seen in training** and predicted in held-out *years*. Predicting a brand-new genotype needs extra information (such as its parameters) and is not tested here.
+:::
