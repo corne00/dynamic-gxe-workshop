@@ -238,7 +238,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#fitted-equations" id="toc-fitted-equations" class="nav-link active" data-scroll-target="#fitted-equations">Fitted equations</a></li>
   <li><a href="#growth-rate-over-the-season" id="toc-growth-rate-over-the-season" class="nav-link" data-scroll-target="#growth-rate-over-the-season">Growth rate over the season</a></li>
   <li><a href="#effect-of-a-single-driver" id="toc-effect-of-a-single-driver" class="nav-link" data-scroll-target="#effect-of-a-single-driver">Effect of a single driver</a></li>
-  <li><a href="#interactions-partial-dependence-and-ice" id="toc-interactions-partial-dependence-and-ice" class="nav-link" data-scroll-target="#interactions-partial-dependence-and-ice">Interactions, partial dependence and ICE</a></li>
+  <li><a href="#interactions-and-partial-dependence" id="toc-interactions-and-partial-dependence" class="nav-link" data-scroll-target="#interactions-and-partial-dependence">Interactions and partial dependence</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/06-reading.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -407,9 +407,9 @@ RAD  0.72  0.74 -0.58  1.00</code></pre>
 </div>
 <p>The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the season, not a response to temperature. Thermal time and day length are correlated at 0.97 and are best read together.</p>
 </section>
-<section id="interactions-partial-dependence-and-ice" class="level2">
-<h2 class="anchored" data-anchor-id="interactions-partial-dependence-and-ice">Interactions, partial dependence and ICE</h2>
-<p>The 12-term library is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of drivers (36 terms, backward elimination to 20 terms) they differ. For <code>g114</code>, the grey lines are individual conditional expectation (ICE) curves, one for each of 200 sampled days: the growth rate of that day when only the driver is changed. Partial dependence is their average.</p>
+<section id="interactions-and-partial-dependence" class="level2">
+<h2 class="anchored" data-anchor-id="interactions-and-partial-dependence">Interactions and partial dependence</h2>
+<p>The 12-term library is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of drivers (36 terms, backward elimination to 20 terms) they differ. For <code>g114</code>, partial dependence averages the growth rate over all observed days while one driver is set to each value in turn.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv, <span class="at">pairs =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>d2 <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta2, tr, <span class="st">"g114"</span>)</span>
@@ -418,35 +418,31 @@ RAD  0.72  0.74 -0.58  1.00</code></pre>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>effects <span class="ot">&lt;-</span> <span class="cf">function</span>(j) {</span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  feature <span class="ot">&lt;-</span> drv<span class="sc">$</span>drivers[j]</span>
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  ale <span class="ot">&lt;-</span> FeatureEffect<span class="sc">$</span><span class="fu">new</span>(pred2, feature, <span class="st">"ale"</span>, <span class="at">grid.size =</span> <span class="dv">24</span>)<span class="sc">$</span>results</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  pdp <span class="ot">&lt;-</span> FeatureEffect<span class="sc">$</span><span class="fu">new</span>(pred2, feature, <span class="st">"pdp+ice"</span>, <span class="at">grid.size =</span> <span class="dv">24</span>)<span class="sc">$</span>results</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  pdp <span class="ot">&lt;-</span> FeatureEffect<span class="sc">$</span><span class="fu">new</span>(pred2, feature, <span class="st">"pdp"</span>, <span class="at">grid.size =</span> <span class="dv">24</span>)<span class="sc">$</span>results</span>
 <span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  pdp<span class="sc">$</span>x <span class="ot">&lt;-</span> <span class="fu">natural</span>(pdp[[feature]], j)</span>
 <span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  pdp<span class="sc">$</span>driver <span class="ot">&lt;-</span> <span class="fu">factor</span>(feature, drv<span class="sc">$</span>drivers)</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  curve <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(pdp<span class="sc">$</span>.type <span class="sc">==</span> <span class="st">"pdp"</span>, <span class="st">"pdp"</span>, pdp<span class="sc">$</span>.id)</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  pdp<span class="sc">$</span>.value <span class="ot">&lt;-</span> pdp<span class="sc">$</span>.value <span class="sc">-</span> <span class="fu">ave</span>(pdp<span class="sc">$</span>.value, curve, <span class="at">FUN =</span> mean)</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  ale<span class="sc">$</span>x <span class="ot">&lt;-</span> <span class="fu">natural</span>(ale[[feature]], j)</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  ale<span class="sc">$</span>driver <span class="ot">&lt;-</span> pdp<span class="sc">$</span>driver[<span class="dv">1</span>]</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  pdp[[feature]] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  ale[[feature]] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">ice =</span> pdp[pdp<span class="sc">$</span>.type <span class="sc">==</span> <span class="st">"ice"</span> <span class="sc">&amp;</span> pdp<span class="sc">$</span>.id <span class="sc">%in%</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(Z), <span class="dv">200</span>), ],</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">pdp =</span> pdp[pdp<span class="sc">$</span>.type <span class="sc">==</span> <span class="st">"pdp"</span>, ], <span class="at">ale =</span> ale)</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>parts <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, effects)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  pdp<span class="sc">$</span>.value <span class="ot">&lt;-</span> pdp<span class="sc">$</span>.value <span class="sc">-</span> <span class="fu">mean</span>(pdp<span class="sc">$</span>.value)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  ale<span class="sc">$</span>x <span class="ot">&lt;-</span> <span class="fu">natural</span>(ale[[feature]], j)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  ale<span class="sc">$</span>driver <span class="ot">&lt;-</span> pdp<span class="sc">$</span>driver[<span class="dv">1</span>]</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  pdp[[feature]] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  ale[[feature]] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">pdp =</span> pdp, <span class="at">ale =</span> ale)</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>parts <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, effects)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>bind <span class="ot">&lt;-</span> <span class="cf">function</span>(name) <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(parts, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, name))</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>ice <span class="ot">&lt;-</span> <span class="fu">bind</span>(<span class="st">"ice"</span>); pdp <span class="ot">&lt;-</span> <span class="fu">bind</span>(<span class="st">"pdp"</span>); ale <span class="ot">&lt;-</span> <span class="fu">bind</span>(<span class="st">"ale"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>pdp <span class="ot">&lt;-</span> <span class="fu">bind</span>(<span class="st">"pdp"</span>); ale <span class="ot">&lt;-</span> <span class="fu">bind</span>(<span class="st">"ale"</span>)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(ice, <span class="fu">aes</span>(x, .value)) <span class="sc">+</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">group =</span> .id), <span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> pdp, <span class="fu">aes</span>(<span class="at">colour =</span> <span class="st">"partial dependence"</span>), <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> ale, <span class="fu">aes</span>(<span class="at">y =</span> .value, <span class="at">colour =</span> <span class="st">"ALE"</span>), <span class="at">linewidth =</span> <span class="fl">0.9</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>            <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"blue"</span>, <span class="st">"burgundy"</span>) <span class="sc">+</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"driver value"</span>, <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span>) <span class="sc">+</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pdp, <span class="fu">aes</span>(x, .value)) <span class="sc">+</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">colour =</span> <span class="st">"partial dependence"</span>), <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> ale, <span class="fu">aes</span>(<span class="at">y =</span> .value, <span class="at">colour =</span> <span class="st">"ALE"</span>), <span class="at">linewidth =</span> <span class="fl">0.9</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"blue"</span>, <span class="st">"burgundy"</span>) <span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"driver value"</span>, <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span>) <span class="sc">+</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -455,7 +451,7 @@ RAD  0.72  0.74 -0.58  1.00</code></pre>
 </div>
 </div>
 </div>
-<p>The ICE curves are not parallel, which is the interaction. Partial dependence also evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a season with high thermal time, whereas ALE does not.</p>
+<p>The two curves differ because of the interactions. Partial dependence also evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a season with high thermal time, whereas ALE does not.</p>
 
 
 </section>

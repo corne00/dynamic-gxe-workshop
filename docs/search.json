@@ -604,5 +604,16 @@
       "Steps",
       "9 · Extensions"
     ]
+  },
+  {
+    "objectID": "06-reading.html#interactions-and-partial-dependence",
+    "href": "06-reading.html#interactions-and-partial-dependence",
+    "title": "6 · Interpretation",
+    "section": "Interactions and partial dependence",
+    "text": "Interactions and partial dependence\nThe 12-term library is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of drivers (36 terms, backward elimination to 20 terms) they differ. For g114, partial dependence averages the growth rate over all observed days while one driver is set to each value in turn.\n\nTheta2 &lt;- make_library(drv, pairs = TRUE)\nd2 &lt;- make_design(Theta2, tr, \"g114\")\npred2 &lt;- predictor(fit_subset(d2$X, d2$dy, k = 20, method = \"backward\"), TRUE)\n\neffects &lt;- function(j) {\n  feature &lt;- drv$drivers[j]\n  ale &lt;- FeatureEffect$new(pred2, feature, \"ale\", grid.size = 24)$results\n  pdp &lt;- FeatureEffect$new(pred2, feature, \"pdp\", grid.size = 24)$results\n  pdp$x &lt;- natural(pdp[[feature]], j)\n  pdp$driver &lt;- factor(feature, drv$drivers)\n  pdp$.value &lt;- pdp$.value - mean(pdp$.value)\n  ale$x &lt;- natural(ale[[feature]], j)\n  ale$driver &lt;- pdp$driver[1]\n  pdp[[feature]] &lt;- NULL\n  ale[[feature]] &lt;- NULL\n  list(pdp = pdp, ale = ale)\n}\nparts &lt;- lapply(1:2, effects)\n\n\nbind &lt;- function(name) do.call(rbind, lapply(parts, `[[`, name))\npdp &lt;- bind(\"pdp\"); ale &lt;- bind(\"ale\")\n\nggplot(pdp, aes(x, .value)) +\n  geom_line(aes(colour = \"partial dependence\"), linewidth = 0.9) +\n  geom_line(data = ale, aes(y = .value, colour = \"ALE\"), linewidth = 0.9,\n            linetype = 2) +\n  facet_wrap(~driver, scales = \"free_x\") +\n  scale_colour_dgxe(\"blue\", \"burgundy\") +\n  labs(x = \"driver value\", y = \"effect on growth rate (t/ha/day)\") +\n  theme_dgxe() +\n  legend_top()\n\n\n\n\n\n\n\n\nThe two curves differ because of the interactions. Partial dependence also evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a season with high thermal time, whereas ALE does not.",
+    "crumbs": [
+      "Steps",
+      "6 · Interpretation"
+    ]
   }
 ]

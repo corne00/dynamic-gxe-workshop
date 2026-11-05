@@ -133,9 +133,9 @@ ggplot(curves, aes(x, effect, group = genotype)) +
 
 The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the season, not a response to temperature. Thermal time and day length are correlated at 0.97 and are best read together.
 
-## Interactions, partial dependence and ICE
+## Interactions and partial dependence
 
-The 12-term library is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of drivers (36 terms, backward elimination to 20 terms) they differ. For `g114`, the grey lines are individual conditional expectation (ICE) curves, one for each of 200 sampled days: the growth rate of that day when only the driver is changed. Partial dependence is their average.
+The 12-term library is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of drivers (36 terms, backward elimination to 20 terms) they differ. For `g114`, partial dependence averages the growth rate over all observed days while one driver is set to each value in turn.
 
 ```{r}
 Theta2 <- make_library(drv, pairs = TRUE)
@@ -145,30 +145,26 @@ pred2 <- predictor(fit_subset(d2$X, d2$dy, k = 20, method = "backward"), TRUE)
 effects <- function(j) {
   feature <- drv$drivers[j]
   ale <- FeatureEffect$new(pred2, feature, "ale", grid.size = 24)$results
-  pdp <- FeatureEffect$new(pred2, feature, "pdp+ice", grid.size = 24)$results
+  pdp <- FeatureEffect$new(pred2, feature, "pdp", grid.size = 24)$results
   pdp$x <- natural(pdp[[feature]], j)
   pdp$driver <- factor(feature, drv$drivers)
-  curve <- ifelse(pdp$.type == "pdp", "pdp", pdp$.id)
-  pdp$.value <- pdp$.value - ave(pdp$.value, curve, FUN = mean)
+  pdp$.value <- pdp$.value - mean(pdp$.value)
   ale$x <- natural(ale[[feature]], j)
   ale$driver <- pdp$driver[1]
   pdp[[feature]] <- NULL
   ale[[feature]] <- NULL
-  list(ice = pdp[pdp$.type == "ice" & pdp$.id %in% sample(1:nrow(Z), 200), ],
-       pdp = pdp[pdp$.type == "pdp", ], ale = ale)
+  list(pdp = pdp, ale = ale)
 }
-set.seed(1)
 parts <- lapply(1:2, effects)
 ```
 
 ```{r}
 #| fig-height: 3
 bind <- function(name) do.call(rbind, lapply(parts, `[[`, name))
-ice <- bind("ice"); pdp <- bind("pdp"); ale <- bind("ale")
+pdp <- bind("pdp"); ale <- bind("ale")
 
-ggplot(ice, aes(x, .value)) +
-  geom_line(aes(group = .id), colour = "#D1D5DB", linewidth = 0.2) +
-  geom_line(data = pdp, aes(colour = "partial dependence"), linewidth = 0.9) +
+ggplot(pdp, aes(x, .value)) +
+  geom_line(aes(colour = "partial dependence"), linewidth = 0.9) +
   geom_line(data = ale, aes(y = .value, colour = "ALE"), linewidth = 0.9,
             linetype = 2) +
   facet_wrap(~driver, scales = "free_x") +
@@ -178,4 +174,4 @@ ggplot(ice, aes(x, .value)) +
   legend_top()
 ```
 
-The ICE curves are not parallel, which is the interaction. Partial dependence also evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a season with high thermal time, whereas ALE does not.
+The two curves differ because of the interactions. Partial dependence also evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a season with high thermal time, whereas ALE does not.
