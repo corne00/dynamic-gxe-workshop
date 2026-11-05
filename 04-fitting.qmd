@@ -8,82 +8,61 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-## Pooled normal equations
-
-For this step all genotypes and seasons are pooled. The statistics are summed and the library columns scaled to unit root-mean-square, so that coefficients are comparable.
+Every method maps the design matrix $\mathbf{X}$ and the increments $\Delta\mathbf{y}$ of one genotype to a coefficient vector, with the intercept first. A method is therefore a function `fit(X, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
 
 ```{r}
-st <- sum_years(gram, seq_along(tr$years))
-A  <- apply(st$A, c(2, 3), sum)
-b  <- colSums(st$b)
-sc <- scale_gram(A, b, n = sum(st$n))
-terms <- gram$names
+d <- make_design(Theta, tr, "g001")
 ```
 
-## Fitting methods
+## Least squares and penalised regression
 
-Each method takes `(A, b)` and returns `list(coef, support)`.
+Ordinary least squares uses `lm.fit`. Ridge, lasso and elastic net are provided by `glmnet`; they differ in the penalty (squared, absolute value, and a mixture of both). The lasso sets coefficients to zero.
 
 ```{r}
 #| echo: false
 #| results: asis
-show_fun("fit_ols", "fit_ridge", "fit_ssr")
+show_fun("fit_ols", "fit_glmnet", "fit_ridge", "fit_lasso", "fit_enet")
 ```
 
+## Subset selection and thresholding
+
+Best-subset selection and backward elimination keep $k$ terms (`leaps`). Sequential thresholded least squares (STLSQ) is the algorithm of the original SINDy method: fit, remove the terms whose scaled coefficient is below a threshold, and refit on the remaining terms.
+
 ```{r}
-fits <- list(OLS = fit_ols(sc$A, sc$b),
-             ridge = fit_ridge(sc$A, sc$b, lambda = 0.01),
-             SSR_8 = fit_ssr(sc$A, sc$b, k = 8))
-coefs <- sapply(fits, `[[`, "coef")
-rownames(coefs) <- terms
-round(coefs, 3)
+#| echo: false
+#| results: asis
+show_fun("fit_subset", "fit_stlsq")
 ```
+
+## Comparison
+
+The methods fitted to the same data:
+
+```{r}
+fits <- sapply(fit_methods, function(fit) fit(d$X, d$dy))
+round(fits, 3)
+```
+
+Scaled to a common size (coefficient times the standard deviation of the term, relative to that of the increments), the sparsity pattern of each method is visible; empty cells are terms that were removed.
 
 ```{r}
 #| fig-height: 3.6
-d <- data.frame(term = factor(rep(terms, 3), rev(terms)),
-                method = factor(rep(names(fits), each = length(terms)),
-                                names(fits)),
-                coef = as.vector(coefs))
+size <- apply(d$X, 2, sd) / sd(d$dy)
+effect <- fits[-1, ] * size
+long <- data.frame(term = factor(rownames(effect), rev(rownames(effect))),
+                   method = factor(rep(colnames(effect), each = nrow(effect)),
+                                   colnames(effect)),
+                   effect = as.vector(effect))
 
-ggplot(d, aes(coef, term, colour = method, shape = method)) +
-  geom_vline(xintercept = 0, colour = "#D1D5DB", linewidth = 0.3) +
-  geom_point(size = 2.2, alpha = 0.9) +
-  scale_colour_dgxe("blue", "grey", "burgundy") +
-  labs(x = "coefficient (scaled library)", y = NULL) +
+ggplot(long, aes(method, term, fill = ifelse(effect == 0, NA, effect))) +
+  geom_tile(colour = "white", linewidth = 0.6) +
+  scale_fill_gradient2(low = dgxe[["burgundy"]], mid = "white",
+                       high = dgxe[["blue"]], na.value = "#F3F4F6") +
+  labs(x = NULL, y = NULL, fill = "scaled\ncoefficient") +
   theme_dgxe() +
-  legend_top()
+  theme(axis.text.x = element_text(angle = 30, hjust = 1),
+        axis.line = element_blank(), axis.ticks = element_blank(),
+        legend.position = "right")
 ```
 
-## Order of elimination
-
-Sequential thresholding removes one term at a time; the order is the following.
-
-```{r}
-S <- seq_along(terms)
-removed <- character(0)
-while (length(S) > 1) {
-  coef <- solve(sc$A[S, S] + 1e-6 * diag(length(S)), sc$b[S])
-  drop <- which.min(abs(coef))
-  removed <- c(removed, terms[S[drop]])
-  S <- S[-drop]
-}
-c(removed, last = terms[S])
-```
-
-The order depends on the library and on correlations among its terms, and is not a ranking of importance. The number of terms is chosen by validation (step 5).
-
-## Another method: lasso
-
-Any method that maps `(A, b)` to coefficients can be used. As an example, the lasso by coordinate descent on the same scaled normal equations:
-
-```{r}
-#| echo: false
-#| results: asis
-show_fun("fit_lasso")
-```
-
-```{r}
-las <- fit_lasso(sc$A, sc$b, lambda = 2e-4)
-setNames(round(las$coef, 3), terms)
-```
+The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen seasons in step 5.

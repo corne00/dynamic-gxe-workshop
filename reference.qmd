@@ -3,47 +3,46 @@ title: "Reference"
 subtitle: "Symbols, functions, data, and sources"
 ---
 
-## Symbols in words
+## Symbols
 
 | Symbol | Meaning |
 |---|---|
-| $y(t)$, $B(t)$ | biomass on day $t$ (t/ha) |
-| $L(t)$ | leaf area index |
-| $u_t$ | the weather drivers on day $t$: TT, DL, RAW, RAD, standardised |
-| $\theta_j(u)$ | one candidate function in the library (for example $\text{TT}^2$) |
-| $\Theta$ | the library: the value of every candidate on every day |
-| $\xi$ | coefficients, one per library term |
-| $\mu$, $\delta_g$ | shared coefficients, and the deviation of genotype $g$ |
-| $A = X^\top X$, $b = X^\top z$ | normal-equation statistics: all a linear fit needs |
-| $k$ | number of terms kept by the sparse fit |
+| $\mathbf{y}(t)$, $y$ | state of the crop; here biomass (t/ha) |
+| $\mathbf{u}(t) = (u_1, \dots, u_m)$ | environmental drivers, standardised |
+| $\theta_j(\mathbf{y}, \mathbf{u})$ | candidate function $j$ of the library |
+| $\boldsymbol{\theta}$ | vector of all candidate functions |
+| $\boldsymbol{\xi}$ | coefficient vector |
+| $\Delta y_i = y_{i+1} - y_i$, $\Delta\mathbf{y}$ | daily increment, and the vector of increments |
+| $\mathbf{X}$ | library evaluated on all days (rows) |
+| $K$ | number of candidate functions |
 
-## Function index
+## Functions
 
-All functions are in `R/functions.R` and use base R only. Each page shows the code of the functions it uses.
+All functions are in `R/functions.R`.
 
-| Function | Step | Purpose |
-|---|---|---|
-| `make_drivers(wx)` | 3 | standardised weather array `[year, day, driver]` |
-| `make_library(drv, degree, pairs)` | 3 | library array `[year, day, term]` |
-| `make_trajectories(traj, drv, var)` | 3 | response array `[genotype, year, day]` |
-| `build_design(Theta, tr, genotypes)` | 3 | explicit design matrix `X` and response `z` |
-| `gram_stats(Theta, tr)` | 3 | `A` and `b` per genotype and year |
-| `fit_ols`, `fit_ridge`, `fit_ssr` | 4 | fitting methods with signature `fit(A, b, ...)` |
-| `fit_hier`, `fit_years` | 4, 7 | shared coefficients plus genotype deviations |
-| `simulate(xi, Theta_y, y0)` | 5 | roll the equation forward (running total) |
-| `cv_blocked(...)` | 5 | leave-one-year-out cross-validation |
-| `evaluate(P, tr)` | 5 | trajectory, fixed-day and maturity RMSE |
-| `ale_curve(rate, Z, j)` | 6 | accumulated local effect of driver `j` |
-| `rank_scores`, `lookup_baseline` | 7 | ranking metrics and the no-weather baseline |
+| Function | Purpose |
+|---|---|
+| `make_drivers(wx)` | standardised drivers `U[season, day, driver]` |
+| `make_library(drv, degree, pairs)` | library `Theta[season, day, term]` |
+| `make_trajectories(traj, drv, var)` | response `Y[genotype, season, day]` |
+| `make_design(Theta, tr, genotype)` | design matrix `X` and increments `dy` |
+| `fit_ols`, `fit_ridge`, `fit_lasso`, `fit_enet`, `fit_subset`, `fit_stlsq` | fitting methods `fit(X, dy)` |
+| `simulate(coef, Theta_y, y0)` | solution as a cumulative sum |
+| `cross_validate(Theta, tr, fit)` | leave-one-season-out predictions |
+| `evaluate(P, tr)` | trajectory, fixed-day and maturity RMSE |
+| `ale_curve(rate, Z, j)` | accumulated local effect of driver `j` |
+| `rank_scores(Pd, Yd)`, `lookup_trajectory(tr)` | ranking metrics and the baseline |
 
 ## Data
 
-Daily simulated wheat growth from the APSIM model at Narrabri (NSW, Australia): 199 genotypes, 31 seasons (1983 to 2013). See [Data](02-data.qmd) for the columns. Files are in `data/`.
-
-The data are simulation output. The source and licence of the underlying APSIM simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.
+APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes, 31 seasons (1983 to 2013), daily. Columns are described in [Data](02-data.qmd). Files are in `data/`.
 
 ## Sources
 
+- Bustos-Korts, D. et al. (2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. *Frontiers in Plant Science* 10, 1540. doi:10.3389/fpls.2019.01540. Data: [figshare](https://figshare.com/articles/dataset/24843705).
 - Brunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. *PNAS* 113(15), 3932–3937.
-- Bustos-Korts, D. et al. (2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. *Frontiers in Plant Science* 10, 1540. doi:10.3389/fpls.2019.01540
+- Friedman, J., Hastie, T. and Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. *Journal of Statistical Software* 33(1), 1–22 (`glmnet`).
+- Lumley, T. and Miller, A. `leaps`: regression subset selection. R package.
 - Apley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. *Journal of the Royal Statistical Society B* 82(4), 1059–1086.
+
+The source and licence of the underlying simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.

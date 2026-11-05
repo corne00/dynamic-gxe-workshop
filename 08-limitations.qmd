@@ -11,24 +11,25 @@ source("R/pipeline.R")
 
 ## Choice of library
 
-The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing `var = "lai"`.
+The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing `var = "lai"`. Least squares is used for all libraries here.
 
 ```{r}
 trl <- make_trajectories(traj, drv, var = "lai")
-cv_poly <- cv_blocked(Theta, trl, gram_stats(Theta, trl), fit_ols)
+P_poly <- cached("cv_lai_poly.rds", cross_validate(Theta, trl, fit_ols))
 ```
 
 As an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly:
 
 ```{r}
 B <- bs(as.vector(drv$U[, , "TT"]), df = 6)
-others <- matrix(drv$U[, , -1], ncol = 3)             # DL, RAW, RAD
-Theta_spl <- array(cbind(1, B, others), c(dim(drv$U)[1:2], 10))
-cv_spl <- cv_blocked(Theta_spl, trl, gram_stats(Theta_spl, trl), fit_ols)
+others <- matrix(drv$U[, , -1], ncol = 3, dimnames = list(NULL, c("DL", "RAW", "RAD")))
+Theta_spl <- array(cbind(B, others), c(dim(drv$U)[1:2], 9),
+                   dimnames = list(NULL, NULL, c(paste0("B", 1:6), colnames(others))))
+P_spl <- cached("cv_lai_spline.rds", cross_validate(Theta_spl, trl, fit_ols))
 
 base <- lookup_trajectory(trl)
-round(rbind(`cubic polynomial` = evaluate(cv_poly$pred, trl),
-            `B-spline in TT` = evaluate(cv_spl$pred, trl),
+round(rbind(`cubic polynomial` = evaluate(P_poly, trl),
+            `B-spline in TT` = evaluate(P_spl, trl),
             baseline = evaluate(base, trl)), 3)
 ```
 
@@ -39,7 +40,7 @@ days <- 2:dim(trl$Y)[3] + trl$das0 - 1
 rmse <- function(P, model) {
   data.frame(das = days, rmse = rmse_by_day(P, trl), model = model)
 }
-d <- rbind(rmse(cv_poly$pred, models[1]), rmse(cv_spl$pred, models[2]),
+d <- rbind(rmse(P_poly, models[1]), rmse(P_spl, models[2]),
            rmse(base, models[3]))
 d$model <- factor(d$model, models)
 
@@ -51,26 +52,21 @@ ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) +
   legend_top()
 ```
 
-A cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better, but over whole trajectories the baseline remains slightly more accurate (0.47 against 0.53); the spline model is better at day 113 and at maturity. When the model is inaccurate, the library should be examined before the fitting method.
+A cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better. When the model is inaccurate, the library should be examined before the fitting method.
 
 ## Collinear drivers
 
-Thermal time and day length have a correlation of 0.97. Fitting the same model separately to odd and even seasons gives different coefficients but nearly identical growth rates.
+Thermal time and day length have a correlation of 0.97. Fitting the same model to the odd and to the even seasons of one genotype gives different coefficients but similar growth rates.
 
 ```{r}
-odd <- tr$years[tr$years %% 2 == 1]
-even <- tr$years[tr$years %% 2 == 0]
-fit_half <- function(years) {
-  fit_years(gram, which(tr$years %in% years), fit_ols)$mu
-}
-mu <- cbind(odd = fit_half(odd), even = fit_half(even))
-rownames(mu) <- gram$names
-round(mu[c("TT", "TT^2", "DL", "DL^2"), ], 3)
+d <- make_design(Theta, tr, "g114")
+odd <- fit_ols(d$X[d$season %% 2 == 1, ], d$dy[d$season %% 2 == 1])
+even <- fit_ols(d$X[d$season %% 2 == 0, ], d$dy[d$season %% 2 == 0])
+round(rbind(odd, even)[, c("TT", "TT^2", "DL", "DL^2")], 3)
 
-Tbar <- apply(Theta, c(2, 3), mean)       # library along the mean weather
-rate <- Tbar %*% mu
-c(correlation = cor(rate[, "odd"], rate[, "even"]),
-  max_difference = max(abs(rate[, "odd"] - rate[, "even"])))
+rate <- cbind(1, d$X) %*% cbind(odd, even)      # growth rate on all days
+c(correlation = cor(rate[, 1], rate[, 2]),
+  max_difference = max(abs(rate[, 1] - rate[, 2])))
 ```
 
 The data determine the combined effect of correlated drivers better than each coefficient, so response curves are preferable to individual coefficients for interpretation.
@@ -80,15 +76,11 @@ The data determine the combined effect of correlated drivers better than each co
 The regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.
 
 ```{r}
-cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)
-increment_error <- function(g, y) {
-  n <- tr$nend[g, y]
-  diff(cv$pred[g, y, 1:(n + 1)]) - trajectory_xz(Theta, tr, g, y)$z
-}
-cells <- expand.grid(g = seq_along(tr$genotypes), y = seq_along(tr$years))
-err <- unlist(Map(increment_error, cells$g, cells$y))
-c(daily_increment_rmse = sqrt(mean(err^2)),
-  trajectory_rmse = evaluate(cv$pred, tr)[[1]])
+P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
+step_error <- P[, , -1] - P[, , -dim(P)[3]]           # predicted increments
+step_error <- step_error - (tr$Y[, , -1] - tr$Y[, , -dim(tr$Y)[3]])
+c(daily_increment_rmse = sqrt(mean(step_error^2, na.rm = TRUE)),
+  trajectory_rmse = evaluate(P, tr)[[1]])
 ```
 
 For this reason the model is assessed on the simulated trajectory and not on the daily increments.

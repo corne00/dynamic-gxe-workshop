@@ -228,8 +228,8 @@ window.Quarto = {
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#symbols-in-words" id="toc-symbols-in-words" class="nav-link active" data-scroll-target="#symbols-in-words">Symbols in words</a></li>
-  <li><a href="#function-index" id="toc-function-index" class="nav-link" data-scroll-target="#function-index">Function index</a></li>
+  <li><a href="#symbols" id="toc-symbols" class="nav-link active" data-scroll-target="#symbols">Symbols</a></li>
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#data" id="toc-data" class="nav-link" data-scroll-target="#data">Data</a></li>
   <li><a href="#sources" id="toc-sources" class="nav-link" data-scroll-target="#sources">Sources</a></li>
   </ul>
@@ -258,8 +258,8 @@ window.Quarto = {
 </header>
 
 
-<section id="symbols-in-words" class="level2">
-<h2 class="anchored" data-anchor-id="symbols-in-words">Symbols in words</h2>
+<section id="symbols" class="level2">
+<h2 class="anchored" data-anchor-id="symbols">Symbols</h2>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -273,136 +273,112 @@ window.Quarto = {
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="math inline">\(y(t)\)</span>, <span class="math inline">\(B(t)\)</span></td>
-<td>biomass on day <span class="math inline">\(t\)</span> (t/ha)</td>
+<td><span class="math inline">\(\mathbf{y}(t)\)</span>, <span class="math inline">\(y\)</span></td>
+<td>state of the crop; here biomass (t/ha)</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(L(t)\)</span></td>
-<td>leaf area index</td>
+<td><span class="math inline">\(\mathbf{u}(t) = (u_1, \dots, u_m)\)</span></td>
+<td>environmental drivers, standardised</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">\(u_t\)</span></td>
-<td>the weather drivers on day <span class="math inline">\(t\)</span>: TT, DL, RAW, RAD, standardised</td>
+<td><span class="math inline">\(\theta_j(\mathbf{y}, \mathbf{u})\)</span></td>
+<td>candidate function <span class="math inline">\(j\)</span> of the library</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(\theta_j(u)\)</span></td>
-<td>one candidate function in the library (for example <span class="math inline">\(\text{TT}^2\)</span>)</td>
+<td><span class="math inline">\(\boldsymbol{\theta}\)</span></td>
+<td>vector of all candidate functions</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">\(\Theta\)</span></td>
-<td>the library: the value of every candidate on every day</td>
+<td><span class="math inline">\(\boldsymbol{\xi}\)</span></td>
+<td>coefficient vector</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(\xi\)</span></td>
-<td>coefficients, one per library term</td>
+<td><span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span>, <span class="math inline">\(\Delta\mathbf{y}\)</span></td>
+<td>daily increment, and the vector of increments</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">\(\mu\)</span>, <span class="math inline">\(\delta_g\)</span></td>
-<td>shared coefficients, and the deviation of genotype <span class="math inline">\(g\)</span></td>
+<td><span class="math inline">\(\mathbf{X}\)</span></td>
+<td>library evaluated on all days (rows)</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(A = X^\top X\)</span>, <span class="math inline">\(b = X^\top z\)</span></td>
-<td>normal-equation statistics: all a linear fit needs</td>
-</tr>
-<tr class="odd">
-<td><span class="math inline">\(k\)</span></td>
-<td>number of terms kept by the sparse fit</td>
+<td><span class="math inline">\(K\)</span></td>
+<td>number of candidate functions</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="function-index" class="level2">
-<h2 class="anchored" data-anchor-id="function-index">Function index</h2>
-<p>All functions are in <code>R/functions.R</code> and use base R only. Each page shows the code of the functions it uses.</p>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<p>All functions are in <code>R/functions.R</code>.</p>
 <table class="caption-top table">
 <colgroup>
-<col style="width: 33%">
-<col style="width: 33%">
-<col style="width: 33%">
+<col style="width: 50%">
+<col style="width: 50%">
 </colgroup>
 <thead>
 <tr class="header">
 <th>Function</th>
-<th>Step</th>
 <th>Purpose</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>make_drivers(wx)</code></td>
-<td>3</td>
-<td>standardised weather array <code>[year, day, driver]</code></td>
+<td>standardised drivers <code>U[season, day, driver]</code></td>
 </tr>
 <tr class="even">
 <td><code>make_library(drv, degree, pairs)</code></td>
-<td>3</td>
-<td>library array <code>[year, day, term]</code></td>
+<td>library <code>Theta[season, day, term]</code></td>
 </tr>
 <tr class="odd">
 <td><code>make_trajectories(traj, drv, var)</code></td>
-<td>3</td>
-<td>response array <code>[genotype, year, day]</code></td>
+<td>response <code>Y[genotype, season, day]</code></td>
 </tr>
 <tr class="even">
-<td><code>build_design(Theta, tr, genotypes)</code></td>
-<td>3</td>
-<td>explicit design matrix <code>X</code> and response <code>z</code></td>
+<td><code>make_design(Theta, tr, genotype)</code></td>
+<td>design matrix <code>X</code> and increments <code>dy</code></td>
 </tr>
 <tr class="odd">
-<td><code>gram_stats(Theta, tr)</code></td>
-<td>3</td>
-<td><code>A</code> and <code>b</code> per genotype and year</td>
+<td><code>fit_ols</code>, <code>fit_ridge</code>, <code>fit_lasso</code>, <code>fit_enet</code>, <code>fit_subset</code>, <code>fit_stlsq</code></td>
+<td>fitting methods <code>fit(X, dy)</code></td>
 </tr>
 <tr class="even">
-<td><code>fit_ols</code>, <code>fit_ridge</code>, <code>fit_ssr</code></td>
-<td>4</td>
-<td>fitting methods with signature <code>fit(A, b, ...)</code></td>
+<td><code>simulate(coef, Theta_y, y0)</code></td>
+<td>solution as a cumulative sum</td>
 </tr>
 <tr class="odd">
-<td><code>fit_hier</code>, <code>fit_years</code></td>
-<td>4, 7</td>
-<td>shared coefficients plus genotype deviations</td>
-</tr>
-<tr class="even">
-<td><code>simulate(xi, Theta_y, y0)</code></td>
-<td>5</td>
-<td>roll the equation forward (running total)</td>
-</tr>
-<tr class="odd">
-<td><code>cv_blocked(...)</code></td>
-<td>5</td>
-<td>leave-one-year-out cross-validation</td>
+<td><code>cross_validate(Theta, tr, fit)</code></td>
+<td>leave-one-season-out predictions</td>
 </tr>
 <tr class="even">
 <td><code>evaluate(P, tr)</code></td>
-<td>5</td>
 <td>trajectory, fixed-day and maturity RMSE</td>
 </tr>
 <tr class="odd">
 <td><code>ale_curve(rate, Z, j)</code></td>
-<td>6</td>
 <td>accumulated local effect of driver <code>j</code></td>
 </tr>
 <tr class="even">
-<td><code>rank_scores</code>, <code>lookup_baseline</code></td>
-<td>7</td>
-<td>ranking metrics and the no-weather baseline</td>
+<td><code>rank_scores(Pd, Yd)</code>, <code>lookup_trajectory(tr)</code></td>
+<td>ranking metrics and the baseline</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="data" class="level2">
 <h2 class="anchored" data-anchor-id="data">Data</h2>
-<p>Daily simulated wheat growth from the APSIM model at Narrabri (NSW, Australia): 199 genotypes, 31 seasons (1983 to 2013). See <a href="./02-data.html">Data</a> for the columns. Files are in <code>data/</code>.</p>
-<p>The data are simulation output. The source and licence of the underlying APSIM simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.</p>
+<p>APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes, 31 seasons (1983 to 2013), daily. Columns are described in <a href="./02-data.html">Data</a>. Files are in <code>data/</code>.</p>
 </section>
 <section id="sources" class="level2">
 <h2 class="anchored" data-anchor-id="sources">Sources</h2>
 <ul>
+<li>Bustos-Korts, D. et al.&nbsp;(2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. <em>Frontiers in Plant Science</em> 10, 1540. doi:10.3389/fpls.2019.01540. Data: <a href="https://figshare.com/articles/dataset/24843705">figshare</a>.</li>
 <li>Brunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. <em>PNAS</em> 113(15), 3932–3937.</li>
-<li>Bustos-Korts, D. et al.&nbsp;(2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. <em>Frontiers in Plant Science</em> 10, 1540. doi:10.3389/fpls.2019.01540</li>
+<li>Friedman, J., Hastie, T. and Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. <em>Journal of Statistical Software</em> 33(1), 1–22 (<code>glmnet</code>).</li>
+<li>Lumley, T. and Miller, A. <code>leaps</code>: regression subset selection. R package.</li>
 <li>Apley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. <em>Journal of the Royal Statistical Society B</em> 82(4), 1059–1086.</li>
 </ul>
+<p>The source and licence of the underlying simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.</p>
 
 
 </section>

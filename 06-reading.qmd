@@ -8,39 +8,42 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-## Final model
+## Fitted equations
 
-For interpretation the model is fitted once to all seasons. The shared coefficients on the 12-term support, in standardised drivers, are:
+For interpretation, the sparse model (STLSQ) of every genotype is fitted to all seasons. The coefficients of the median genotype (`g114`) are
 
 ```{r}
-f  <- fit_years(gram, seq_along(tr$years), fit_ssr, k = 12)
-mu <- f$mu
-round(setNames(mu[f$support], f$names[f$support]), 4)
-rate <- function(Z) as.vector(library_matrix(Z) %*% mu)
+fit_genotype <- function(g) {
+  d <- make_design(Theta, tr, g)
+  fit_stlsq(d$X, d$dy)
+}
+coefs <- sapply(tr$genotypes, fit_genotype)       # (1 + terms) x genotype
+round(coefs[, "g114"], 4)
 ```
 
-Individual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.
+Terms with a coefficient of zero were removed. Individual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.
 
 ## Growth rate over the season
 
-Predicted growth rate for the weather of each season (grey) and the mean (blue).
+Predicted growth rate of genotype `g114` for the drivers of each season (grey) and of three selected seasons.
 
 ```{r}
 #| fig-height: 2.8
 nd <- dim(Theta)[2]
-rate_y <- function(y) Theta[y, , ] %*% mu
+rate_y <- function(y) cbind(1, Theta[y, , ]) %*% coefs[, "g114"]
 d <- data.frame(das = rep(1:nd + tr$das0 - 1, length(tr$years)),
                 year = rep(tr$years, each = nd),
                 rate = unlist(lapply(seq_along(tr$years), rate_y)))
 d <- d[d$das <= tr$das0 + max(tr$nend) - 1, ]
+shown <- d[d$year %in% c(1984, 1998, 2008), ]
 
-ggplot(d, aes(das, rate)) +
-  geom_line(aes(group = year), colour = dgxe[["grey"]],
-            linewidth = 0.3, alpha = 0.7) +
-  stat_summary(fun = mean, geom = "line", colour = dgxe[["blue"]],
-               linewidth = 0.9) +
+ggplot(d, aes(das, rate, group = year)) +
+  geom_line(colour = "#D1D5DB", linewidth = 0.3) +
+  geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.8) +
+  scale_colour_dgxe("blue", "cyan", "burgundy") +
   labs(x = "days after sowing", y = "growth rate (t/ha/day)") +
-  theme_dgxe()
+  theme_dgxe() +
+  legend_top()
 ```
 
 ## Effect of a single driver
@@ -52,7 +55,7 @@ Z <- observed_points(drv, tr)
 round(cor(Z), 2)
 ```
 
-Accumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the rate.
+Accumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the growth rate.
 
 ```{r}
 #| echo: false
@@ -60,37 +63,48 @@ Accumulated local effects (ALE) vary the driver only within narrow intervals aro
 show_fun("ale_curve")
 ```
 
-```{r}
-natural <- function(z, j) z * drv$scale[j] + drv$center[j]   # original units
-driver <- function(j) factor(drv$drivers[j], drv$drivers)
+The ALE curve of each driver for every genotype (grey), and for the genotypes with the lowest, median and highest final biomass:
 
-curves <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
+```{r}
+natural <- function(z, j) z * drv$scale[j] + drv$center[j]     # original units
+ale_genotype <- function(g, j) {
+  rate <- function(Z) as.vector(cbind(1, library_matrix(Z)) %*% coefs[, g])
   ale <- ale_curve(rate, Z, j)
-  data.frame(driver = driver(j), x = natural(ale$z, j), effect = ale$effect)
-}))
-observed <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
-  data.frame(driver = driver(j), x = natural(Z[, j], j))
-}))
+  data.frame(genotype = g, driver = factor(drv$drivers[j], drv$drivers),
+             x = natural(ale$z, j), effect = ale$effect)
+}
+cells <- expand.grid(g = tr$genotypes, j = seq_along(drv$drivers),
+                     stringsAsFactors = FALSE)
+curves <- do.call(rbind, Map(ale_genotype, cells$g, cells$j))
 ```
 
 ```{r}
-#| fig-height: 3.4
-ggplot(curves, aes(x, effect)) +
-  geom_hline(yintercept = 0, colour = "#D1D5DB", linewidth = 0.3) +
-  geom_line(colour = dgxe[["blue"]], linewidth = 0.9) +
+#| fig-height: 4.2
+three <- spread_genotypes(tr)
+observed <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
+  data.frame(driver = factor(drv$drivers[j], drv$drivers), x = natural(Z[, j], j))
+}))
+
+ggplot(curves, aes(x, effect, group = genotype)) +
+  geom_hline(yintercept = 0, colour = "#9CA3AF", linewidth = 0.3) +
+  geom_line(colour = "#D1D5DB", linewidth = 0.25) +
+  geom_line(data = curves[curves$genotype %in% three, ],
+            aes(colour = genotype), linewidth = 0.8) +
   geom_rug(data = observed, aes(x = x), inherit.aes = FALSE, sides = "b",
-           alpha = 0.03, colour = dgxe[["ink"]]) +
+           alpha = 0.03) +
   facet_wrap(~driver, scales = "free_x") +
+  scale_colour_dgxe("burgundy", "cyan", "blue") +
   labs(x = "TT (°C d) · DL (h) · RAW (0 to 1) · RAD (MJ/m²/day)",
        y = "effect on growth rate (t/ha/day)") +
-  theme_dgxe()
+  theme_dgxe() +
+  legend_top()
 ```
 
-The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the season, not a response to temperature. TT and DL are correlated at 0.97 and are best read together.
+The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the season, not a response to temperature. Thermal time and day length are correlated at 0.97 and are best read together.
 
 ## Interactions and partial dependence
 
-The 13-term library is additive in the drivers, so partial dependence and ALE coincide. With products of drivers (37 terms) they differ:
+The 12-term library is additive in the drivers, so partial dependence and ALE coincide. With products of drivers (36 terms, backward elimination to 20 terms) they differ, shown here for `g114`:
 
 ```{r}
 pdp <- function(rate, Z, j, grid) {
@@ -102,17 +116,17 @@ pdp <- function(rate, Z, j, grid) {
 }
 
 Theta2 <- make_library(drv, pairs = TRUE)
-gram2 <- gram_stats(Theta2, tr)
-f2 <- fit_years(gram2, seq_along(tr$years), fit_ssr, k = 20)
-rate2 <- function(Z) as.vector(library_matrix(Z, pairs = TRUE) %*% f2$mu)
+d2 <- make_design(Theta2, tr, "g114")
+coef2 <- fit_subset(d2$X, d2$dy, k = 20, method = "backward")
+rate2 <- function(Z) as.vector(cbind(1, library_matrix(Z, pairs = TRUE)) %*% coef2)
 
 curves2 <- do.call(rbind, lapply(1:2, function(j) {
   ale <- ale_curve(rate2, Z, j)
   pd <- pdp(rate2, Z, j, ale$z)
-  x <- natural(ale$z, j)
-  rbind(data.frame(driver = driver(j), x = x, effect = ale$effect,
+  driver <- factor(drv$drivers[j], drv$drivers)
+  rbind(data.frame(driver, x = natural(ale$z, j), effect = ale$effect,
                    method = "ALE"),
-        data.frame(driver = driver(j), x = x, effect = pd - mean(pd),
+        data.frame(driver, x = natural(ale$z, j), effect = pd - mean(pd),
                    method = "partial dependence"))
 }))
 ```
@@ -128,4 +142,4 @@ ggplot(curves2, aes(x, effect, colour = method, linetype = method)) +
   legend_top()
 ```
 
-Partial dependence evaluates the model at combinations of drivers that do not occur in the data (for example a short day late in a high thermal-time season), whereas ALE does not.
+Partial dependence evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a season with high thermal time, whereas ALE does not.

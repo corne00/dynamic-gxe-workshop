@@ -6,13 +6,14 @@ The numbers and figures on this page come from the research code (Python), not f
 
 ## Coupled states
 
-In steps 4 to 8 the growth rate depends on the weather but not on the state of the crop, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. A model with this feedback is a coupled system in leaf area index $L$ and biomass $B$,
+In steps 4 to 8 the library depends on the drivers only, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. Including the state in the library gives a coupled system in the leaf area index $L$ and the biomass $B$, with $\mathbf{y} = (L, B)$:
 
 $$
-\frac{\mathrm{d}L}{\mathrm{d}t} = f_L(L, B, u_t), \qquad \frac{\mathrm{d}B}{\mathrm{d}t} = f_B(L, B, u_t),
+\dot{L} = \boldsymbol{\theta}_L(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi}_L, \qquad
+\dot{B} = \boldsymbol{\theta}_B(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi}_B .
 $$
 
-Because the state appears on the right-hand side, the solution requires numerical integration. The regression remains linear in the coefficients, so steps 3 and 4 apply unchanged, but errors in the states feed back into the rates.
+The regression is unchanged, with the observed states in the library. The solution requires numerical integration, and errors in the states feed back into the rates.
 
 ![Fitting and prediction for three model variants: weather only (driving-only), coupled with leaf area index $L$ predicted by its own equation, and driven by measured $L$.](images/model_variants.png){width=100%}
 
@@ -22,7 +23,7 @@ A candidate term for biomass growth is the light intercepted by the canopy, $I =
 
 ## Results at Narrabri
 
-Final biomass RMSE of coupled variants (leave-one-year-out, t/ha):
+Final biomass RMSE of coupled variants (leave-one-year-out, t/ha). In the research code the genotypes were fitted jointly, with shared coefficients and genotype-specific deviations; fitting each genotype separately, as in this workshop, gives a similar error (0.76 t/ha at maturity for the weather-only model).
 
 | Model | Final biomass RMSE |
 |---|---|
@@ -43,8 +44,8 @@ Response curves of the fitted LAI and biomass equations (ALE, as in step 6):
 
 ## Further directions
 
-- Other regression methods: any method with the signature `fit(A, b, ...)`. Bayesian regression with sparsity-inducing priors provides uncertainty for the coefficients at higher computational cost.
-- Several sites: pooling sites adds variation in the weather.
+- Other regression methods: any method with the signature `fit(X, dy)`. Bayesian regression with sparsity-inducing priors provides uncertainty for the coefficients at higher computational cost.
+- Several sites and joint fitting of genotypes: coefficients shared between genotypes, with genotype-specific deviations, use the data of all genotypes for each equation. Pooling sites adds variation in the weather.
 - New genotypes: prediction for a genotype not used in fitting requires additional information about it, for example its parameter values. This is not treated here.
 - Other responses: step 8 shows leaf area index as an example.
 

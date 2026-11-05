@@ -1,17 +1,15 @@
 ## =============================================================================
 ##  Sparse identification of crop growth: functions used in the workshop
-##  (base R only)
 ##
-##    wx   --make_drivers-->       drv --make_library--> Theta
-##    traj --make_trajectories-->  tr
-##    Theta, tr --gram_stats-->    gram        (A = X'X and b = X'z)
-##    gram --fit_*--> coefficients --simulate--> predictions --evaluate--> RMSE
+##    weather --make_drivers--> drv --make_library--> Theta   (candidate terms)
+##    biomass --make_trajectories--> tr
+##    Theta, tr --make_design--> X, dy                (regression of increments)
+##    fit_*(X, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
 ##
-##  Every fitting method has the signature fit(A, b, ...), so methods are
-##  interchangeable.
+##  Base R, except for glmnet and leaps in some of the fitting methods.
 ## =============================================================================
 
-## ---- Drivers: array U[year, day, driver], standardised ---------------------
+## ---- Drivers: array U[season, day, driver], standardised -------------------
 make_drivers <- function(wx, drivers = c("TT", "DL", "RAW", "RAD")) {
   years <- sort(unique(wx$year))
   das0 <- min(wx$das)
@@ -35,13 +33,13 @@ make_drivers <- function(wx, drivers = c("TT", "DL", "RAW", "RAD")) {
        das0 = das0, drivers = drivers, center = center, scale = scale)
 }
 
-## ---- Library of candidate functions -----------------------------------------
-## Z: n x d matrix of standardised drivers -> n x K matrix of terms.
-## A constant and powers 1..degree of every driver; pairs = TRUE adds products
-## of pairs of drivers.
+## ---- Library of candidate terms ---------------------------------------------
+## Z: n x m matrix of standardised drivers -> n x K matrix of terms. Powers
+## 1..degree of every driver; pairs = TRUE adds products of pairs of drivers.
+## The constant term is the intercept of the regression and is not included.
 library_matrix <- function(Z, degree = 3, pairs = FALSE) {
   term <- function(x, p) if (p == 1) x else paste0(x, "^", p)
-  cols <- list(`1` = rep(1, nrow(Z)))
+  cols <- list()
   for (d in colnames(Z)) {
     for (p in 1:degree) cols[[term(d, p)]] <- Z[, d]^p
   }
@@ -58,7 +56,7 @@ library_matrix <- function(Z, degree = 3, pairs = FALSE) {
   do.call(cbind, cols)
 }
 
-## Theta[year, day, term]
+## Theta[season, day, term]
 make_library <- function(drv, degree = 3, pairs = FALSE) {
   d <- dim(drv$U)
   Z <- matrix(drv$U, ncol = d[3], dimnames = list(NULL, drv$drivers))
@@ -66,7 +64,7 @@ make_library <- function(drv, degree = 3, pairs = FALSE) {
   array(L, c(d[1:2], ncol(L)), dimnames = list(NULL, NULL, colnames(L)))
 }
 
-## ---- Trajectories: array Y[genotype, year, day], NA after maturity ----------
+## ---- Trajectories: array Y[genotype, season, day], NA after maturity --------
 ## nend[g, y] is the number of daily steps of trajectory (g, y).
 make_trajectories <- function(traj, drv, var = "biomass") {
   gen <- sort(unique(traj$genotype))
@@ -80,190 +78,118 @@ make_trajectories <- function(traj, drv, var = "biomass") {
        das0 = drv$das0)
 }
 
-## ---- Regression problem -----------------------------------------------------
-## One trajectory: increments z_t = y_{t+1} - y_t regressed on the library at
-## day t.
-trajectory_xz <- function(Theta, tr, g, y) {
-  n <- tr$nend[g, y]
-  list(X = matrix(Theta[y, 1:n, ], n), z = diff(tr$Y[g, y, 1:(n + 1)]))
-}
-
-## Explicit design matrix X and response z (all seasons stacked).
-build_design <- function(Theta, tr, genotypes = tr$genotypes) {
-  idx <- expand.grid(y = seq_along(tr$years),
-                     g = match(genotypes, tr$genotypes))
-  xz <- Map(function(g, y) trajectory_xz(Theta, tr, g, y), idx$g, idx$y)
-  n <- tr$nend[cbind(idx$g, idx$y)]
-  X <- do.call(rbind, lapply(xz, `[[`, "X"))
+## ---- Regression problem for one genotype ------------------------------------
+## Rows: all days of all seasons. X: library at day t. dy: y(t + 1) - y(t).
+make_design <- function(Theta, tr, genotype) {
+  g <- match(genotype, tr$genotypes)
+  n <- tr$nend[g, ]
+  seasons <- seq_along(tr$years)
+  X <- lapply(seasons, function(y) matrix(Theta[y, 1:n[y], ], n[y]))
+  dy <- lapply(seasons, function(y) diff(tr$Y[g, y, 1:(n[y] + 1)]))
+  X <- do.call(rbind, X)
   colnames(X) <- dimnames(Theta)[[3]]
-  id <- data.frame(genotype = rep(tr$genotypes[idx$g], n),
-                   year = rep(tr$years[idx$y], n),
-                   day = sequence(n) - 1)
-  list(X = X, z = unlist(lapply(xz, `[[`, "z")), id = id)
+  list(X = X, dy = unlist(dy), season = rep(seasons, n))
 }
 
-## A = X'X and b = X'z for every genotype and season. A linear fit needs
-## nothing else, and cross-validation reduces to adding and subtracting these
-## small matrices.
-gram_stats <- function(Theta, tr) {
-  G <- dim(tr$Y)[1]
-  ny <- length(tr$years)
-  K <- dim(Theta)[3]
-  A <- array(0, c(G, ny, K, K))
-  b <- array(0, c(G, ny, K))
-  for (g in seq_len(G)) {
-    for (y in seq_len(ny)) {
-      s <- trajectory_xz(Theta, tr, g, y)
-      A[g, y, , ] <- crossprod(s$X)
-      b[g, y, ] <- crossprod(s$X, s$z)
-    }
-  }
-  list(A = A, b = b, n = tr$nend, names = dimnames(Theta)[[3]])
+## ---- Fitting methods: fit(X, dy) -> coefficients (intercept first) ----------
+named <- function(b, X) setNames(unname(b), c("1", colnames(X)))
+
+fit_ols <- function(X, dy) {
+  lm.fit(cbind(`1` = 1, X), dy)$coefficients
 }
 
-## Sum the statistics over a set of seasons.
-sum_years <- function(gram, years) {
-  list(A = apply(gram$A[, years, , , drop = FALSE], c(1, 3, 4), sum),
-       b = apply(gram$b[, years, , drop = FALSE], c(1, 3), sum),
-       n = rowSums(gram$n[, years, drop = FALSE]))
+## Ridge (alpha = 0), lasso (alpha = 1) and elastic net by glmnet.
+fit_glmnet <- function(X, dy, alpha, lambda) {
+  fit <- glmnet::glmnet(X, dy, alpha = alpha, lambda = lambda)
+  named(as.vector(coef(fit)), X)
+}
+fit_ridge <- function(X, dy, lambda = 1e-3) fit_glmnet(X, dy, 0, lambda)
+fit_lasso <- function(X, dy, lambda = 3e-4) fit_glmnet(X, dy, 1, lambda)
+fit_enet <- function(X, dy, lambda = 6e-4) fit_glmnet(X, dy, 0.5, lambda)
+
+## Best subset (exhaustive) or backward elimination with k terms, by leaps.
+fit_subset <- function(X, dy, k = 8, method = "exhaustive") {
+  b <- coef(leaps::regsubsets(X, dy, nvmax = k, method = method), k)
+  full <- setNames(numeric(ncol(X) + 1), c("1", colnames(X)))
+  full[c("1", names(b)[-1])] <- b
+  full
 }
 
-## Scale the library columns to unit root-mean-square, so that coefficients
-## are comparable.
-scale_gram <- function(A, b, n, s = sqrt(diag(A) / n)) {
-  list(A = A / n / outer(s, s), b = b / n / s, s = s)
-}
-
-## ---- Fitting methods: fit(A, b, ...) -> list(coef, support) -----------------
-fit_ols <- function(A, b, ...) {
-  list(coef = solve(A, b), support = seq_along(b))
-}
-
-fit_ridge <- function(A, b, lambda = 0.01, ...) {
-  penalty <- lambda * mean(diag(A)) * diag(nrow(A))
-  list(coef = solve(A + penalty, b), support = seq_along(b))
-}
-
-## Sequential thresholding: refit, drop the smallest coefficient, repeat until
-## k terms remain.
-fit_ssr <- function(A, b, k = 8, alpha = 1e-6, ...) {
-  S <- seq_along(b)
+## Sequential thresholded least squares (the original SINDy algorithm): refit
+## on the active terms and remove those whose scaled coefficient is below the
+## threshold, until no term is removed.
+fit_stlsq <- function(X, dy, threshold = 0.05) {
+  size <- apply(X, 2, sd) / sd(dy)         # puts all coefficients on one scale
+  active <- colnames(X)
   repeat {
-    co <- solve(A[S, S, drop = FALSE] + alpha * diag(length(S)), b[S])
-    if (length(S) <= k) break
-    S <- S[-which.min(abs(co))]
+    b <- lm.fit(cbind(`1` = 1, X[, active, drop = FALSE]), dy)$coefficients
+    keep <- abs(b[active]) * size[active] >= threshold
+    if (all(keep) || !any(keep)) break
+    active <- active[keep]
   }
-  coef <- numeric(length(b))
-  coef[S] <- co
-  list(coef = coef, support = S)
+  full <- setNames(numeric(ncol(X) + 1), c("1", colnames(X)))
+  full[names(b)] <- b
+  full
 }
 
-## Lasso by coordinate descent on the scaled normal equations.
-fit_lasso <- function(A, b, lambda = 2e-4, iters = 2000, ...) {
-  xi <- numeric(length(b))
-  for (it in seq_len(iters)) {
-    old <- xi
-    for (j in seq_along(b)) {
-      r <- b[j] - sum(A[j, -j] * xi[-j])
-      xi[j] <- sign(r) * max(abs(r) - lambda, 0) / A[j, j]
-    }
-    if (max(abs(xi - old)) < 1e-9) break
-  }
-  list(coef = xi, support = which(xi != 0))
-}
-
-## ---- Genotypes: xi_g = mu + delta_g on a common support ---------------------
-## mu: ridge fit of the pooled data. delta_g: ridge-shrunk fit of the residual
-## of genotype g.
-fit_hier <- function(Ag, bg, support, lam_mu = 1e-4, lam_g = 0.01) {
-  G <- dim(Ag)[1]
-  K <- dim(Ag)[2]
-  k <- length(support)
-  Ap <- apply(Ag[, support, support, drop = FALSE], c(2, 3), sum)
-  bp <- colSums(bg[, support, drop = FALSE])
-  mu <- numeric(K)
-  mu[support] <- solve(Ap + lam_mu * mean(diag(Ap)) * diag(k), bp)
-  delta <- matrix(0, G, K)
-  for (g in seq_len(G)) {
-    Ags <- Ag[g, support, support]
-    penalty <- lam_g * mean(diag(Ags)) * diag(k)
-    residual <- bg[g, support] - Ags %*% mu[support]
-    delta[g, support] <- solve(Ags + penalty, residual)
-  }
-  list(mu = mu, delta = delta, xi = sweep(delta, 2, mu, "+"),
-       support = support)
-}
-
-## Fit on a set of seasons: `fitter` selects the shared support on the pooled
-## problem, fit_hier gives mu and the deviations. Coefficients are returned in
-## library units.
-fit_years <- function(gram, years, fitter = fit_ssr, k = 12,
-                      lam_mu = 1e-4, lam_g = 0.01, ...) {
-  st <- sum_years(gram, years)
-  n <- sum(st$n)
-  A <- apply(st$A, c(2, 3), sum)
-  b <- colSums(st$b)
-  s <- sqrt(diag(A) / n)
-  Ag <- sweep(sweep(st$A, 2, s, "/"), 3, s, "/") / n
-  bg <- sweep(st$b, 2, s, "/") / n
-  support <- fitter(A / n / outer(s, s), b / n / s, k = k, ...)$support
-  h <- fit_hier(Ag, bg, support, lam_mu, lam_g)
-  list(xi = sweep(h$xi, 2, s, "/"), mu = h$mu / s, support = support,
-       names = gram$names)
-}
+## Methods compared in the workshop (hyperparameters fixed for simplicity).
+fit_methods <- list(
+  OLS = fit_ols,
+  ridge = fit_ridge,
+  lasso = fit_lasso,
+  `elastic net` = fit_enet,
+  `best subset (k = 8)` = function(X, dy) fit_subset(X, dy, k = 8),
+  `backward (k = 8)` = function(X, dy) fit_subset(X, dy, 8, "backward"),
+  STLSQ = fit_stlsq)
 
 ## ---- Simulation: for a weather-only library the solution is a cumulative sum
-## xi: genotype x term; Theta_y: day x term (one season); y0: initial biomass
-## per genotype.
-simulate <- function(xi, Theta_y, y0) {
-  increments <- Theta_y[-nrow(Theta_y), , drop = FALSE] %*% t(xi)
-  sweep(rbind(0, apply(increments, 2, cumsum)), 2, y0, "+")   # day x genotype
+## coef: intercept and term coefficients; Theta_y: day x term (one season).
+simulate <- function(coef, Theta_y, y0) {
+  rate <- cbind(1, Theta_y[-nrow(Theta_y), ]) %*% coef
+  y0 + c(0, cumsum(rate))
 }
 
-## ---- Validation: leave-one-year-out -----------------------------------------
-## Each season is predicted by a model fitted to the others, starting from
-## their mean initial biomass.
-cv_blocked <- function(Theta, tr, gram, fitter = fit_ssr, k = 12,
-                       lam_mu = 1e-4, lam_g = 0.01, ...) {
-  ny <- length(tr$years)
-  P <- array(NA_real_, c(dim(tr$Y)[1], ny, dim(Theta)[2]))
-  support <- vector("list", ny)
-  for (v in seq_len(ny)) {
-    train <- setdiff(seq_len(ny), v)
-    f <- fit_years(gram, train, fitter, k, lam_mu, lam_g, ...)
-    y0 <- rowMeans(tr$Y[, train, 1])
-    P[, v, ] <- t(simulate(f$xi, Theta[v, , ], y0))
-    support[[v]] <- f$support
+## Genotypes with the lowest, median and highest mean final biomass.
+spread_genotypes <- function(tr) {
+  last <- cbind(as.vector(row(tr$nend)), as.vector(col(tr$nend)),
+                as.vector(tr$nend) + 1)
+  final <- matrix(tr$Y[last], nrow(tr$nend), dimnames = dimnames(tr$nend))
+  ranked <- names(sort(rowMeans(final)))
+  ranked[c(1, ceiling(length(ranked) / 2), length(ranked))]
+}
+
+## ---- Validation: leave-one-season-out ---------------------------------------
+## Each season is predicted by a model fitted to the other seasons of the same
+## genotype, starting from the mean initial biomass of those seasons.
+## Returns P[genotype, season, day].
+cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
+  P <- array(NA_real_, dim(tr$Y))
+  for (g in match(genotypes, tr$genotypes)) {
+    d <- make_design(Theta, tr, tr$genotypes[g])
+    for (v in seq_along(tr$years)) {
+      train <- d$season != v
+      coef <- fit(d$X[train, ], d$dy[train])
+      P[g, v, ] <- simulate(coef, Theta[v, , ], mean(tr$Y[g, -v, 1]))
+    }
   }
-  list(pred = P, support = support)
+  P
 }
 
 ## RMSE over whole trajectories, on a fixed day (array index; 99 is day 113
-## after sowing), and at maturity.
+## after sowing) and at maturity. Genotypes that were not predicted are ignored.
 evaluate <- function(P, tr, fixed_day = 99) {
-  sq_error <- 0
-  count <- 0
-  final <- numeric(0)
-  for (g in seq_len(dim(P)[1])) {
-    for (y in seq_len(dim(P)[2])) {
-      n <- tr$nend[g, y]
-      d <- 2:(n + 1)                    # index 1 is the given initial value
-      sq_error <- sq_error + sum((P[g, y, d] - tr$Y[g, y, d])^2)
-      count <- count + n
-      final <- c(final, P[g, y, n + 1] - tr$Y[g, y, n + 1])
-    }
-  }
-  fixed <- (P[, , fixed_day] - tr$Y[, , fixed_day])^2
-  c(trajectory_rmse = sqrt(sq_error / count),
-    fixed_day_rmse = sqrt(mean(fixed, na.rm = TRUE)),
-    maturity_rmse = sqrt(mean(final^2)))
+  err <- P - tr$Y
+  err[, , 1] <- NA                                # the initial value is given
+  last <- cbind(as.vector(row(tr$nend)), as.vector(col(tr$nend)),
+                as.vector(tr$nend) + 1)
+  rmse <- function(e) sqrt(mean(e^2, na.rm = TRUE))
+  c(trajectory_rmse = rmse(err), fixed_day_rmse = rmse(err[, , fixed_day]),
+    maturity_rmse = rmse(err[last]))
 }
 
 ## RMSE on each day, over all genotype-season pairs still growing on that day.
 rmse_by_day <- function(P, tr) {
-  sapply(2:dim(P)[3], function(d) {
-    sqrt(mean((P[, , d] - tr$Y[, , d])^2, na.rm = TRUE))
-  })
+  sqrt(apply((P - tr$Y)^2, 3, mean, na.rm = TRUE))[-1]
 }
 
 ## Baseline without weather: each trajectory is the mean curve of the same

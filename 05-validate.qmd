@@ -8,9 +8,9 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-## Simulation
+## Solution
 
-The library depends on the weather only, so the solution is a cumulative sum:
+With a library that depends on the drivers only, the solution of the fitted equation is a cumulative sum of the predicted daily growth:
 
 ```{r}
 #| echo: false
@@ -18,57 +18,54 @@ The library depends on the weather only, so the solution is a cumulative sum:
 show_fun("simulate")
 ```
 
-## One held-out season
+## Leave-one-season-out cross-validation
 
-The model is fitted to all seasons except 1998 (shared support of 12 terms, plus genotype deviations) and used to predict 1998 from its weather. All 199 genotypes are shown.
-
-```{r}
-v <- match(1998, tr$years)
-train <- setdiff(seq_along(tr$years), v)
-f <- fit_years(gram, train, fit_ssr, k = 12)
-y0 <- rowMeans(tr$Y[, train, 1])
-pred <- simulate(f$xi, Theta[v, , ], y0)          # day x genotype
-f$names[f$support]
-```
-
-```{r}
-#| fig-height: 3
-obs <- tr$Y[, v, ]                                # genotype x day
-idx <- which(!is.na(obs), arr.ind = TRUE)
-base <- data.frame(genotype = idx[, 1], das = idx[, 2] + tr$das0 - 1)
-d <- rbind(cbind(base, source = "APSIM", biomass = obs[idx]),
-           cbind(base, source = "Model", biomass = t(pred)[idx]))
-
-ggplot(d, aes(das, biomass, group = genotype, colour = source)) +
-  geom_line(linewidth = 0.2, alpha = 0.3) +
-  facet_wrap(~source) +
-  scale_colour_dgxe("grey", "blue") +
-  labs(x = "days after sowing", y = "biomass (t/ha)") +
-  theme_dgxe()
-```
-
-## Leave-one-year-out cross-validation
-
-The same procedure is repeated for each of the 31 seasons.
+For every genotype and every season, the model is fitted to the other 30 seasons of that genotype and used to predict the left-out season from its drivers, starting from the mean initial biomass of the training seasons.
 
 ```{r}
 #| echo: false
 #| results: asis
-show_fun("cv_blocked", "evaluate")
+show_fun("cross_validate", "evaluate")
 ```
+
+The sparse model (STLSQ) for all 199 genotypes, with the root-mean-square error (RMSE, t/ha) over whole trajectories, on day 113 after sowing, and at maturity:
 
 ```{r}
-system.time(cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12))
-round(evaluate(cv$pred, tr), 3)       # fixed day: index 99 = day 113
+P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
+round(evaluate(P, tr), 3)
 ```
 
-Predicted against APSIM biomass at day 113, all genotype-season pairs:
+## Predicted trajectories
+
+Season 1998, predicted by models that were fitted without it. All genotypes are shown in grey; the genotypes with the lowest, median and highest final biomass are in colour.
+
+```{r}
+#| fig-height: 3
+v <- match(1998, tr$years)
+three <- spread_genotypes(tr)
+cells <- which(!is.na(tr$Y[, v, ]), arr.ind = TRUE)      # genotype, day
+long <- data.frame(genotype = tr$genotypes[cells[, 1]],
+                   das = cells[, 2] + tr$das0 - 1)
+d <- rbind(cbind(long, source = "APSIM", biomass = tr$Y[, v, ][cells]),
+           cbind(long, source = "Model", biomass = P[, v, ][cells]))
+
+ggplot(d, aes(das, biomass, group = genotype)) +
+  geom_line(colour = "#D1D5DB", linewidth = 0.2) +
+  geom_line(data = d[d$genotype %in% three, ], aes(colour = genotype),
+            linewidth = 0.7) +
+  facet_wrap(~source) +
+  scale_colour_dgxe("burgundy", "cyan", "blue") +
+  labs(x = "days after sowing", y = "biomass (t/ha)") +
+  theme_dgxe() +
+  legend_top()
+```
+
+Predicted against APSIM biomass on day 113, all genotype-season pairs:
 
 ```{r}
 #| fig-height: 3.6
 #| fig-width: 4.2
-d <- data.frame(obs = as.vector(tr$Y[, , 99]),
-                pred = as.vector(cv$pred[, , 99]))
+d <- data.frame(obs = as.vector(tr$Y[, , 99]), pred = as.vector(P[, , 99]))
 rmse <- sqrt(mean((d$obs - d$pred)^2))
 
 ggplot(d, aes(obs, pred)) +
@@ -83,7 +80,7 @@ ggplot(d, aes(obs, pred)) +
 
 ## Baseline without weather
 
-As a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons.
+As a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons. This prediction does not use the weather.
 
 ```{r}
 #| echo: false
@@ -101,8 +98,7 @@ The error as a function of time:
 ```{r}
 #| fig-height: 3
 days <- 2:dim(tr$Y)[3] + tr$das0 - 1
-d <- rbind(data.frame(das = days, rmse = rmse_by_day(cv$pred, tr),
-                      model = "model"),
+d <- rbind(data.frame(das = days, rmse = rmse_by_day(P, tr), model = "model"),
            data.frame(das = days, rmse = rmse_by_day(base, tr),
                       model = "baseline"))
 
@@ -117,58 +113,41 @@ ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) +
   theme_dgxe()
 ```
 
-## Choice of fitting method
+## Comparison of fitting methods
 
-All methods share the signature `fit(A, b, ...)`, so they can be compared in one loop.
+All methods of step 4 are evaluated in the same way:
 
 ```{r}
-methods <- list(OLS = list(fitter = fit_ols),
-                ridge = list(fitter = fit_ridge, lambda = 0.01),
-                SSR_8 = list(fitter = fit_ssr, k = 8),
-                SSR_12 = list(fitter = fit_ssr, k = 12),
-                lasso = list(fitter = fit_lasso, lambda = 2e-4))
-
-compare <- function(m) {
-  cv <- do.call(cv_blocked, c(list(Theta, tr, gram), m))
-  round(evaluate(cv$pred, tr), 3)
-}
-res <- cached("swap_methods.rds", {
-  scores <- t(sapply(methods, compare))
-  data.frame(method = names(methods), scores, row.names = NULL)
-})
-baseline <- data.frame(method = "baseline", t(round(evaluate(base, tr), 3)))
-rbind(res, baseline)
+scores <- cached("cv_methods.rds", t(sapply(fit_methods, function(fit) {
+  evaluate(cross_validate(Theta, tr, fit), tr)
+})))
+round(rbind(scores, baseline = evaluate(base, tr)), 3)
 ```
+
+The methods are close to each other. The sparse models use fewer terms for a similar error, and all of them improve on the baseline, mainly late in the season.
 
 ## Number of terms
 
-With the 13-term library the sparse model has little room to reduce complexity. Adding products of drivers (`pairs = TRUE`, 37 terms) gives a larger dictionary:
+With 12 terms there is little to remove. For a larger library that includes products of drivers (`pairs = TRUE`, 36 terms), the held-out error of backward elimination (every fifth genotype) as a function of the number of terms is:
 
 ```{r}
 Theta2 <- make_library(drv, pairs = TRUE)
-gram2 <- gram_stats(Theta2, tr)
+genotypes <- tr$genotypes[seq(1, 199, by = 5)]
+ks <- c(4, 6, 8, 12, 16, 20, 28, 36)
 
-ks <- c(6, 8, 12, 16, 20, 30, 37)
-rmse_k <- function(k) {
-  evaluate(cv_blocked(Theta2, tr, gram2, fit_ssr, k = k)$pred, tr)[[1]]
-}
-rk <- cached("rmse_vs_k_pairs.rds",
-             data.frame(k = ks, rmse = sapply(ks, rmse_k)))
+by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k) {
+  fit <- function(X, dy) fit_subset(X, dy, k, "backward")
+  evaluate(cross_validate(Theta2, tr, fit, genotypes), tr)[[1]]
+})))
 ```
 
 ```{r}
 #| fig-height: 2.8
 #| fig-width: 5
-ols13 <- res$trajectory_rmse[res$method == "OLS"]
-
-ggplot(rk, aes(k, rmse)) +
-  geom_hline(yintercept = ols13, colour = dgxe[["burgundy"]],
-             linewidth = 0.4, linetype = 2) +
+ggplot(by_k, aes(k, rmse)) +
   geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
   geom_point(colour = dgxe[["blue"]], size = 2) +
-  annotate("text", x = 37, y = ols13, label = "13-term library, OLS",
-           vjust = -0.7, hjust = 1, colour = dgxe[["burgundy"]], size = 3.3) +
-  labs(x = "number of terms (37-term library)",
+  labs(x = "number of terms (36-term library)",
        y = "held-out trajectory RMSE (t/ha)") +
   theme_dgxe()
 ```

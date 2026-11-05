@@ -262,11 +262,12 @@ window.Quarto = {
 <p>The numbers and figures on this page come from the research code (Python), not from the R functions of the previous steps, and are not reproduced in R.</p>
 <section id="coupled-states" class="level2">
 <h2 class="anchored" data-anchor-id="coupled-states">Coupled states</h2>
-<p>In steps 4 to 8 the growth rate depends on the weather but not on the state of the crop, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. A model with this feedback is a coupled system in leaf area index <span class="math inline">\(L\)</span> and biomass <span class="math inline">\(B\)</span>,</p>
+<p>In steps 4 to 8 the library depends on the drivers only, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. Including the state in the library gives a coupled system in the leaf area index <span class="math inline">\(L\)</span> and the biomass <span class="math inline">\(B\)</span>, with <span class="math inline">\(\mathbf{y} = (L, B)\)</span>:</p>
 <p><span class="math display">\[
-\frac{\mathrm{d}L}{\mathrm{d}t} = f_L(L, B, u_t), \qquad \frac{\mathrm{d}B}{\mathrm{d}t} = f_B(L, B, u_t),
+\dot{L} = \boldsymbol{\theta}_L(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi}_L, \qquad
+\dot{B} = \boldsymbol{\theta}_B(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi}_B .
 \]</span></p>
-<p>Because the state appears on the right-hand side, the solution requires numerical integration. The regression remains linear in the coefficients, so steps 3 and 4 apply unchanged, but errors in the states feed back into the rates.</p>
+<p>The regression is unchanged, with the observed states in the library. The solution requires numerical integration, and errors in the states feed back into the rates.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/model_variants.png" class="img-fluid figure-img" style="width:100.0%"></p>
@@ -280,7 +281,7 @@ window.Quarto = {
 </section>
 <section id="results-at-narrabri" class="level2">
 <h2 class="anchored" data-anchor-id="results-at-narrabri">Results at Narrabri</h2>
-<p>Final biomass RMSE of coupled variants (leave-one-year-out, t/ha):</p>
+<p>Final biomass RMSE of coupled variants (leave-one-year-out, t/ha). In the research code the genotypes were fitted jointly, with shared coefficients and genotype-specific deviations; fitting each genotype separately, as in this workshop, gives a similar error (0.76 t/ha at maturity for the weather-only model).</p>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -328,8 +329,8 @@ window.Quarto = {
 <section id="further-directions" class="level2">
 <h2 class="anchored" data-anchor-id="further-directions">Further directions</h2>
 <ul>
-<li>Other regression methods: any method with the signature <code>fit(A, b, ...)</code>. Bayesian regression with sparsity-inducing priors provides uncertainty for the coefficients at higher computational cost.</li>
-<li>Several sites: pooling sites adds variation in the weather.</li>
+<li>Other regression methods: any method with the signature <code>fit(X, dy)</code>. Bayesian regression with sparsity-inducing priors provides uncertainty for the coefficients at higher computational cost.</li>
+<li>Several sites and joint fitting of genotypes: coefficients shared between genotypes, with genotype-specific deviations, use the data of all genotypes for each equation. Pooling sites adds variation in the weather.</li>
 <li>New genotypes: prediction for a genotype not used in fitting requires additional information about it, for example its parameter values. This is not treated here.</li>
 <li>Other responses: step 8 shows leaf area index as an example.</li>
 </ul>

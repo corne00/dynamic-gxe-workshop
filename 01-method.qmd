@@ -2,60 +2,73 @@
 title: "1 · Method"
 ---
 
-```{r}
-#| echo: false
-source("R/functions.R")
-source("R/show.R")
-```
-
 ## Overview
 
-![Schematic. Weather drivers $U$ and the response $Y$ are measured over time. The growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation.](images/method_overview.png){width=100%}
+![Schematic. Environmental drivers $U$ and the response $Y$ are measured over time. The growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation.](images/method_overview.png){width=100%}
 
 ## Model
 
-Let $y(t)$ denote biomass and $u(t) = (\mathrm{TT}, \mathrm{DL}, \mathrm{RAW}, \mathrm{RAD})$ the daily weather drivers: accumulated thermal time, day length, relative available water and solar radiation. The growth rate is modelled as
+Let $\mathbf{y}(t)$ denote the state of the crop (for example biomass or leaf area index) and $\mathbf{u}(t) = (u_1(t), \dots, u_m(t))$ the environmental drivers. The dynamics are written as a system of ordinary differential equations
 
 $$
-\frac{\mathrm{d}y}{\mathrm{d}t} = \sum_{j=1}^{K} \xi_j\,\theta_j\bigl(u(t)\bigr),
+\dot{\mathbf{y}} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
 $$
 
-where $\theta_1,\dots,\theta_K$ is a fixed library of candidate functions and $\xi$ is a vector of coefficients. The library used here contains a constant and the first three powers of each driver ($K=13$).
+Each component $\dot{y}$ of the right-hand side is expressed as a combination of candidate functions $\theta_1, \dots, \theta_K$ (the library),
+
+$$
+\dot{y} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
+$$
+
+where most coefficients $\xi_j$ are expected to be zero. The library contains, for example, a constant, powers of the drivers and of the states, and products of them.
+
+In this workshop the state is a single quantity, biomass $y$, and the library contains functions of the drivers only, so that the growth rate depends on the environment but not on the current biomass. Libraries that contain the state are treated in step 9.
 
 ## Regression
 
-With daily data, the increments $z_t = y_{t+1}-y_t$ are regressed on the library evaluated at day $t$. Because $\xi$ enters linearly, this is an ordinary linear least-squares problem
+Let $y_i = y(t_i)$ be observations on consecutive days. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\dot{y}(t_i)$ for a time step of one day. Collecting the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
 
 $$
-\min_{\xi}\ \lVert z - X\xi\rVert_2^2, \qquad X_{tj} = \theta_j(u_t).
+\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 $$
 
-The data enter only through $A = X^\top X$ and $b = X^\top z$. These are computed once per genotype and season, so that cross-validation reduces to adding and subtracting small matrices. Every fitting method in step 4 has the signature `fit(A, b, ...)`.
+The coefficients enter linearly, so they can be estimated by regression, for example by least squares
+
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
+$$
+
+Any regression method can be used. Step 4 compares several.
 
 ## Sparsity
 
-Sequential thresholding refits the model and removes the term with the smallest scaled coefficient until $k$ terms remain. The retained set of terms (the support) is common to all genotypes.
-
-## Genotypes
-
-The coefficients of genotype $g$ are $\xi_g = \mu + \delta_g$. The shared part $\mu$ is estimated from all genotypes on the common support, and each deviation $\delta_g$ is estimated from the data of genotype $g$ with a ridge penalty.
+A short equation is easier to interpret and less prone to overfitting than one with many terms. Sparsity is obtained by regression methods that set coefficients to zero: thresholding of small coefficients (sequential thresholded least squares, the original SINDy algorithm), an $\ell_1$ penalty (lasso), or subset selection. The number of retained terms balances accuracy and complexity and is chosen by validation.
 
 ## Solution
 
-Since the library depends on the weather only, the equation can be solved by a cumulative sum, without an ODE solver:
+Given $\hat{\boldsymbol{\xi}}$ and the drivers, the equation is solved forward in time from an initial value $y_0$ with the same one-day step,
 
 $$
-y(t) = y_0 + \sum_{s<t} \sum_j \xi_j\,\theta_j(u_s).
+y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\boldsymbol{\xi}} .
 $$
+
+If the library depends on the drivers only, this is a cumulative sum, $y_i = y_0 + \sum_{s<i} \boldsymbol{\theta}(\mathbf{u}_s)^\top \hat{\boldsymbol{\xi}}$, and no ODE solver is needed.
+
+## Genotypes
+
+Each genotype $g$ has its own coefficient vector $\boldsymbol{\xi}_g$, estimated from the trajectories of that genotype in all available seasons.
 
 ## Validation
 
-Seasons are the independent units, because the weather of neighbouring days is strongly correlated. The model is validated by leave-one-year-out cross-validation: each year is predicted from a model fitted to the other 30, starting from the mean initial biomass.
+The independent units are seasons, since the weather of neighbouring days is strongly correlated. The model of a genotype is validated by leave-one-season-out cross-validation: each season is predicted from a model fitted to the other seasons and compared with the observed trajectory.
 
-## Implementation
+## Steps
 
-```{r}
-#| echo: false
-#| results: asis
-show_fun("fit_ols", "simulate")
-```
+| Step | |
+|---|---|
+| [2 · Data](02-data.html) | drivers and trajectories |
+| [3 · Library and design matrix](03-design.html) | $\boldsymbol{\theta}$, $\mathbf{X}$ and $\Delta\mathbf{y}$ |
+| [4 · Fitting](04-fitting.html) | estimation of $\boldsymbol{\xi}$ |
+| [5 · Validation](05-validate.html) | solution and cross-validation |
+| [6 · Interpretation](06-reading.html) | response curves |
+| [7 · Genotypes](07-genotypes.html) | equations of different genotypes |

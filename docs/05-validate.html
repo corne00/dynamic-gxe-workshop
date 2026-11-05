@@ -235,11 +235,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul class="collapse">
-  <li><a href="#simulation" id="toc-simulation" class="nav-link active" data-scroll-target="#simulation">Simulation</a></li>
-  <li><a href="#one-held-out-season" id="toc-one-held-out-season" class="nav-link" data-scroll-target="#one-held-out-season">One held-out season</a></li>
-  <li><a href="#leave-one-year-out-cross-validation" id="toc-leave-one-year-out-cross-validation" class="nav-link" data-scroll-target="#leave-one-year-out-cross-validation">Leave-one-year-out cross-validation</a></li>
+  <li><a href="#solution" id="toc-solution" class="nav-link active" data-scroll-target="#solution">Solution</a></li>
+  <li><a href="#leave-one-season-out-cross-validation" id="toc-leave-one-season-out-cross-validation" class="nav-link" data-scroll-target="#leave-one-season-out-cross-validation">Leave-one-season-out cross-validation</a></li>
+  <li><a href="#predicted-trajectories" id="toc-predicted-trajectories" class="nav-link" data-scroll-target="#predicted-trajectories">Predicted trajectories</a></li>
   <li><a href="#baseline-without-weather" id="toc-baseline-without-weather" class="nav-link" data-scroll-target="#baseline-without-weather">Baseline without weather</a></li>
-  <li><a href="#choice-of-fitting-method" id="toc-choice-of-fitting-method" class="nav-link" data-scroll-target="#choice-of-fitting-method">Choice of fitting method</a></li>
+  <li><a href="#comparison-of-fitting-methods" id="toc-comparison-of-fitting-methods" class="nav-link" data-scroll-target="#comparison-of-fitting-methods">Comparison of fitting methods</a></li>
   <li><a href="#number-of-terms" id="toc-number-of-terms" class="nav-link" data-scroll-target="#number-of-terms">Number of terms</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/05-validate.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
@@ -266,116 +266,94 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="simulation" class="level2">
-<h2 class="anchored" data-anchor-id="simulation">Simulation</h2>
-<p>The library depends on the weather only, so the solution is a cumulative sum:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>simulate <span class="ot">&lt;-</span> <span class="cf">function</span>(xi, Theta_y, y0) {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  increments <span class="ot">&lt;-</span> Theta_y[<span class="sc">-</span><span class="fu">nrow</span>(Theta_y), , drop <span class="ot">=</span> <span class="cn">FALSE</span>] <span class="sc">%*%</span> <span class="fu">t</span>(xi)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sweep</span>(<span class="fu">rbind</span>(<span class="dv">0</span>, <span class="fu">apply</span>(increments, <span class="dv">2</span>, cumsum)), <span class="dv">2</span>, y0, <span class="st">"+"</span>)   <span class="co"># day x genotype</span></span>
+<section id="solution" class="level2">
+<h2 class="anchored" data-anchor-id="solution">Solution</h2>
+<p>With a library that depends on the drivers only, the solution of the fitted equation is a cumulative sum of the predicted daily growth:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>simulate <span class="ot">&lt;-</span> <span class="cf">function</span>(coef, Theta_y, y0) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  rate <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, Theta_y[<span class="sc">-</span><span class="fu">nrow</span>(Theta_y), ]) <span class="sc">%*%</span> coef</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  y0 <span class="sc">+</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fu">cumsum</span>(rate))</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="one-held-out-season" class="level2">
-<h2 class="anchored" data-anchor-id="one-held-out-season">One held-out season</h2>
-<p>The model is fitted to all seasons except 1998 (shared support of 12 terms, plus genotype deviations) and used to predict 1998 from its weather. All 199 genotypes are shown.</p>
+<section id="leave-one-season-out-cross-validation" class="level2">
+<h2 class="anchored" data-anchor-id="leave-one-season-out-cross-validation">Leave-one-season-out cross-validation</h2>
+<p>For every genotype and every season, the model is fitted to the other 30 seasons of that genotype and used to predict the left-out season from its drivers, starting from the mean initial biomass of the training seasons.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>cross_validate <span class="ot">&lt;-</span> <span class="cf">function</span>(Theta, tr, fit, <span class="at">genotypes =</span> tr<span class="sc">$</span>genotypes) {</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  P <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">dim</span>(tr<span class="sc">$</span>Y))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (g <span class="cf">in</span> <span class="fu">match</span>(genotypes, tr<span class="sc">$</span>genotypes)) {</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, tr<span class="sc">$</span>genotypes[g])</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (v <span class="cf">in</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years)) {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>      train <span class="ot">&lt;-</span> d<span class="sc">$</span>season <span class="sc">!=</span> v</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>      coef <span class="ot">&lt;-</span> <span class="fu">fit</span>(d<span class="sc">$</span>X[train, ], d<span class="sc">$</span>dy[train])</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>      P[g, v, ] <span class="ot">&lt;-</span> <span class="fu">simulate</span>(coef, Theta[v, , ], <span class="fu">mean</span>(tr<span class="sc">$</span>Y[g, <span class="sc">-</span>v, <span class="dv">1</span>]))</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>  P</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>evaluate <span class="ot">&lt;-</span> <span class="cf">function</span>(P, tr, <span class="at">fixed_day =</span> <span class="dv">99</span>) {</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  err <span class="ot">&lt;-</span> P <span class="sc">-</span> tr<span class="sc">$</span>Y</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  err[, , <span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span>                                <span class="co"># the initial value is given</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  last <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">as.vector</span>(<span class="fu">row</span>(tr<span class="sc">$</span>nend)), <span class="fu">as.vector</span>(<span class="fu">col</span>(tr<span class="sc">$</span>nend)),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                <span class="fu">as.vector</span>(tr<span class="sc">$</span>nend) <span class="sc">+</span> <span class="dv">1</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(e) <span class="fu">sqrt</span>(<span class="fu">mean</span>(e<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">trajectory_rmse =</span> <span class="fu">rmse</span>(err), <span class="at">fixed_day_rmse =</span> <span class="fu">rmse</span>(err[, , fixed_day]),</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">maturity_rmse =</span> <span class="fu">rmse</span>(err[last]))</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The sparse model (STLSQ) for all 199 genotypes, with the root-mean-square error (RMSE, t/ha) over whole trajectories, on day 113 after sowing, and at maturity:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="dv">1998</span>, tr<span class="sc">$</span>years)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">seq_along</span>(tr<span class="sc">$</span>years), v)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="fu">fit_years</span>(gram, train, fit_ssr, <span class="at">k =</span> <span class="dv">12</span>)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>y0 <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(tr<span class="sc">$</span>Y[, train, <span class="dv">1</span>])</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">simulate</span>(f<span class="sc">$</span>xi, Theta[v, , ], y0)          <span class="co"># day x genotype</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>f<span class="sc">$</span>names[f<span class="sc">$</span>support]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_stlsq.rds"</span>, <span class="fu">cross_validate</span>(Theta, tr, fit_stlsq))</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">evaluate</span>(P, tr), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> [1] "1"     "TT"    "TT^2"  "TT^3"  "DL"    "DL^2"  "DL^3"  "RAW"   "RAW^2"
-[10] "RAD"   "RAD^2" "RAD^3"</code></pre>
+<pre><code>trajectory_rmse  fixed_day_rmse   maturity_rmse 
+          0.526           0.701           0.761 </code></pre>
 </div>
 </div>
+</section>
+<section id="predicted-trajectories" class="level2">
+<h2 class="anchored" data-anchor-id="predicted-trajectories">Predicted trajectories</h2>
+<p>Season 1998, predicted by models that were fitted without it. All genotypes are shown in grey; the genotypes with the lowest, median and highest final biomass are in colour.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>obs <span class="ot">&lt;-</span> tr<span class="sc">$</span>Y[, v, ]                                <span class="co"># genotype x day</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>idx <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(obs), <span class="at">arr.ind =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">genotype =</span> idx[, <span class="dv">1</span>], <span class="at">das =</span> idx[, <span class="dv">2</span>] <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">cbind</span>(base, <span class="at">source =</span> <span class="st">"APSIM"</span>, <span class="at">biomass =</span> obs[idx]),</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>           <span class="fu">cbind</span>(base, <span class="at">source =</span> <span class="st">"Model"</span>, <span class="at">biomass =</span> <span class="fu">t</span>(pred)[idx]))</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(das, biomass, <span class="at">group =</span> genotype, <span class="at">colour =</span> source)) <span class="sc">+</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.2</span>, <span class="at">alpha =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>source) <span class="sc">+</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"grey"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"biomass (t/ha)"</span>) <span class="sc">+</span></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">match</span>(<span class="dv">1998</span>, tr<span class="sc">$</span>years)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">spread_genotypes</span>(tr)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>cells <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="sc">!</span><span class="fu">is.na</span>(tr<span class="sc">$</span>Y[, v, ]), <span class="at">arr.ind =</span> <span class="cn">TRUE</span>)      <span class="co"># genotype, day</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>long <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">genotype =</span> tr<span class="sc">$</span>genotypes[cells[, <span class="dv">1</span>]],</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">das =</span> cells[, <span class="dv">2</span>] <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">cbind</span>(long, <span class="at">source =</span> <span class="st">"APSIM"</span>, <span class="at">biomass =</span> tr<span class="sc">$</span>Y[, v, ][cells]),</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>           <span class="fu">cbind</span>(long, <span class="at">source =</span> <span class="st">"Model"</span>, <span class="at">biomass =</span> P[, v, ][cells]))</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(das, biomass, <span class="at">group =</span> genotype)) <span class="sc">+</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> d[d<span class="sc">$</span>genotype <span class="sc">%in%</span> three, ], <span class="fu">aes</span>(<span class="at">colour =</span> genotype),</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>            <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>source) <span class="sc">+</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"cyan"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"biomass (t/ha)"</span>) <span class="sc">+</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="05-validate_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="1036"></p>
+<p><img src="05-validate_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="1036"></p>
 </figure>
 </div>
 </div>
 </div>
-</section>
-<section id="leave-one-year-out-cross-validation" class="level2">
-<h2 class="anchored" data-anchor-id="leave-one-year-out-cross-validation">Leave-one-year-out cross-validation</h2>
-<p>The same procedure is repeated for each of the 31 seasons.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>cv_blocked <span class="ot">&lt;-</span> <span class="cf">function</span>(Theta, tr, gram, <span class="at">fitter =</span> fit_ssr, <span class="at">k =</span> <span class="dv">12</span>,</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                       <span class="at">lam_mu =</span> <span class="fl">1e-4</span>, <span class="at">lam_g =</span> <span class="fl">0.01</span>, ...) {</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  ny <span class="ot">&lt;-</span> <span class="fu">length</span>(tr<span class="sc">$</span>years)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  P <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">c</span>(<span class="fu">dim</span>(tr<span class="sc">$</span>Y)[<span class="dv">1</span>], ny, <span class="fu">dim</span>(Theta)[<span class="dv">2</span>]))</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  support <span class="ot">&lt;-</span> <span class="fu">vector</span>(<span class="st">"list"</span>, ny)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (v <span class="cf">in</span> <span class="fu">seq_len</span>(ny)) {</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    train <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">seq_len</span>(ny), v)</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    f <span class="ot">&lt;-</span> <span class="fu">fit_years</span>(gram, train, fitter, k, lam_mu, lam_g, ...)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    y0 <span class="ot">&lt;-</span> <span class="fu">rowMeans</span>(tr<span class="sc">$</span>Y[, train, <span class="dv">1</span>])</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    P[, v, ] <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">simulate</span>(f<span class="sc">$</span>xi, Theta[v, , ], y0))</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    support[[v]] <span class="ot">&lt;-</span> f<span class="sc">$</span>support</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">pred =</span> P, <span class="at">support =</span> support)</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>evaluate <span class="ot">&lt;-</span> <span class="cf">function</span>(P, tr, <span class="at">fixed_day =</span> <span class="dv">99</span>) {</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  sq_error <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  count <span class="ot">&lt;-</span> <span class="dv">0</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  final <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="dv">0</span>)</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (g <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">dim</span>(P)[<span class="dv">1</span>])) {</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (y <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">dim</span>(P)[<span class="dv">2</span>])) {</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      n <span class="ot">&lt;-</span> tr<span class="sc">$</span>nend[g, y]</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>      d <span class="ot">&lt;-</span> <span class="dv">2</span><span class="sc">:</span>(n <span class="sc">+</span> <span class="dv">1</span>)                    <span class="co"># index 1 is the given initial value</span></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      sq_error <span class="ot">&lt;-</span> sq_error <span class="sc">+</span> <span class="fu">sum</span>((P[g, y, d] <span class="sc">-</span> tr<span class="sc">$</span>Y[g, y, d])<span class="sc">^</span><span class="dv">2</span>)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>      count <span class="ot">&lt;-</span> count <span class="sc">+</span> n</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      final <span class="ot">&lt;-</span> <span class="fu">c</span>(final, P[g, y, n <span class="sc">+</span> <span class="dv">1</span>] <span class="sc">-</span> tr<span class="sc">$</span>Y[g, y, n <span class="sc">+</span> <span class="dv">1</span>])</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  fixed <span class="ot">&lt;-</span> (P[, , fixed_day] <span class="sc">-</span> tr<span class="sc">$</span>Y[, , fixed_day])<span class="sc">^</span><span class="dv">2</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">trajectory_rmse =</span> <span class="fu">sqrt</span>(sq_error <span class="sc">/</span> count),</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">fixed_day_rmse =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(fixed, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="at">maturity_rmse =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(final<span class="sc">^</span><span class="dv">2</span>)))</span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Predicted against APSIM biomass on day 113, all genotype-season pairs:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">system.time</span>(cv <span class="ot">&lt;-</span> <span class="fu">cv_blocked</span>(Theta, tr, gram, fit_ssr, <span class="at">k =</span> <span class="dv">12</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   user  system elapsed 
-  3.983   0.052   4.177 </code></pre>
-</div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">evaluate</span>(cv<span class="sc">$</span>pred, tr), <span class="dv">3</span>)       <span class="co"># fixed day: index 99 = day 113</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>trajectory_rmse  fixed_day_rmse   maturity_rmse 
-          0.521           0.689           0.747 </code></pre>
-</div>
-</div>
-<p>Predicted against APSIM biomass at day 113, all genotype-season pairs:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">obs =</span> <span class="fu">as.vector</span>(tr<span class="sc">$</span>Y[, , <span class="dv">99</span>]),</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">pred =</span> <span class="fu">as.vector</span>(cv<span class="sc">$</span>pred[, , <span class="dv">99</span>]))</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((d<span class="sc">$</span>obs <span class="sc">-</span> d<span class="sc">$</span>pred)<span class="sc">^</span><span class="dv">2</span>))</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(obs, pred)) <span class="sc">+</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">colour =</span> dgxe[[<span class="st">"grey"</span>]], <span class="at">linewidth =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">size =</span> <span class="fl">0.5</span>, <span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fu">min</span>(d<span class="sc">$</span>obs), <span class="at">y =</span> <span class="fu">max</span>(d<span class="sc">$</span>pred), <span class="at">hjust =</span> <span class="dv">0</span>, <span class="at">vjust =</span> <span class="dv">1</span>,</span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">size =</span> <span class="fl">3.4</span>, <span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"RMSE %.2f t/ha"</span>, rmse)) <span class="sc">+</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"APSIM biomass (t/ha)"</span>, <span class="at">y =</span> <span class="st">"predicted biomass (t/ha)"</span>) <span class="sc">+</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">obs =</span> <span class="fu">as.vector</span>(tr<span class="sc">$</span>Y[, , <span class="dv">99</span>]), <span class="at">pred =</span> <span class="fu">as.vector</span>(P[, , <span class="dv">99</span>]))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>((d<span class="sc">$</span>obs <span class="sc">-</span> d<span class="sc">$</span>pred)<span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(obs, pred)) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_abline</span>(<span class="at">colour =</span> dgxe[[<span class="st">"grey"</span>]], <span class="at">linewidth =</span> <span class="fl">0.4</span>) <span class="sc">+</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">size =</span> <span class="fl">0.5</span>, <span class="at">alpha =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="fu">min</span>(d<span class="sc">$</span>obs), <span class="at">y =</span> <span class="fu">max</span>(d<span class="sc">$</span>pred), <span class="at">hjust =</span> <span class="dv">0</span>, <span class="at">vjust =</span> <span class="dv">1</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>           <span class="at">size =</span> <span class="fl">3.4</span>, <span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"RMSE %.2f t/ha"</span>, rmse)) <span class="sc">+</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_equal</span>() <span class="sc">+</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"APSIM biomass (t/ha)"</span>, <span class="at">y =</span> <span class="st">"predicted biomass (t/ha)"</span>) <span class="sc">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="05-validate_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="604"></p>
+<p><img src="05-validate_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="604"></p>
 </figure>
 </div>
 </div>
@@ -383,20 +361,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="baseline-without-weather" class="level2">
 <h2 class="anchored" data-anchor-id="baseline-without-weather">Baseline without weather</h2>
-<p>As a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>lookup_trajectory <span class="ot">&lt;-</span> <span class="cf">function</span>(tr) {</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  hold_last <span class="ot">&lt;-</span> <span class="cf">function</span>(v) <span class="fu">replace</span>(v, <span class="fu">is.nan</span>(v), <span class="fu">tail</span>(v[<span class="sc">!</span><span class="fu">is.nan</span>(v)], <span class="dv">1</span>))</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  P <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">dim</span>(tr<span class="sc">$</span>Y))</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (y <span class="cf">in</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years)) {</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    m <span class="ot">&lt;-</span> <span class="fu">apply</span>(tr<span class="sc">$</span>Y[, <span class="sc">-</span>y, , <span class="at">drop =</span> <span class="cn">FALSE</span>], <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    P[, y, ] <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">apply</span>(m, <span class="dv">1</span>, hold_last))</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    P[, y, <span class="dv">1</span>] <span class="ot">&lt;-</span> tr<span class="sc">$</span>Y[, y, <span class="dv">1</span>]</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  P</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>As a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons. This prediction does not use the weather.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>lookup_trajectory <span class="ot">&lt;-</span> <span class="cf">function</span>(tr) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  hold_last <span class="ot">&lt;-</span> <span class="cf">function</span>(v) <span class="fu">replace</span>(v, <span class="fu">is.nan</span>(v), <span class="fu">tail</span>(v[<span class="sc">!</span><span class="fu">is.nan</span>(v)], <span class="dv">1</span>))</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  P <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="cn">NA_real_</span>, <span class="fu">dim</span>(tr<span class="sc">$</span>Y))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (y <span class="cf">in</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years)) {</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    m <span class="ot">&lt;-</span> <span class="fu">apply</span>(tr<span class="sc">$</span>Y[, <span class="sc">-</span>y, , <span class="at">drop =</span> <span class="cn">FALSE</span>], <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>), mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    P[, y, ] <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">apply</span>(m, <span class="dv">1</span>, hold_last))</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    P[, y, <span class="dv">1</span>] <span class="ot">&lt;-</span> tr<span class="sc">$</span>Y[, y, <span class="dv">1</span>]</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  P</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">lookup_trajectory</span>(tr)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">evaluate</span>(base, tr), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">lookup_trajectory</span>(tr)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">evaluate</span>(base, tr), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>trajectory_rmse  fixed_day_rmse   maturity_rmse 
           0.739           0.840           1.423 </code></pre>
@@ -404,92 +382,75 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>The error as a function of time:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">dim</span>(tr<span class="sc">$</span>Y)[<span class="dv">3</span>] <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">data.frame</span>(<span class="at">das =</span> days, <span class="at">rmse =</span> <span class="fu">rmse_by_day</span>(cv<span class="sc">$</span>pred, tr),</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>                      <span class="at">model =</span> <span class="st">"model"</span>),</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>           <span class="fu">data.frame</span>(<span class="at">das =</span> days, <span class="at">rmse =</span> <span class="fu">rmse_by_day</span>(base, tr),</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>                      <span class="at">model =</span> <span class="st">"baseline"</span>))</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d[d<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">155</span>, ], <span class="fu">aes</span>(das, rmse, <span class="at">colour =</span> model)) <span class="sc">+</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">y =</span> <span class="fl">0.5</span>, <span class="at">label =</span> <span class="st">"model"</span>,</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>           <span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">size =</span> <span class="fl">3.4</span>, <span class="at">hjust =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">y =</span> <span class="fl">0.2</span>, <span class="at">label =</span> <span class="st">"baseline"</span>,</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>           <span class="at">colour =</span> dgxe[[<span class="st">"burgundy"</span>]], <span class="at">size =</span> <span class="fl">3.4</span>, <span class="at">hjust =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"held-out RMSE (t/ha)"</span>) <span class="sc">+</span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="dv">2</span><span class="sc">:</span><span class="fu">dim</span>(tr<span class="sc">$</span>Y)[<span class="dv">3</span>] <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">data.frame</span>(<span class="at">das =</span> days, <span class="at">rmse =</span> <span class="fu">rmse_by_day</span>(P, tr), <span class="at">model =</span> <span class="st">"model"</span>),</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>           <span class="fu">data.frame</span>(<span class="at">das =</span> days, <span class="at">rmse =</span> <span class="fu">rmse_by_day</span>(base, tr),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                      <span class="at">model =</span> <span class="st">"baseline"</span>))</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d[d<span class="sc">$</span>das <span class="sc">&lt;=</span> <span class="dv">155</span>, ], <span class="fu">aes</span>(das, rmse, <span class="at">colour =</span> model)) <span class="sc">+</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">y =</span> <span class="fl">0.5</span>, <span class="at">label =</span> <span class="st">"model"</span>,</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>           <span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">size =</span> <span class="fl">3.4</span>, <span class="at">hjust =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">40</span>, <span class="at">y =</span> <span class="fl">0.2</span>, <span class="at">label =</span> <span class="st">"baseline"</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">colour =</span> dgxe[[<span class="st">"burgundy"</span>]], <span class="at">size =</span> <span class="fl">3.4</span>, <span class="at">hjust =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"held-out RMSE (t/ha)"</span>) <span class="sc">+</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="05-validate_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="1036"></p>
+<p><img src="05-validate_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="1036"></p>
 </figure>
 </div>
 </div>
 </div>
 </section>
-<section id="choice-of-fitting-method" class="level2">
-<h2 class="anchored" data-anchor-id="choice-of-fitting-method">Choice of fitting method</h2>
-<p>All methods share the signature <code>fit(A, b, ...)</code>, so they can be compared in one loop.</p>
+<section id="comparison-of-fitting-methods" class="level2">
+<h2 class="anchored" data-anchor-id="comparison-of-fitting-methods">Comparison of fitting methods</h2>
+<p>All methods of step 4 are evaluated in the same way:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>methods <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">OLS =</span> <span class="fu">list</span>(<span class="at">fitter =</span> fit_ols),</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>                <span class="at">ridge =</span> <span class="fu">list</span>(<span class="at">fitter =</span> fit_ridge, <span class="at">lambda =</span> <span class="fl">0.01</span>),</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>                <span class="at">SSR_8 =</span> <span class="fu">list</span>(<span class="at">fitter =</span> fit_ssr, <span class="at">k =</span> <span class="dv">8</span>),</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">SSR_12 =</span> <span class="fu">list</span>(<span class="at">fitter =</span> fit_ssr, <span class="at">k =</span> <span class="dv">12</span>),</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">lasso =</span> <span class="fu">list</span>(<span class="at">fitter =</span> fit_lasso, <span class="at">lambda =</span> <span class="fl">2e-4</span>))</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>compare <span class="ot">&lt;-</span> <span class="cf">function</span>(m) {</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>  cv <span class="ot">&lt;-</span> <span class="fu">do.call</span>(cv_blocked, <span class="fu">c</span>(<span class="fu">list</span>(Theta, tr, gram), m))</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="fu">evaluate</span>(cv<span class="sc">$</span>pred, tr), <span class="dv">3</span>)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"swap_methods.rds"</span>, {</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>  scores <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">sapply</span>(methods, compare))</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">method =</span> <span class="fu">names</span>(methods), scores, <span class="at">row.names =</span> <span class="cn">NULL</span>)</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>baseline <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">method =</span> <span class="st">"baseline"</span>, <span class="fu">t</span>(<span class="fu">round</span>(<span class="fu">evaluate</span>(base, tr), <span class="dv">3</span>)))</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="fu">rbind</span>(res, baseline)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_methods.rds"</span>, <span class="fu">t</span>(<span class="fu">sapply</span>(fit_methods, <span class="cf">function</span>(fit) {</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">evaluate</span>(<span class="fu">cross_validate</span>(Theta, tr, fit), tr)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>})))</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(scores, <span class="at">baseline =</span> <span class="fu">evaluate</span>(base, tr)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    method trajectory_rmse fixed_day_rmse maturity_rmse
-1      OLS           0.516          0.684         0.750
-2    ridge           0.516          0.684         0.750
-3    SSR_8           0.612          0.784         0.884
-4   SSR_12           0.521          0.689         0.747
-5    lasso           0.532          0.718         0.764
-6 baseline           0.739          0.840         1.423</code></pre>
+<pre><code>                    trajectory_rmse fixed_day_rmse maturity_rmse
+OLS                           0.519          0.687         0.758
+ridge                         0.523          0.702         0.749
+lasso                         0.528          0.712         0.750
+elastic net                   0.527          0.710         0.747
+best subset (k = 8)           0.529          0.715         0.752
+backward (k = 8)              0.529          0.713         0.754
+STLSQ                         0.526          0.701         0.761
+baseline                      0.739          0.840         1.423</code></pre>
 </div>
 </div>
+<p>The methods are close to each other. The sparse models use fewer terms for a similar error, and all of them improve on the baseline, mainly late in the season.</p>
 </section>
 <section id="number-of-terms" class="level2">
 <h2 class="anchored" data-anchor-id="number-of-terms">Number of terms</h2>
-<p>With the 13-term library the sparse model has little room to reduce complexity. Adding products of drivers (<code>pairs = TRUE</code>, 37 terms) gives a larger dictionary:</p>
+<p>With 12 terms there is little to remove. For a larger library that includes products of drivers (<code>pairs = TRUE</code>, 36 terms), the held-out error of backward elimination (every fifth genotype) as a function of the number of terms is:</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv, <span class="at">pairs =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>gram2 <span class="ot">&lt;-</span> <span class="fu">gram_stats</span>(Theta2, tr)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>ks <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">6</span>, <span class="dv">8</span>, <span class="dv">12</span>, <span class="dv">16</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">37</span>)</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>rmse_k <span class="ot">&lt;-</span> <span class="cf">function</span>(k) {</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">evaluate</span>(<span class="fu">cv_blocked</span>(Theta2, tr, gram2, fit_ssr, <span class="at">k =</span> k)<span class="sc">$</span>pred, tr)[[<span class="dv">1</span>]]</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>rk <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"rmse_vs_k_pairs.rds"</span>,</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>             <span class="fu">data.frame</span>(<span class="at">k =</span> ks, <span class="at">rmse =</span> <span class="fu">sapply</span>(ks, rmse_k)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv, <span class="at">pairs =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>genotypes <span class="ot">&lt;-</span> tr<span class="sc">$</span>genotypes[<span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">199</span>, <span class="at">by =</span> <span class="dv">5</span>)]</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>ks <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">6</span>, <span class="dv">8</span>, <span class="dv">12</span>, <span class="dv">16</span>, <span class="dv">20</span>, <span class="dv">28</span>, <span class="dv">36</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>by_k <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"rmse_vs_k.rds"</span>, <span class="fu">data.frame</span>(<span class="at">k =</span> ks, <span class="at">rmse =</span> <span class="fu">sapply</span>(ks, <span class="cf">function</span>(k) {</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy) <span class="fu">fit_subset</span>(X, dy, k, <span class="st">"backward"</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">evaluate</span>(<span class="fu">cross_validate</span>(Theta2, tr, fit, genotypes), tr)[[<span class="dv">1</span>]]</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>})))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>ols13 <span class="ot">&lt;-</span> res<span class="sc">$</span>trajectory_rmse[res<span class="sc">$</span>method <span class="sc">==</span> <span class="st">"OLS"</span>]</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(rk, <span class="fu">aes</span>(k, rmse)) <span class="sc">+</span></span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> ols13, <span class="at">colour =</span> dgxe[[<span class="st">"burgundy"</span>]],</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">linewidth =</span> <span class="fl">0.4</span>, <span class="at">linetype =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">"text"</span>, <span class="at">x =</span> <span class="dv">37</span>, <span class="at">y =</span> ols13, <span class="at">label =</span> <span class="st">"13-term library, OLS"</span>,</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>           <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.7</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">colour =</span> dgxe[[<span class="st">"burgundy"</span>]], <span class="at">size =</span> <span class="fl">3.3</span>) <span class="sc">+</span></span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"number of terms (37-term library)"</span>,</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"held-out trajectory RMSE (t/ha)"</span>) <span class="sc">+</span></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(by_k, <span class="fu">aes</span>(k, rmse)) <span class="sc">+</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">size =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"number of terms (36-term library)"</span>,</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">"held-out trajectory RMSE (t/ha)"</span>) <span class="sc">+</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="05-validate_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="720"></p>
+<p><img src="05-validate_files/figure-html/unnamed-chunk-12-1.png" class="img-fluid figure-img" width="720"></p>
 </figure>
 </div>
 </div>

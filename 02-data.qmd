@@ -7,58 +7,80 @@ title: "2 · Data"
 source("R/page_setup.R")
 ```
 
-The data are APSIM simulations of wheat at Narrabri (New South Wales): 199 genotypes in 31 seasons (1983 to 2013), daily from 15 days after sowing to maturity. Weather is common to all genotypes within a season and is stored in a separate table.
+The data are APSIM simulations of wheat at Narrabri (New South Wales): 199 genotypes in 31 seasons (1983 to 2013), daily from 15 days after sowing to maturity. They are a subset of the simulations of Bustos-Korts et al. (2019), published on [figshare](https://figshare.com/articles/dataset/24843705). Weather is the same for all genotypes within a season and is stored in a separate table.
 
 ```{r}
-wx   <- read.csv("data/narrabri_weather.csv")
+wx <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 head(wx, 3)
 head(traj, 3)
 ```
 
-| Column | Description |
-|---|---|
-| `das` | days after sowing |
-| `TT` | accumulated thermal time since sowing (°C d) |
-| `DL` | day length (h) |
-| `RAW` | relative available soil water (0 to 1) |
-| `RAD` | solar radiation (MJ m⁻² d⁻¹) |
-| `biomass` | above-ground dry matter (t ha⁻¹) |
-| `lai` | leaf area index (m² m⁻²) |
+## Drivers
 
-## Biomass
+Some weather variables are given and others are constructed from them.
 
-Each line is one genotype. The four seasons were chosen to span the range of weather.
+| Variable | Description | |
+|---|---|---|
+| `Tmin`, `Tmax` | daily minimum and maximum temperature (°C) | given |
+| `Rain` | rainfall (mm) | given |
+| `RAD` | solar radiation (MJ m⁻² d⁻¹) | given |
+| `VP` | vapour pressure (hPa) | given |
+| `DL` | day length (h) | given |
+| `TT` | thermal time accumulated since sowing (°C d) | constructed from temperature |
+| `RAW` | relative available soil water (0 to 1) | constructed from rain and evaporative demand |
+
+Thermal time accumulates the daily mean temperature, truncated at zero. Its increments reproduce this definition:
 
 ```{r}
-#| fig-height: 3
-seasons <- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]
-ggplot(seasons, aes(das, biomass, group = genotype)) +
-  geom_line(colour = dgxe[["blue"]], linewidth = 0.2, alpha = 0.25) +
-  facet_wrap(~year, nrow = 1) +
-  labs(x = "days after sowing", y = "biomass (t/ha)") +
-  theme_dgxe()
+increment <- pmax((wx$Tmin + wx$Tmax) / 2, 0)
+daily_change <- ave(wx$TT, wx$year, FUN = function(x) c(NA, diff(x)))
+max(abs(daily_change - increment), na.rm = TRUE)
 ```
 
-## Weather
+The accumulation starts at sowing, so `TT` on the first day in the table (day 15) already contains the first 14 days. `RAW` comes from a soil-water balance with rainfall as input and reference evapotranspiration as the evaporative demand; it is provided as a column. The library in step 3 uses `TT`, `DL`, `RAW` and `RAD`.
 
-Each grey line is one season; the blue line is the mean over seasons.
+The four drivers in the library, for all seasons (grey) and three selected seasons:
 
 ```{r}
-#| fig-height: 3.4
+#| fig-height: 3.2
 drivers <- c("TT", "DL", "RAW", "RAD")
 w <- data.frame(year = wx$year, das = wx$das,
                 driver = factor(rep(drivers, each = nrow(wx)), drivers),
                 value = unlist(wx[drivers]))
-mean_path <- aggregate(value ~ driver + das, w, mean)
+shown <- w[w$year %in% c(1984, 1998, 2008), ]
 
-ggplot(w, aes(das, value)) +
-  geom_line(aes(group = year), colour = dgxe[["grey"]],
-            linewidth = 0.25, alpha = 0.6) +
-  geom_line(data = mean_path, colour = dgxe[["blue"]], linewidth = 0.8) +
+ggplot(w, aes(das, value, group = year)) +
+  geom_line(colour = "#D1D5DB", linewidth = 0.25) +
+  geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.7) +
   facet_wrap(~driver, scales = "free_y") +
+  scale_colour_dgxe("blue", "cyan", "burgundy") +
   labs(x = "days after sowing", y = NULL) +
-  theme_dgxe()
+  theme_dgxe() +
+  legend_top()
 ```
 
-Trajectories end on different days, since genotypes mature at different times. The end of each trajectory is tracked in step 3.
+## Response
+
+The response is the biomass (t/ha) of each genotype; leaf area index `lai` is used in step 8. Each panel is one season: all 199 genotypes in grey and three genotypes with the lowest, median and highest final biomass in colour.
+
+```{r}
+#| fig-height: 3
+#| warning: false
+drv <- make_drivers(wx)
+tr <- make_trajectories(traj, drv)
+three <- spread_genotypes(tr)
+seasons <- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]
+
+ggplot(seasons, aes(das, biomass, group = genotype)) +
+  geom_line(colour = "#D1D5DB", linewidth = 0.2) +
+  geom_line(data = seasons[seasons$genotype %in% three, ],
+            aes(colour = genotype), linewidth = 0.7) +
+  facet_wrap(~year, nrow = 1) +
+  scale_colour_dgxe("burgundy", "cyan", "blue") +
+  labs(x = "days after sowing", y = "biomass (t/ha)") +
+  theme_dgxe() +
+  legend_top()
+```
+
+Trajectories end on different days, since genotypes mature at different times. The array `tr$nend` records the length of each trajectory.

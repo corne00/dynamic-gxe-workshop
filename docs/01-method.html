@@ -26,41 +26,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -268,10 +233,10 @@ window.Quarto = {
   <li><a href="#model" id="toc-model" class="nav-link" data-scroll-target="#model">Model</a></li>
   <li><a href="#regression" id="toc-regression" class="nav-link" data-scroll-target="#regression">Regression</a></li>
   <li><a href="#sparsity" id="toc-sparsity" class="nav-link" data-scroll-target="#sparsity">Sparsity</a></li>
-  <li><a href="#genotypes" id="toc-genotypes" class="nav-link" data-scroll-target="#genotypes">Genotypes</a></li>
   <li><a href="#solution" id="toc-solution" class="nav-link" data-scroll-target="#solution">Solution</a></li>
+  <li><a href="#genotypes" id="toc-genotypes" class="nav-link" data-scroll-target="#genotypes">Genotypes</a></li>
   <li><a href="#validation" id="toc-validation" class="nav-link" data-scroll-target="#validation">Validation</a></li>
-  <li><a href="#implementation" id="toc-implementation" class="nav-link" data-scroll-target="#implementation">Implementation</a></li>
+  <li><a href="#steps" id="toc-steps" class="nav-link" data-scroll-target="#steps">Steps</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/01-method.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -302,54 +267,91 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/method_overview.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>Schematic. Weather drivers <span class="math inline">\(U\)</span> and the response <span class="math inline">\(Y\)</span> are measured over time. The growth rate of <span class="math inline">\(Y\)</span> is regressed on a library <span class="math inline">\(\Theta(Y, U)\)</span> of candidate functions; a sparse coefficient matrix <span class="math inline">\(\Xi\)</span> selects the terms of the equation.</figcaption>
+<figcaption>Schematic. Environmental drivers <span class="math inline">\(U\)</span> and the response <span class="math inline">\(Y\)</span> are measured over time. The growth rate of <span class="math inline">\(Y\)</span> is regressed on a library <span class="math inline">\(\Theta(Y, U)\)</span> of candidate functions; a sparse coefficient matrix <span class="math inline">\(\Xi\)</span> selects the terms of the equation.</figcaption>
 </figure>
 </div>
 </section>
 <section id="model" class="level2">
 <h2 class="anchored" data-anchor-id="model">Model</h2>
-<p>Let <span class="math inline">\(y(t)\)</span> denote biomass and <span class="math inline">\(u(t) = (\mathrm{TT}, \mathrm{DL}, \mathrm{RAW}, \mathrm{RAD})\)</span> the daily weather drivers: accumulated thermal time, day length, relative available water and solar radiation. The growth rate is modelled as</p>
+<p>Let <span class="math inline">\(\mathbf{y}(t)\)</span> denote the state of the crop (for example biomass or leaf area index) and <span class="math inline">\(\mathbf{u}(t) = (u_1(t), \dots, u_m(t))\)</span> the environmental drivers. The dynamics are written as a system of ordinary differential equations</p>
 <p><span class="math display">\[
-\frac{\mathrm{d}y}{\mathrm{d}t} = \sum_{j=1}^{K} \xi_j\,\theta_j\bigl(u(t)\bigr),
+\dot{\mathbf{y}} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
 \]</span></p>
-<p>where <span class="math inline">\(\theta_1,\dots,\theta_K\)</span> is a fixed library of candidate functions and <span class="math inline">\(\xi\)</span> is a vector of coefficients. The library used here contains a constant and the first three powers of each driver (<span class="math inline">\(K=13\)</span>).</p>
+<p>Each component <span class="math inline">\(\dot{y}\)</span> of the right-hand side is expressed as a combination of candidate functions <span class="math inline">\(\theta_1, \dots, \theta_K\)</span> (the library),</p>
+<p><span class="math display">\[
+\dot{y} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
+\]</span></p>
+<p>where most coefficients <span class="math inline">\(\xi_j\)</span> are expected to be zero. The library contains, for example, a constant, powers of the drivers and of the states, and products of them.</p>
+<p>In this workshop the state is a single quantity, biomass <span class="math inline">\(y\)</span>, and the library contains functions of the drivers only, so that the growth rate depends on the environment but not on the current biomass. Libraries that contain the state are treated in step 9.</p>
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>With daily data, the increments <span class="math inline">\(z_t = y_{t+1}-y_t\)</span> are regressed on the library evaluated at day <span class="math inline">\(t\)</span>. Because <span class="math inline">\(\xi\)</span> enters linearly, this is an ordinary linear least-squares problem</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on consecutive days. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\dot{y}(t_i)\)</span> for a time step of one day. Collecting the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
 <p><span class="math display">\[
-\min_{\xi}\ \lVert z - X\xi\rVert_2^2, \qquad X_{tj} = \theta_j(u_t).
+\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 \]</span></p>
-<p>The data enter only through <span class="math inline">\(A = X^\top X\)</span> and <span class="math inline">\(b = X^\top z\)</span>. These are computed once per genotype and season, so that cross-validation reduces to adding and subtracting small matrices. Every fitting method in step 4 has the signature <code>fit(A, b, ...)</code>.</p>
+<p>The coefficients enter linearly, so they can be estimated by regression, for example by least squares</p>
+<p><span class="math display">\[
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
+\]</span></p>
+<p>Any regression method can be used. Step 4 compares several.</p>
 </section>
 <section id="sparsity" class="level2">
 <h2 class="anchored" data-anchor-id="sparsity">Sparsity</h2>
-<p>Sequential thresholding refits the model and removes the term with the smallest scaled coefficient until <span class="math inline">\(k\)</span> terms remain. The retained set of terms (the support) is common to all genotypes.</p>
-</section>
-<section id="genotypes" class="level2">
-<h2 class="anchored" data-anchor-id="genotypes">Genotypes</h2>
-<p>The coefficients of genotype <span class="math inline">\(g\)</span> are <span class="math inline">\(\xi_g = \mu + \delta_g\)</span>. The shared part <span class="math inline">\(\mu\)</span> is estimated from all genotypes on the common support, and each deviation <span class="math inline">\(\delta_g\)</span> is estimated from the data of genotype <span class="math inline">\(g\)</span> with a ridge penalty.</p>
+<p>A short equation is easier to interpret and less prone to overfitting than one with many terms. Sparsity is obtained by regression methods that set coefficients to zero: thresholding of small coefficients (sequential thresholded least squares, the original SINDy algorithm), an <span class="math inline">\(\ell_1\)</span> penalty (lasso), or subset selection. The number of retained terms balances accuracy and complexity and is chosen by validation.</p>
 </section>
 <section id="solution" class="level2">
 <h2 class="anchored" data-anchor-id="solution">Solution</h2>
-<p>Since the library depends on the weather only, the equation can be solved by a cumulative sum, without an ODE solver:</p>
+<p>Given <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span> and the drivers, the equation is solved forward in time from an initial value <span class="math inline">\(y_0\)</span> with the same one-day step,</p>
 <p><span class="math display">\[
-y(t) = y_0 + \sum_{s&lt;t} \sum_j \xi_j\,\theta_j(u_s).
+y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\boldsymbol{\xi}} .
 \]</span></p>
+<p>If the library depends on the drivers only, this is a cumulative sum, <span class="math inline">\(y_i = y_0 + \sum_{s&lt;i} \boldsymbol{\theta}(\mathbf{u}_s)^\top \hat{\boldsymbol{\xi}}\)</span>, and no ODE solver is needed.</p>
+</section>
+<section id="genotypes" class="level2">
+<h2 class="anchored" data-anchor-id="genotypes">Genotypes</h2>
+<p>Each genotype <span class="math inline">\(g\)</span> has its own coefficient vector <span class="math inline">\(\boldsymbol{\xi}_g\)</span>, estimated from the trajectories of that genotype in all available seasons.</p>
 </section>
 <section id="validation" class="level2">
 <h2 class="anchored" data-anchor-id="validation">Validation</h2>
-<p>Seasons are the independent units, because the weather of neighbouring days is strongly correlated. The model is validated by leave-one-year-out cross-validation: each year is predicted from a model fitted to the other 30, starting from the mean initial biomass.</p>
+<p>The independent units are seasons, since the weather of neighbouring days is strongly correlated. The model of a genotype is validated by leave-one-season-out cross-validation: each season is predicted from a model fitted to the other seasons and compared with the observed trajectory.</p>
 </section>
-<section id="implementation" class="level2">
-<h2 class="anchored" data-anchor-id="implementation">Implementation</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>fit_ols <span class="ot">&lt;-</span> <span class="cf">function</span>(A, b, ...) {</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> <span class="fu">solve</span>(A, b), <span class="at">support =</span> <span class="fu">seq_along</span>(b))</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>simulate <span class="ot">&lt;-</span> <span class="cf">function</span>(xi, Theta_y, y0) {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  increments <span class="ot">&lt;-</span> Theta_y[<span class="sc">-</span><span class="fu">nrow</span>(Theta_y), , drop <span class="ot">=</span> <span class="cn">FALSE</span>] <span class="sc">%*%</span> <span class="fu">t</span>(xi)</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sweep</span>(<span class="fu">rbind</span>(<span class="dv">0</span>, <span class="fu">apply</span>(increments, <span class="dv">2</span>, cumsum)), <span class="dv">2</span>, y0, <span class="st">"+"</span>)   <span class="co"># day x genotype</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="steps" class="level2">
+<h2 class="anchored" data-anchor-id="steps">Steps</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Step</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="02-data.html">2 · Data</a></td>
+<td>drivers and trajectories</td>
+</tr>
+<tr class="even">
+<td><a href="03-design.html">3 · Library and design matrix</a></td>
+<td><span class="math inline">\(\boldsymbol{\theta}\)</span>, <span class="math inline">\(\mathbf{X}\)</span> and <span class="math inline">\(\Delta\mathbf{y}\)</span></td>
+</tr>
+<tr class="odd">
+<td><a href="04-fitting.html">4 · Fitting</a></td>
+<td>estimation of <span class="math inline">\(\boldsymbol{\xi}\)</span></td>
+</tr>
+<tr class="even">
+<td><a href="05-validate.html">5 · Validation</a></td>
+<td>solution and cross-validation</td>
+</tr>
+<tr class="odd">
+<td><a href="06-reading.html">6 · Interpretation</a></td>
+<td>response curves</td>
+</tr>
+<tr class="even">
+<td><a href="07-genotypes.html">7 · Genotypes</a></td>
+<td>equations of different genotypes</td>
+</tr>
+</tbody>
+</table>
 
 
 </section>

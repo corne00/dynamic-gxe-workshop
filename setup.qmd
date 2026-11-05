@@ -9,14 +9,14 @@ git clone https://github.com/corne00/dynamic-gxe-workshop.git
 cd dynamic-gxe-workshop
 ```
 
-`R/functions.R` contains all functions used in the workshop (base R). `data/` contains the Narrabri weather, the biomass trajectories and the APSIM cultivar parameters. `scripts/parity_check.R` runs the complete pipeline.
+`R/functions.R` contains all functions used in the workshop. `data/` contains the Narrabri weather and the biomass trajectories.
 
 ## Packages
 
-R 4.1 or later. The modelling code uses base R only. The figures use `ggplot2`:
+R 4.1 or later. The fitting methods use `glmnet` and `leaps`; the figures use `ggplot2`.
 
 ```r
-install.packages("ggplot2")
+install.packages(c("glmnet", "leaps", "ggplot2"))
 ```
 
 ## Test run
@@ -24,16 +24,15 @@ install.packages("ggplot2")
 ```r
 source("R/functions.R")
 
-wx   <- read.csv("data/narrabri_weather.csv")
+wx <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 
-drv   <- make_drivers(wx)
+drv <- make_drivers(wx)
 Theta <- make_library(drv)
-tr    <- make_trajectories(traj, drv)
-gram  <- gram_stats(Theta, tr)
+tr <- make_trajectories(traj, drv)
 
-cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)
-round(evaluate(cv$pred, tr), 3)
+P <- cross_validate(Theta, tr, fit_ols, genotypes = tr$genotypes[1:20])
+round(evaluate(P, tr), 3)
 ```
 
-The expected output is a trajectory RMSE of about 0.52 t/ha. The research implementation in Python gives 0.520, 0.688 and 0.749 for the trajectory, day-113 and maturity RMSE; this code gives 0.521, 0.689 and 0.747.
+The result is the root-mean-square error (t/ha) of 20 genotypes on seasons that were left out of the fit; it should take a few seconds.

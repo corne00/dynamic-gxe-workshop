@@ -1,6 +1,6 @@
 # Dynamic G×E workshop
 
-Hands-on workshop (AAGI 2026 Symposium): learning growth equations from crop-model data with sparse regression, using base R only.
+Hands-on workshop (AAGI 2026 Symposium): learning growth equations from crop-model data with sparse regression in R.
 
 Site: step-by-step pages (method, data, design matrix, fitting, validation, interpretation, genotypes, limitations, extensions) with copyable code and pre-run output.
 
@@ -12,11 +12,11 @@ wx   <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
-`scripts/parity_check.R` runs the whole pipeline in a few seconds. Base R only; the pages additionally use `ggplot2` (and `splines` for one example).
+`scripts/parity_check.R` cross-validates all fitting methods on a few genotypes. Packages: `glmnet`, `leaps`, `ggplot2` (and `splines` for one example).
 
 ## Build the site
 
-Requires [Quarto](https://quarto.org) and R with `ggplot2`.
+Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet` and `leaps`.
 
 ```sh
 quarto render      # writes docs/ ; computed outputs are cached in _freeze/ and precomputed/
@@ -26,7 +26,7 @@ Publish with GitHub Pages: Settings → Pages → Deploy from a branch → `main
 
 ## Layout
 
-- `*.qmd`: the pages · `R/functions.R`: all workshop functions · `R/pipeline.R`: steps 2–4 in one script
+- `*.qmd`: the pages · `R/functions.R`: all workshop functions · `R/pipeline.R`: steps 2–3 in one script
 - `data/`: Narrabri weather and APSIM biomass/LAI trajectories · `scripts/`: data export and parity check
 - `images/`: static figures from the research code (page 9 only)
 

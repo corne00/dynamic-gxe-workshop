@@ -11,7 +11,7 @@ traj <- read.csv("data/narrabri_biomass.csv.gz")
 
 ## Drivers
 
-Each driver is standardised to mean 0 and unit standard deviation. Only weather is used in this step; the response does not enter.
+The drivers $u_1, \dots, u_4$ (`TT`, `DL`, `RAW`, `RAD`) are standardised to mean 0 and standard deviation 1. The response does not enter this step.
 
 ```{r}
 #| echo: false
@@ -21,13 +21,12 @@ show_fun("make_drivers")
 
 ```{r}
 drv <- make_drivers(wx)
-dim(drv$U)            # year x day x driver
-round(drv$center, 1)
+dim(drv$U)            # season x day x driver
 ```
 
 ## Library
 
-The library contains a constant and the first three powers of each driver, $K = 13$ terms.
+The library contains powers of each driver up to degree 3, giving $K = 12$ terms; the constant term is the intercept of the regression.
 
 ```{r}
 #| echo: false
@@ -37,13 +36,13 @@ show_fun("library_matrix", "make_library")
 
 ```{r}
 Theta <- make_library(drv)
-dim(Theta)            # year x day x term
+dim(Theta)            # season x day x term
 dimnames(Theta)[[3]]
 ```
 
 ## Response
 
-The response is stored as an array `Y[genotype, year, day]`, with `NA` after maturity. The number of daily steps of each trajectory is kept in `nend`.
+The biomass trajectories are stored in an array `Y[genotype, season, day]` with `NA` after maturity.
 
 ```{r}
 #| echo: false
@@ -54,44 +53,29 @@ show_fun("make_trajectories")
 ```{r}
 tr <- make_trajectories(traj, drv)
 dim(tr$Y)
-summary(as.vector(tr$nend))
 ```
 
 ## Design matrix
 
-The increments $z_t = y_{t+1} - y_t$ are regressed on the library at day $t$. For three genotypes:
+For one genotype, the rows of $\mathbf{X}$ are the days of all seasons and the columns are the library terms; $\Delta\mathbf{y}$ holds the daily biomass increments $y_{i+1} - y_i$.
 
 ```{r}
 #| echo: false
 #| results: asis
-show_fun("build_design")
+show_fun("make_design")
 ```
 
 ```{r}
-des <- build_design(Theta, tr, tr$genotypes[1:3])
-dim(des$X)
-round(head(des$X, 3), 2)
-round(coef(lm(des$z ~ des$X - 1)), 3)
+d <- make_design(Theta, tr, "g001")
+dim(d$X)
+round(head(d$X, 3), 2)
+head(d$dy)
 ```
 
-## Normal equations
-
-A linear fit needs only $A = X^\top X$ and $b = X^\top z$. These are computed per genotype and season, avoiding the full design matrix (about 850,000 rows for all genotypes).
+The regression of the increments on the library is a linear model:
 
 ```{r}
-#| echo: false
-#| results: asis
-show_fun("gram_stats")
+round(coef(lm(d$dy ~ d$X)), 3)
 ```
 
-```{r}
-gram <- gram_stats(Theta, tr)
-A <- apply(gram$A[1:3, , , ], c(3, 4), sum)
-b <- apply(gram$b[1:3, , ], 3, sum)
-
-max(abs(A - crossprod(des$X)))
-max(abs(b - crossprod(des$X, des$z)))
-max(abs(solve(A, b) - coef(lm(des$z ~ des$X - 1))))
-```
-
-`solve(A, b)` reproduces the `lm` coefficients. From here on the fitting methods only receive `A` and `b`.
+Step 4 replaces `lm` by other methods.

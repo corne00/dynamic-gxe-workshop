@@ -265,26 +265,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="choice-of-library" class="level2">
 <h2 class="anchored" data-anchor-id="choice-of-library">Choice of library</h2>
-<p>The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing <code>var = "lai"</code>.</p>
+<p>The same pipeline is applied to leaf area index (LAI), which rises and then falls during the season, by changing <code>var = "lai"</code>. Least squares is used for all libraries here.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>trl <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv, <span class="at">var =</span> <span class="st">"lai"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>cv_poly <span class="ot">&lt;-</span> <span class="fu">cv_blocked</span>(Theta, trl, <span class="fu">gram_stats</span>(Theta, trl), fit_ols)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>P_poly <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_lai_poly.rds"</span>, <span class="fu">cross_validate</span>(Theta, trl, fit_ols))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>As an alternative library, a B-spline basis in thermal time with the other three drivers entering linearly:</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>B <span class="ot">&lt;-</span> <span class="fu">bs</span>(<span class="fu">as.vector</span>(drv<span class="sc">$</span>U[, , <span class="st">"TT"</span>]), <span class="at">df =</span> <span class="dv">6</span>)</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>others <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U[, , <span class="sc">-</span><span class="dv">1</span>], <span class="at">ncol =</span> <span class="dv">3</span>)             <span class="co"># DL, RAW, RAD</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Theta_spl <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, B, others), <span class="fu">c</span>(<span class="fu">dim</span>(drv<span class="sc">$</span>U)[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="dv">10</span>))</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>cv_spl <span class="ot">&lt;-</span> <span class="fu">cv_blocked</span>(Theta_spl, trl, <span class="fu">gram_stats</span>(Theta_spl, trl), fit_ols)</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">lookup_trajectory</span>(trl)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(<span class="st">`</span><span class="at">cubic polynomial</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(cv_poly<span class="sc">$</span>pred, trl),</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">B-spline in TT</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(cv_spl<span class="sc">$</span>pred, trl),</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="at">baseline =</span> <span class="fu">evaluate</span>(base, trl)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>others <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U[, , <span class="sc">-</span><span class="dv">1</span>], <span class="at">ncol =</span> <span class="dv">3</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="fu">c</span>(<span class="st">"DL"</span>, <span class="st">"RAW"</span>, <span class="st">"RAD"</span>)))</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Theta_spl <span class="ot">&lt;-</span> <span class="fu">array</span>(<span class="fu">cbind</span>(B, others), <span class="fu">c</span>(<span class="fu">dim</span>(drv<span class="sc">$</span>U)[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="dv">9</span>),</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="fu">c</span>(<span class="fu">paste0</span>(<span class="st">"B"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>), <span class="fu">colnames</span>(others))))</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>P_spl <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_lai_spline.rds"</span>, <span class="fu">cross_validate</span>(Theta_spl, trl, fit_ols))</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">lookup_trajectory</span>(trl)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(<span class="st">`</span><span class="at">cubic polynomial</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(P_poly, trl),</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="st">`</span><span class="at">B-spline in TT</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">evaluate</span>(P_spl, trl),</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            <span class="at">baseline =</span> <span class="fu">evaluate</span>(base, trl)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                 trajectory_rmse fixed_day_rmse maturity_rmse
-cubic polynomial           0.885          1.212         0.972
-B-spline in TT             0.526          0.664         0.539
+cubic polynomial           0.925          1.272         1.039
+B-spline in TT             0.532          0.664         0.562
 baseline                   0.473          0.687         0.637</code></pre>
 </div>
 </div>
@@ -294,7 +295,7 @@ baseline                   0.473          0.687         0.637</code></pre>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>rmse <span class="ot">&lt;-</span> <span class="cf">function</span>(P, model) {</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> days, <span class="at">rmse =</span> <span class="fu">rmse_by_day</span>(P, trl), <span class="at">model =</span> model)</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">rmse</span>(cv_poly<span class="sc">$</span>pred, models[<span class="dv">1</span>]), <span class="fu">rmse</span>(cv_spl<span class="sc">$</span>pred, models[<span class="dv">2</span>]),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="fu">rmse</span>(P_poly, models[<span class="dv">1</span>]), <span class="fu">rmse</span>(P_spl, models[<span class="dv">2</span>]),</span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>           <span class="fu">rmse</span>(base, models[<span class="dv">3</span>]))</span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>d<span class="sc">$</span>model <span class="ot">&lt;-</span> <span class="fu">factor</span>(d<span class="sc">$</span>model, models)</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
@@ -312,34 +313,27 @@ baseline                   0.473          0.687         0.637</code></pre>
 </div>
 </div>
 </div>
-<p>A cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better, but over whole trajectories the baseline remains slightly more accurate (0.47 against 0.53); the spline model is better at day 113 and at maturity. When the model is inaccurate, the library should be examined before the fitting method.</p>
+<p>A cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better. When the model is inaccurate, the library should be examined before the fitting method.</p>
 </section>
 <section id="collinear-drivers" class="level2">
 <h2 class="anchored" data-anchor-id="collinear-drivers">Collinear drivers</h2>
-<p>Thermal time and day length have a correlation of 0.97. Fitting the same model separately to odd and even seasons gives different coefficients but nearly identical growth rates.</p>
+<p>Thermal time and day length have a correlation of 0.97. Fitting the same model to the odd and to the even seasons of one genotype gives different coefficients but similar growth rates.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>odd <span class="ot">&lt;-</span> tr<span class="sc">$</span>years[tr<span class="sc">$</span>years <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">1</span>]</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>even <span class="ot">&lt;-</span> tr<span class="sc">$</span>years[tr<span class="sc">$</span>years <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>]</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>fit_half <span class="ot">&lt;-</span> <span class="cf">function</span>(years) {</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_years</span>(gram, <span class="fu">which</span>(tr<span class="sc">$</span>years <span class="sc">%in%</span> years), fit_ols)<span class="sc">$</span>mu</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">odd =</span> <span class="fu">fit_half</span>(odd), <span class="at">even =</span> <span class="fu">fit_half</span>(even))</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(mu) <span class="ot">&lt;-</span> gram<span class="sc">$</span>names</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(mu[<span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"TT^2"</span>, <span class="st">"DL"</span>, <span class="st">"DL^2"</span>), ], <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, <span class="st">"g114"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>odd <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(d<span class="sc">$</span>X[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">1</span>, ], d<span class="sc">$</span>dy[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">1</span>])</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>even <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(d<span class="sc">$</span>X[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>, ], d<span class="sc">$</span>dy[d<span class="sc">$</span>season <span class="sc">%%</span> <span class="dv">2</span> <span class="sc">==</span> <span class="dv">0</span>])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">rbind</span>(odd, even)[, <span class="fu">c</span>(<span class="st">"TT"</span>, <span class="st">"TT^2"</span>, <span class="st">"DL"</span>, <span class="st">"DL^2"</span>)], <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>        odd   even
-TT   -0.063 -0.037
-TT^2 -0.036 -0.031
-DL    0.045  0.020
-DL^2 -0.055 -0.051</code></pre>
+<pre><code>         TT   TT^2    DL   DL^2
+odd  -0.067 -0.037 0.039 -0.065
+even -0.025 -0.033 0.006 -0.055</code></pre>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>Tbar <span class="ot">&lt;-</span> <span class="fu">apply</span>(Theta, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), mean)       <span class="co"># library along the mean weather</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>rate <span class="ot">&lt;-</span> Tbar <span class="sc">%*%</span> mu</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">correlation =</span> <span class="fu">cor</span>(rate[, <span class="st">"odd"</span>], rate[, <span class="st">"even"</span>]),</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_difference =</span> <span class="fu">max</span>(<span class="fu">abs</span>(rate[, <span class="st">"odd"</span>] <span class="sc">-</span> rate[, <span class="st">"even"</span>])))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>rate <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, d<span class="sc">$</span>X) <span class="sc">%*%</span> <span class="fu">cbind</span>(odd, even)      <span class="co"># growth rate on all days</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">correlation =</span> <span class="fu">cor</span>(rate[, <span class="dv">1</span>], rate[, <span class="dv">2</span>]),</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">max_difference =</span> <span class="fu">max</span>(<span class="fu">abs</span>(rate[, <span class="dv">1</span>] <span class="sc">-</span> rate[, <span class="dv">2</span>])))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>   correlation max_difference 
-   0.998197498    0.009107564 </code></pre>
+    0.98748717     0.03865562 </code></pre>
 </div>
 </div>
 <p>The data determine the combined effect of correlated drivers better than each coefficient, so response curves are preferable to individual coefficients for interpretation.</p>
@@ -348,18 +342,14 @@ DL^2 -0.055 -0.051</code></pre>
 <h2 class="anchored" data-anchor-id="accumulation-of-error">Accumulation of error</h2>
 <p>The regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cv <span class="ot">&lt;-</span> <span class="fu">cv_blocked</span>(Theta, tr, gram, fit_ssr, <span class="at">k =</span> <span class="dv">12</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>increment_error <span class="ot">&lt;-</span> <span class="cf">function</span>(g, y) {</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> tr<span class="sc">$</span>nend[g, y]</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">diff</span>(cv<span class="sc">$</span>pred[g, y, <span class="dv">1</span><span class="sc">:</span>(n <span class="sc">+</span> <span class="dv">1</span>)]) <span class="sc">-</span> <span class="fu">trajectory_xz</span>(Theta, tr, g, y)<span class="sc">$</span>z</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>cells <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">g =</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>genotypes), <span class="at">y =</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years))</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>err <span class="ot">&lt;-</span> <span class="fu">unlist</span>(<span class="fu">Map</span>(increment_error, cells<span class="sc">$</span>g, cells<span class="sc">$</span>y))</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">daily_increment_rmse =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(err<span class="sc">^</span><span class="dv">2</span>)),</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">trajectory_rmse =</span> <span class="fu">evaluate</span>(cv<span class="sc">$</span>pred, tr)[[<span class="dv">1</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_stlsq.rds"</span>, <span class="fu">cross_validate</span>(Theta, tr, fit_stlsq))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>step_error <span class="ot">&lt;-</span> P[, , <span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> P[, , <span class="sc">-</span><span class="fu">dim</span>(P)[<span class="dv">3</span>]]           <span class="co"># predicted increments</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>step_error <span class="ot">&lt;-</span> step_error <span class="sc">-</span> (tr<span class="sc">$</span>Y[, , <span class="sc">-</span><span class="dv">1</span>] <span class="sc">-</span> tr<span class="sc">$</span>Y[, , <span class="sc">-</span><span class="fu">dim</span>(tr<span class="sc">$</span>Y)[<span class="dv">3</span>]])</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">daily_increment_rmse =</span> <span class="fu">sqrt</span>(<span class="fu">mean</span>(step_error<span class="sc">^</span><span class="dv">2</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">trajectory_rmse =</span> <span class="fu">evaluate</span>(P, tr)[[<span class="dv">1</span>]])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>daily_increment_rmse      trajectory_rmse 
-          0.02801567           0.52096960 </code></pre>
+          0.02794568           0.52631617 </code></pre>
 </div>
 </div>
 <p>For this reason the model is assessed on the simulated trajectory and not on the daily increments.</p>
