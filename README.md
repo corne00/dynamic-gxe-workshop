@@ -26,7 +26,7 @@ Publish with GitHub Pages: Settings → Pages → Deploy from a branch → `main
 
 ## Interactive figures
 
-Pages 4–7 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute_interactive.R` (a few minutes; writes `data/interactive/*.json`).
+Pages 1 and 4–7 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute_interactive.R` (a few minutes) and `scripts/precompute_weather.R`; both write `data/interactive/*.json`. Page 1 has a toy of the chain environment, response and biomass, driven by the observed temperature of a Narrabri season.
 
 ## Layout
 

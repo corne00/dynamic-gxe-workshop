@@ -11,3 +11,5 @@ figure img, .cell-output-display img { max-width: 100%; }
   border-radius: 3px; background: white; }
 .dgxe-control output { min-width: 5rem; color: #014E81; font-weight: 500; }
 .interactive-note { font-size: .85rem; color: #6B7280; }
+.dgxe-play { border: 1px solid #9CA3AF; border-radius: 3px; background: white;
+  color: #014E81; width: 2rem; cursor: pointer; padding: 0; }

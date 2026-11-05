@@ -27,38 +27,7 @@ save <- function(plots, name, w, h) {
 blue <- dgxe[["blue"]]; cyan <- dgxe[["cyan"]]; bur <- dgxe[["burgundy"]]
 grey <- "#D1D5DB"
 
-## 1. Environment -> response function -> growth -----------------------------
-t <- seq(0, 10, length.out = 400)
-u <- 0.5 + 0.35 * sin(0.9 * t + 0.4) - 0.2 * exp(-(t - 6.5)^2 / 1.2)
-r <- function(u) 0.1 + exp(-(u - 0.55)^2 / 0.06)
-y <- cumsum(r(u)) * (t[2] - t[1])
-mark <- c(2, 6.6)
-at <- sapply(mark, function(m) which.min(abs(t - m)))
-pts <- data.frame(at = factor(1:2), t = t[at], u = u[at], r = r(u[at]),
-                  y = y[at])
-ug <- seq(min(u), max(u), length.out = 200)
-
-pa <- ggplot(data.frame(t, u), aes(t, u)) +
-  geom_line(colour = blue, linewidth = 0.9) +
-  geom_point(data = pts, aes(colour = at), size = 2.4) +
-  scale_colour_manual(values = c(cyan, bur)) +
-  labs(title = "(a) Environment", x = "time", y = expression(u(t))) +
-  concept()
-pb <- ggplot(data.frame(u = ug, r = r(ug)), aes(u, r)) +
-  geom_line(colour = blue, linewidth = 0.9) +
-  geom_point(data = pts, aes(u, r, colour = at), size = 2.4) +
-  scale_colour_manual(values = c(cyan, bur)) +
-  labs(title = "(b) Response", x = expression(u), y = "growth rate") +
-  concept()
-pc <- ggplot(data.frame(t, y), aes(t, y)) +
-  geom_line(colour = blue, linewidth = 0.9) +
-  geom_point(data = pts, aes(colour = at), size = 2.4) +
-  scale_colour_manual(values = c(cyan, bur)) +
-  labs(title = "(c) Growth", x = "time", y = expression(y(t))) +
-  concept()
-save(list(pa, pb, pc), "concept_response.png", 8, 2.3)
-
-## 2. Increments of an observed trajectory (genotype g114, season 1998) -------
+## 1. Increments of an observed trajectory (genotype g114, season 1998) -------
 g <- match("g114", tr$genotypes); v <- match(1998, tr$years)
 yy <- tr$Y[g, v, 1:(tr$nend[g, v] + 1)]
 d <- data.frame(das = seq_along(yy) + tr$das0 - 1, y = yy)
@@ -86,7 +55,7 @@ p2 <- ggplot(d[-nrow(d), ], aes(das, dy)) +
   concept()
 save(list(p1, p2), "concept_increments.png", 8, 2.4)
 
-## 3. Solution: cumulative sum of the predicted growth -----------------------
+## 2. Solution: cumulative sum of the predicted growth -----------------------
 P <- readRDS("precomputed/cv_stlsq.rds")
 pred <- P[g, v, 1:(tr$nend[g, v] + 1)]
 e <- data.frame(das = d$das, rate = c(diff(pred), NA), pred = pred, obs = yy)
@@ -109,7 +78,7 @@ q2 <- ggplot(e, aes(das)) +
         legend.key.height = unit(3.5, "mm"))
 save(list(q1, q2), "concept_solution.png", 8, 2.4)
 
-## 4. Leave-one-season-out validation ----------------------------------------
+## 3. Leave-one-season-out validation ----------------------------------------
 n <- length(tr$years)
 folds <- c(1, 2, 3, 31)
 cv <- do.call(rbind, lapply(seq_along(folds), function(k) {
@@ -129,7 +98,7 @@ pv <- ggplot(cv, aes(season, fold, fill = role)) +
         axis.line.y = element_blank(), axis.ticks.y = element_blank())
 save(pv, "concept_validation.png", 7, 1.9)
 
-## 5. Regression on the library: dy ~ X xi (genotype g114) ------------------
+## 4. Regression on the library: dy ~ X xi (genotype g114) ------------------
 dd <- make_design(Theta, tr, "g114")
 xi <- fit_stlsq(dd$X, dd$dy)
 rows <- 1:30

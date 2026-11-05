@@ -26,6 +26,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -77,6 +112,8 @@ ul.task-list li input[type="checkbox"] {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<script type="module" src="site_libs/quarto-ojs/quarto-ojs-runtime.js"></script>
+<link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js"></script>
 <script src="js/plot.umd.min.js"></script>
 <script src="js/controls.js"></script>
@@ -285,12 +322,135 @@ window.Quarto = {
 \dot{y} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 \]</span></p>
 <p>where most coefficients <span class="math inline">\(\xi_j\)</span> are expected to be zero. The library contains, for example, a constant, powers of the drivers and of the states, and products of them.</p>
-<div class="quarto-figure quarto-figure-center">
-<figure class="figure">
-<p><img src="images/concept_response.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>The driver <span class="math inline">\(u(t)\)</span> (a) enters a response function (b) that gives the growth rate; accumulated over time, the growth rate gives the trajectory of <span class="math inline">\(y\)</span> (c). The two marked days show how a value of <span class="math inline">\(u\)</span> maps to a growth rate and to a position on the trajectory.</figcaption>
-</figure>
+<p>The three panels show how the environment drives growth. Temperature (a) enters a response function (b); the resulting growth rate is accumulated over the season to give biomass (c). Press play, or move the day slider, to follow one day through the panels. The optimum and the upper limit change the shape of the response, and the dashed curves show the default response for comparison.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb1" data-startfrom="29" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 28;"><span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>weather <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/weather.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>viewof year <span class="op">=</span> <span class="fu">select</span>(<span class="st">"Season"</span><span class="op">,</span> weather<span class="op">.</span><span class="at">years</span><span class="op">,</span> <span class="dv">1998</span>)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>viewof optimum <span class="op">=</span> <span class="fu">knob</span>(<span class="st">"Optimum (°C)"</span><span class="op">,</span> d3<span class="op">.</span><span class="fu">range</span>(<span class="dv">10</span><span class="op">,</span> <span class="fl">26.5</span><span class="op">,</span> <span class="fl">0.5</span>)<span class="op">,</span> <span class="dv">20</span><span class="op">,</span> v <span class="kw">=&gt;</span> v<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">1</span>))</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>viewof limit <span class="op">=</span> <span class="fu">knob</span>(<span class="st">"Upper limit (°C)"</span><span class="op">,</span> d3<span class="op">.</span><span class="fu">range</span>(<span class="dv">26</span><span class="op">,</span> <span class="dv">41</span><span class="op">,</span> <span class="dv">1</span>)<span class="op">,</span> <span class="dv">35</span><span class="op">,</span> v <span class="kw">=&gt;</span> v<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">0</span>))</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>viewof day <span class="op">=</span> <span class="fu">player</span>(<span class="st">"Day"</span><span class="op">,</span> d3<span class="op">.</span><span class="fu">range</span>(<span class="dv">146</span>)<span class="op">,</span> <span class="dv">60</span><span class="op">,</span> i <span class="kw">=&gt;</span> weather<span class="op">.</span><span class="at">das0</span> <span class="op">+</span> i)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-1" data-nodetype="declaration">
+
 </div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-2" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-3" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-4" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-5" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-6" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<div id="ojs-cell-1-7" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb2" data-startfrom="39" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 38;"><span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>toy <span class="op">=</span> {</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> base <span class="op">=</span> <span class="dv">2</span><span class="op">,</span> rmax <span class="op">=</span> <span class="fl">0.17</span><span class="op">;</span>                    <span class="co">// °C, t/ha/day</span></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> logistic <span class="op">=</span> x <span class="kw">=&gt;</span> <span class="dv">1</span> <span class="op">/</span> (<span class="dv">1</span> <span class="op">+</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">exp</span>(<span class="op">-</span>x))<span class="op">;</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> canopy <span class="op">=</span> das <span class="kw">=&gt;</span> <span class="fu">logistic</span>((das <span class="op">-</span> <span class="dv">55</span>) <span class="op">/</span> <span class="dv">10</span>) <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> <span class="fu">logistic</span>((das <span class="op">-</span> <span class="dv">130</span>) <span class="op">/</span> <span class="dv">6</span>))<span class="op">;</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> response <span class="op">=</span> (u<span class="op">,</span> opt<span class="op">,</span> top) <span class="kw">=&gt;</span> (u <span class="op">&lt;=</span> base <span class="op">||</span> u <span class="op">&gt;=</span> top) <span class="op">?</span> <span class="dv">0</span> <span class="op">:</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    (top <span class="op">-</span> u) <span class="op">/</span> (top <span class="op">-</span> opt) <span class="op">*</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">pow</span>((u <span class="op">-</span> base) <span class="op">/</span> (opt <span class="op">-</span> base)<span class="op">,</span> (opt <span class="op">-</span> base) <span class="op">/</span> (top <span class="op">-</span> opt))<span class="op">;</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> u <span class="op">=</span> weather<span class="op">.</span><span class="at">temperature</span>[weather<span class="op">.</span><span class="at">years</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="op">+</span>year)]<span class="op">.</span><span class="fu">slice</span>(<span class="dv">0</span><span class="op">,</span> <span class="dv">146</span>)<span class="op">;</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> das <span class="op">=</span> d3<span class="op">.</span><span class="fu">range</span>(<span class="dv">146</span>)<span class="op">.</span><span class="fu">map</span>(i <span class="kw">=&gt;</span> weather<span class="op">.</span><span class="at">das0</span> <span class="op">+</span> i)<span class="op">;</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> trajectory <span class="op">=</span> (opt<span class="op">,</span> top) <span class="kw">=&gt;</span> {</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> u<span class="op">.</span><span class="fu">map</span>((v<span class="op">,</span> i) <span class="kw">=&gt;</span> (y <span class="op">+=</span> rmax <span class="op">*</span> <span class="fu">response</span>(v<span class="op">,</span> opt<span class="op">,</span> top) <span class="op">*</span> <span class="fu">canopy</span>(das[i])))<span class="op">;</span></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> {u<span class="op">,</span> das<span class="op">,</span> response<span class="op">,</span> canopy<span class="op">,</span> rmax<span class="op">,</span></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>          <span class="dt">y</span><span class="op">:</span> <span class="fu">trajectory</span>(optimum<span class="op">,</span> limit)<span class="op">,</span> <span class="dt">ref</span><span class="op">:</span> <span class="fu">trajectory</span>(<span class="dv">20</span><span class="op">,</span> <span class="dv">35</span>)}<span class="op">;</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="ojs-cell-2" data-nodetype="declaration">
+
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb3" data-startfrom="58" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 57;"><span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> {u<span class="op">,</span> das<span class="op">,</span> response<span class="op">,</span> canopy<span class="op">,</span> rmax<span class="op">,</span> y<span class="op">,</span> ref} <span class="op">=</span> toy<span class="op">;</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rows <span class="op">=</span> (v<span class="op">,</span> <span class="im">from</span><span class="op">,</span> to) <span class="kw">=&gt;</span> d3<span class="op">.</span><span class="fu">range</span>(<span class="im">from</span><span class="op">,</span> to)<span class="op">.</span><span class="fu">map</span>(i <span class="kw">=&gt;</span> ({<span class="dt">das</span><span class="op">:</span> das[i]<span class="op">,</span> <span class="dt">v</span><span class="op">:</span> v[i]}))<span class="op">;</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> style <span class="op">=</span> {<span class="dt">fontSize</span><span class="op">:</span> <span class="st">"10px"</span>}<span class="op">;</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> n <span class="op">=</span> u<span class="op">.</span><span class="at">length</span><span class="op">,</span> d <span class="op">=</span> day<span class="op">;</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> blue <span class="op">=</span> <span class="st">"#014E81"</span><span class="op">,</span> faint <span class="op">=</span> <span class="st">"#D1D5DB"</span><span class="op">,</span> red <span class="op">=</span> <span class="st">"#8B1E3F"</span><span class="op">;</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> temperature <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">228</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">230</span><span class="op">,</span> style<span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">38</span><span class="op">,</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"days after sowing"</span><span class="op">,</span> <span class="dt">domain</span><span class="op">:</span> [das[<span class="dv">0</span>]<span class="op">,</span> das[n <span class="op">-</span> <span class="dv">1</span>]]}<span class="op">,</span></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"temperature (°C)"</span><span class="op">,</span> <span class="dt">domain</span><span class="op">:</span> [<span class="dv">0</span><span class="op">,</span> <span class="dv">30</span>]}<span class="op">,</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">rows</span>(u<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> n)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> faint})<span class="op">,</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">rows</span>(u<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> d <span class="op">+</span> <span class="dv">1</span>)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> blue<span class="op">,</span> <span class="dt">strokeWidth</span><span class="op">:</span> <span class="fl">1.5</span>})<span class="op">,</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">dot</span>([{<span class="dt">das</span><span class="op">:</span> das[d]<span class="op">,</span> <span class="dt">v</span><span class="op">:</span> u[d]}]<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> red<span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="dv">5</span>})]</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> grid <span class="op">=</span> d3<span class="op">.</span><span class="fu">range</span>(<span class="dv">0</span><span class="op">,</span> <span class="fl">40.01</span><span class="op">,</span> <span class="fl">0.25</span>)<span class="op">;</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> curve <span class="op">=</span> (opt<span class="op">,</span> top) <span class="kw">=&gt;</span> grid<span class="op">.</span><span class="fu">map</span>(g <span class="kw">=&gt;</span> ({<span class="dt">u</span><span class="op">:</span> g<span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="fu">response</span>(g<span class="op">,</span> opt<span class="op">,</span> top)}))<span class="op">;</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rate <span class="op">=</span> rmax <span class="op">*</span> <span class="fu">response</span>(u[d]<span class="op">,</span> optimum<span class="op">,</span> limit) <span class="op">*</span> <span class="fu">canopy</span>(das[d])<span class="op">;</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> responsePlot <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">228</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">230</span><span class="op">,</span> style<span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">38</span><span class="op">,</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"temperature (°C)"</span><span class="op">,</span> <span class="dt">domain</span><span class="op">:</span> [<span class="dv">0</span><span class="op">,</span> <span class="dv">40</span>]}<span class="op">,</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"relative response"</span><span class="op">,</span> <span class="dt">domain</span><span class="op">:</span> [<span class="dv">0</span><span class="op">,</span> <span class="fl">1.05</span>]}<span class="op">,</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">ruleX</span>(u<span class="op">,</span> {<span class="dt">y1</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">y2</span><span class="op">:</span> <span class="fl">0.04</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="dt">strokeOpacity</span><span class="op">:</span> <span class="fl">0.5</span>})<span class="op">,</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">curve</span>(<span class="dv">20</span><span class="op">,</span> <span class="dv">35</span>)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"u"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"r"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="dt">strokeDasharray</span><span class="op">:</span> <span class="st">"4 3"</span>})<span class="op">,</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">curve</span>(optimum<span class="op">,</span> limit)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"u"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"r"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> blue<span class="op">,</span> <span class="dt">strokeWidth</span><span class="op">:</span> <span class="dv">2</span>})<span class="op">,</span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">ruleX</span>([u[d]]<span class="op">,</span> {<span class="dt">y1</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">y2</span><span class="op">:</span> <span class="fu">response</span>(u[d]<span class="op">,</span> optimum<span class="op">,</span> limit)<span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> red<span class="op">,</span> <span class="dt">strokeOpacity</span><span class="op">:</span> <span class="fl">0.4</span>})<span class="op">,</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">dot</span>([{<span class="dt">u</span><span class="op">:</span> u[d]<span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="fu">response</span>(u[d]<span class="op">,</span> optimum<span class="op">,</span> limit)}]<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"u"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"r"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> red<span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="dv">5</span>})]</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> growth <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">228</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">230</span><span class="op">,</span> style<span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">38</span><span class="op">,</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"days after sowing"</span><span class="op">,</span> <span class="dt">domain</span><span class="op">:</span> [das[<span class="dv">0</span>]<span class="op">,</span> das[n <span class="op">-</span> <span class="dv">1</span>]]}<span class="op">,</span></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"biomass (t/ha)"</span><span class="op">,</span> <span class="dt">domain</span><span class="op">:</span> [<span class="dv">0</span><span class="op">,</span> <span class="dv">14</span>]}<span class="op">,</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">rows</span>(ref<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> n)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="dt">strokeDasharray</span><span class="op">:</span> <span class="st">"4 3"</span>})<span class="op">,</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">rows</span>(y<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> n)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> faint<span class="op">,</span> <span class="dt">strokeWidth</span><span class="op">:</span> <span class="dv">2</span>})<span class="op">,</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">rows</span>(y<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> d <span class="op">+</span> <span class="dv">1</span>)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> blue<span class="op">,</span> <span class="dt">strokeWidth</span><span class="op">:</span> <span class="dv">2</span>})<span class="op">,</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(<span class="fu">rows</span>(y<span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">max</span>(<span class="dv">0</span><span class="op">,</span> d <span class="op">-</span> <span class="dv">1</span>)<span class="op">,</span> d <span class="op">+</span> <span class="dv">1</span>)<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> red<span class="op">,</span> <span class="dt">strokeWidth</span><span class="op">:</span> <span class="dv">4</span>})<span class="op">,</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">dot</span>([{<span class="dt">das</span><span class="op">:</span> das[d]<span class="op">,</span> <span class="dt">v</span><span class="op">:</span> y[d]}]<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"v"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> red<span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="dv">5</span>})]</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div style="display:flex;flex-wrap:wrap;gap:.3rem"&gt;</span><span class="sc">${</span>temperature<span class="sc">}${</span>responsePlot<span class="sc">}${</span>growth<span class="sc">}</span><span class="vs">&lt;/div&gt;</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="vs">    &lt;p class="interactive-note"&gt;Day </span><span class="sc">${</span>das[d]<span class="sc">}</span><span class="vs">: </span><span class="sc">${</span>u[d]<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">1</span>)<span class="sc">}</span><span class="vs"> °C gives a relative response of </span><span class="sc">${</span><span class="fu">response</span>(u[d]<span class="op">,</span> optimum<span class="op">,</span> limit)<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs"> and a growth rate of </span><span class="sc">${</span>rate<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">3</span>)<span class="sc">}</span><span class="vs"> t/ha/day.&lt;/p&gt;`</span><span class="op">;</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="ojs-cell-3" data-nodetype="expression">
+
+</div>
+</div>
+</div>
+<p>Temperature is the observed daily mean at Narrabri (3-day average). The response is an asymmetric function of temperature with base temperature 2 °C, and the growth rate is 0.17 t/ha/day times the response times a canopy factor that rises with leaf area and falls at senescence. The figure is a toy: the growth rate depends on temperature only.</p>
 <p>In this workshop the state is a single quantity, biomass <span class="math inline">\(y\)</span>, and the library contains functions of the drivers only, so that the growth rate depends on the environment but not on the current biomass. Libraries that contain the state are treated in step 9.</p>
 </section>
 <section id="regression" class="level2">
@@ -385,6 +545,17 @@ y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\bolds
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script type="ojs-module-contents">
+eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzXG5QbG90ID0gd2luZG93LlBsb3RcbndlYXRoZXIgPSBGaWxlQXR0YWNobWVudChcImRhdGEvaW50ZXJhY3RpdmUvd2VhdGhlci5qc29uXCIpLmpzb24oKVxudmlld29mIHllYXIgPSBzZWxlY3QoXCJTZWFzb25cIiwgd2VhdGhlci55ZWFycywgMTk5OClcbnZpZXdvZiBvcHRpbXVtID0ga25vYihcIk9wdGltdW0gKMKwQylcIiwgZDMucmFuZ2UoMTAsIDI2LjUsIDAuNSksIDIwLCB2ID0+IHYudG9GaXhlZCgxKSlcbnZpZXdvZiBsaW1pdCA9IGtub2IoXCJVcHBlciBsaW1pdCAowrBDKVwiLCBkMy5yYW5nZSgyNiwgNDEsIDEpLCAzNSwgdiA9PiB2LnRvRml4ZWQoMCkpXG52aWV3b2YgZGF5ID0gcGxheWVyKFwiRGF5XCIsIGQzLnJhbmdlKDE0NiksIDYwLCBpID0+IHdlYXRoZXIuZGFzMCArIGkpXG4ifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXQiLCJjZWxsTmFtZSI6Im9qcy1jZWxsLTIiLCJpbmxpbmUiOmZhbHNlLCJzb3VyY2UiOiJ0b3kgPSB7XG4gIGNvbnN0IGJhc2UgPSAyLCBybWF4ID0gMC4xNzsgICAgICAgICAgICAgICAgICAgIC8vIMKwQywgdC9oYS9kYXlcbiAgY29uc3QgbG9naXN0aWMgPSB4ID0+IDEgLyAoMSArIE1hdGguZXhwKC14KSk7XG4gIGNvbnN0IGNhbm9weSA9IGRhcyA9PiBsb2dpc3RpYygoZGFzIC0gNTUpIC8gMTApICogKDEgLSBsb2dpc3RpYygoZGFzIC0gMTMwKSAvIDYpKTtcbiAgY29uc3QgcmVzcG9uc2UgPSAodSwgb3B0LCB0b3ApID0+ICh1IDw9IGJhc2UgfHwgdSA+PSB0b3ApID8gMCA6XG4gICAgKHRvcCAtIHUpIC8gKHRvcCAtIG9wdCkgKiBNYXRoLnBvdygodSAtIGJhc2UpIC8gKG9wdCAtIGJhc2UpLCAob3B0IC0gYmFzZSkgLyAodG9wIC0gb3B0KSk7XG4gIGNvbnN0IHUgPSB3ZWF0aGVyLnRlbXBlcmF0dXJlW3dlYXRoZXIueWVhcnMuaW5kZXhPZigreWVhcildLnNsaWNlKDAsIDE0Nik7XG4gIGNvbnN0IGRhcyA9IGQzLnJhbmdlKDE0NikubWFwKGkgPT4gd2VhdGhlci5kYXMwICsgaSk7XG4gIGNvbnN0IHRyYWplY3RvcnkgPSAob3B0LCB0b3ApID0+IHtcbiAgICBsZXQgeSA9IDA7XG4gICAgcmV0dXJuIHUubWFwKCh2LCBpKSA9PiAoeSArPSBybWF4ICogcmVzcG9uc2Uodiwgb3B0LCB0b3ApICogY2Fub3B5KGRhc1tpXSkpKTtcbiAgfTtcbiAgcmV0dXJuIHt1LCBkYXMsIHJlc3BvbnNlLCBjYW5vcHksIHJtYXgsXG4gICAgICAgICAgeTogdHJhamVjdG9yeShvcHRpbXVtLCBsaW1pdCksIHJlZjogdHJhamVjdG9yeSgyMCwgMzUpfTtcbn1cbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMyIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IntcbiAgY29uc3Qge3UsIGRhcywgcmVzcG9uc2UsIGNhbm9weSwgcm1heCwgeSwgcmVmfSA9IHRveTtcbiAgY29uc3Qgcm93cyA9ICh2LCBmcm9tLCB0bykgPT4gZDMucmFuZ2UoZnJvbSwgdG8pLm1hcChpID0+ICh7ZGFzOiBkYXNbaV0sIHY6IHZbaV19KSk7XG4gIGNvbnN0IHN0eWxlID0ge2ZvbnRTaXplOiBcIjEwcHhcIn07XG4gIGNvbnN0IG4gPSB1Lmxlbmd0aCwgZCA9IGRheTtcbiAgY29uc3QgYmx1ZSA9IFwiIzAxNEU4MVwiLCBmYWludCA9IFwiI0QxRDVEQlwiLCByZWQgPSBcIiM4QjFFM0ZcIjtcbiAgY29uc3QgdGVtcGVyYXR1cmUgPSBQbG90LnBsb3Qoe1xuICAgIHdpZHRoOiAyMjgsIGhlaWdodDogMjMwLCBzdHlsZSwgbWFyZ2luTGVmdDogMzgsXG4gICAgeDoge2xhYmVsOiBcImRheXMgYWZ0ZXIgc293aW5nXCIsIGRvbWFpbjogW2Rhc1swXSwgZGFzW24gLSAxXV19LFxuICAgIHk6IHtsYWJlbDogXCJ0ZW1wZXJhdHVyZSAowrBDKVwiLCBkb21haW46IFswLCAzMF19LFxuICAgIG1hcmtzOiBbUGxvdC5saW5lKHJvd3ModSwgMCwgbiksIHt4OiBcImRhc1wiLCB5OiBcInZcIiwgc3Ryb2tlOiBmYWludH0pLFxuICAgICAgICAgICAgUGxvdC5saW5lKHJvd3ModSwgMCwgZCArIDEpLCB7eDogXCJkYXNcIiwgeTogXCJ2XCIsIHN0cm9rZTogYmx1ZSwgc3Ryb2tlV2lkdGg6IDEuNX0pLFxuICAgICAgICAgICAgUGxvdC5kb3QoW3tkYXM6IGRhc1tkXSwgdjogdVtkXX1dLCB7eDogXCJkYXNcIiwgeTogXCJ2XCIsIGZpbGw6IHJlZCwgcjogNX0pXVxuICB9KTtcbiAgY29uc3QgZ3JpZCA9IGQzLnJhbmdlKDAsIDQwLjAxLCAwLjI1KTtcbiAgY29uc3QgY3VydmUgPSAob3B0LCB0b3ApID0+IGdyaWQubWFwKGcgPT4gKHt1OiBnLCByOiByZXNwb25zZShnLCBvcHQsIHRvcCl9KSk7XG4gIGNvbnN0IHJhdGUgPSBybWF4ICogcmVzcG9uc2UodVtkXSwgb3B0aW11bSwgbGltaXQpICogY2Fub3B5KGRhc1tkXSk7XG4gIGNvbnN0IHJlc3BvbnNlUGxvdCA9IFBsb3QucGxvdCh7XG4gICAgd2lkdGg6IDIyOCwgaGVpZ2h0OiAyMzAsIHN0eWxlLCBtYXJnaW5MZWZ0OiAzOCxcbiAgICB4OiB7bGFiZWw6IFwidGVtcGVyYXR1cmUgKMKwQylcIiwgZG9tYWluOiBbMCwgNDBdfSxcbiAgICB5OiB7bGFiZWw6IFwicmVsYXRpdmUgcmVzcG9uc2VcIiwgZG9tYWluOiBbMCwgMS4wNV19LFxuICAgIG1hcmtzOiBbUGxvdC5ydWxlWCh1LCB7eTE6IDAsIHkyOiAwLjA0LCBzdHJva2U6IFwiIzlDQTNBRlwiLCBzdHJva2VPcGFjaXR5OiAwLjV9KSxcbiAgICAgICAgICAgIFBsb3QubGluZShjdXJ2ZSgyMCwgMzUpLCB7eDogXCJ1XCIsIHk6IFwiclwiLCBzdHJva2U6IFwiIzlDQTNBRlwiLCBzdHJva2VEYXNoYXJyYXk6IFwiNCAzXCJ9KSxcbiAgICAgICAgICAgIFBsb3QubGluZShjdXJ2ZShvcHRpbXVtLCBsaW1pdCksIHt4OiBcInVcIiwgeTogXCJyXCIsIHN0cm9rZTogYmx1ZSwgc3Ryb2tlV2lkdGg6IDJ9KSxcbiAgICAgICAgICAgIFBsb3QucnVsZVgoW3VbZF1dLCB7eTE6IDAsIHkyOiByZXNwb25zZSh1W2RdLCBvcHRpbXVtLCBsaW1pdCksIHN0cm9rZTogcmVkLCBzdHJva2VPcGFjaXR5OiAwLjR9KSxcbiAgICAgICAgICAgIFBsb3QuZG90KFt7dTogdVtkXSwgcjogcmVzcG9uc2UodVtkXSwgb3B0aW11bSwgbGltaXQpfV0sIHt4OiBcInVcIiwgeTogXCJyXCIsIGZpbGw6IHJlZCwgcjogNX0pXVxuICB9KTtcbiAgY29uc3QgZ3Jvd3RoID0gUGxvdC5wbG90KHtcbiAgICB3aWR0aDogMjI4LCBoZWlnaHQ6IDIzMCwgc3R5bGUsIG1hcmdpbkxlZnQ6IDM4LFxuICAgIHg6IHtsYWJlbDogXCJkYXlzIGFmdGVyIHNvd2luZ1wiLCBkb21haW46IFtkYXNbMF0sIGRhc1tuIC0gMV1dfSxcbiAgICB5OiB7bGFiZWw6IFwiYmlvbWFzcyAodC9oYSlcIiwgZG9tYWluOiBbMCwgMTRdfSxcbiAgICBtYXJrczogW1Bsb3QubGluZShyb3dzKHJlZiwgMCwgbiksIHt4OiBcImRhc1wiLCB5OiBcInZcIiwgc3Ryb2tlOiBcIiM5Q0EzQUZcIiwgc3Ryb2tlRGFzaGFycmF5OiBcIjQgM1wifSksXG4gICAgICAgICAgICBQbG90LmxpbmUocm93cyh5LCAwLCBuKSwge3g6IFwiZGFzXCIsIHk6IFwidlwiLCBzdHJva2U6IGZhaW50LCBzdHJva2VXaWR0aDogMn0pLFxuICAgICAgICAgICAgUGxvdC5saW5lKHJvd3MoeSwgMCwgZCArIDEpLCB7eDogXCJkYXNcIiwgeTogXCJ2XCIsIHN0cm9rZTogYmx1ZSwgc3Ryb2tlV2lkdGg6IDJ9KSxcbiAgICAgICAgICAgIFBsb3QubGluZShyb3dzKHksIE1hdGgubWF4KDAsIGQgLSAxKSwgZCArIDEpLCB7eDogXCJkYXNcIiwgeTogXCJ2XCIsIHN0cm9rZTogcmVkLCBzdHJva2VXaWR0aDogNH0pLFxuICAgICAgICAgICAgUGxvdC5kb3QoW3tkYXM6IGRhc1tkXSwgdjogeVtkXX1dLCB7eDogXCJkYXNcIiwgeTogXCJ2XCIsIGZpbGw6IHJlZCwgcjogNX0pXVxuICB9KTtcbiAgcmV0dXJuIGh0bWxgPGRpdiBzdHlsZT1cImRpc3BsYXk6ZmxleDtmbGV4LXdyYXA6d3JhcDtnYXA6LjNyZW1cIj4ke3RlbXBlcmF0dXJlfSR7cmVzcG9uc2VQbG90fSR7Z3Jvd3RofTwvZGl2PlxuICAgIDxwIGNsYXNzPVwiaW50ZXJhY3RpdmUtbm90ZVwiPkRheSAke2Rhc1tkXX06ICR7dVtkXS50b0ZpeGVkKDEpfSDCsEMgZ2l2ZXMgYSByZWxhdGl2ZSByZXNwb25zZSBvZiAke3Jlc3BvbnNlKHVbZF0sIG9wdGltdW0sIGxpbWl0KS50b0ZpeGVkKDIpfSBhbmQgYSBncm93dGggcmF0ZSBvZiAke3JhdGUudG9GaXhlZCgzKX0gdC9oYS9kYXkuPC9wPmA7XG59XG4ifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXRRdWlldCIsInNvdXJjZSI6InNoaW55SW5wdXQoJ3llYXInKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnb3B0aW11bScpIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdsaW1pdCcpIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdkYXknKSJ9XX0=
+</script>
+<script type="module">
+if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }
+window._ojs.paths.runtimeToDoc = "../..";
+window._ojs.paths.runtimeToRoot = "../..";
+window._ojs.paths.docToRoot = "";
+window._ojs.selfContained = false;
+window._ojs.runtime.interpretFromScriptTags();
+</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";
