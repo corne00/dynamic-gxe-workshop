@@ -13,10 +13,10 @@ cd dynamic-gxe-workshop
 
 ## Packages
 
-R 4.1 or later. The fitting methods use `glmnet` and `leaps`; the figures use `ggplot2`.
+R 4.1 or later. The fitting methods use `glmnet` and `leaps`; the interpretation page uses `iml` (with `yaImpute`); the figures use `ggplot2`.
 
 ```r
-install.packages(c("glmnet", "leaps", "ggplot2"))
+install.packages(c("glmnet", "leaps", "ggplot2", "iml"))
 ```
 
 ## Test run

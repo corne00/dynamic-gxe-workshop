@@ -12,11 +12,11 @@ wx   <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
-`scripts/parity_check.R` cross-validates all fitting methods on a few genotypes. Packages: `glmnet`, `leaps`, `ggplot2` (and `splines` for one example).
+`scripts/parity_check.R` cross-validates all fitting methods on a few genotypes. Packages: `glmnet`, `leaps`, `iml`, `ggplot2` (and `splines` for one example).
 
 ## Build the site
 
-Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet` and `leaps`.
+Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet`, `leaps` and `iml`.
 
 ```sh
 quarto render      # writes docs/ ; computed outputs are cached in _freeze/ and precomputed/

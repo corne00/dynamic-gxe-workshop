@@ -216,25 +216,6 @@ observed_points <- function(drv, tr) {
   do.call(rbind, lapply(seq_along(drv$years), season))
 }
 
-## Effect of driver j on the growth rate. In each of K quantile intervals,
-## driver j is moved from the lower to the upper end while the other drivers
-## keep their observed values; the mean changes in the rate are accumulated
-## and centred. rate: function(Z) -> growth rate.
-ale_curve <- function(rate, Z, j, K = 24) {
-  edge <- unique(quantile(Z[, j], seq(0, 1, length.out = K + 1)))
-  nb <- length(edge) - 1
-  bin <- pmin(pmax(findInterval(Z[, j], edge), 1), nb)
-  Zu <- Zl <- Z
-  Zu[, j] <- edge[bin + 1]
-  Zl[, j] <- edge[bin]
-  count <- tabulate(bin, nb)
-  change <- split(rate(Zu) - rate(Zl), factor(bin, levels = seq_len(nb)))
-  change <- vapply(change, sum, 0) / pmax(count, 1)
-  A <- c(0, cumsum(change))
-  mid <- (A[-1] + A[-length(A)]) / 2
-  data.frame(z = edge, effect = A - sum(mid * count) / sum(count))
-}
-
 ## ---- Genotype ranking -------------------------------------------------------
 ## Pd, Yd: genotype x season matrices of predicted and APSIM biomass on one
 ## day. For each season: Spearman correlation of the two rankings and overlap
