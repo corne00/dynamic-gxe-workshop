@@ -32,7 +32,7 @@ weather = FileAttachment("data/interactive/weather.json").json()
 viewof year = select("Season", weather.years, 1998)
 viewof optimum = knob("Optimum (°C)", d3.range(10, 26.5, 0.5), 20, v => v.toFixed(1))
 viewof limit = knob("Upper limit (°C)", d3.range(26, 41, 1), 35, v => v.toFixed(0))
-viewof day = player("Day", d3.range(146), 60, i => weather.das0 + i)
+viewof day = player("Day", d3.range(150), 60, i => weather.das0 + i)
 ```
 
 ```{ojs}
@@ -43,8 +43,8 @@ toy = {
   const canopy = das => logistic((das - 55) / 10) * (1 - logistic((das - 130) / 6));
   const response = (u, opt, top) => (u <= base || u >= top) ? 0 :
     (top - u) / (top - opt) * Math.pow((u - base) / (opt - base), (opt - base) / (top - opt));
-  const u = weather.temperature[weather.years.indexOf(+year)].slice(0, 146);
-  const das = d3.range(146).map(i => weather.das0 + i);
+  const u = weather.temperature[weather.years.indexOf(+year)].slice();
+  const das = d3.range(u.length).map(i => weather.das0 + i);
   const trajectory = (opt, top) => {
     let y = 0;
     return u.map((v, i) => (y += rmax * response(v, opt, top) * canopy(das[i])));
@@ -60,11 +60,11 @@ toy = {
   const {u, das, response, canopy, rmax, y, ref} = toy;
   const rows = (v, from, to) => d3.range(from, to).map(i => ({das: das[i], v: v[i]}));
   const style = {fontSize: "10px"};
-  const n = u.length, d = day;
+  const n = u.length, d = Math.min(day, n - 1), last = weather.das0 + 149;
   const blue = "#014E81", faint = "#D1D5DB", red = "#8B1E3F";
   const temperature = Plot.plot({
     width: 228, height: 230, style, marginLeft: 38,
-    x: {label: "days after sowing", domain: [das[0], das[n - 1]]},
+    x: {label: "days after sowing", domain: [weather.das0, last]},
     y: {label: "temperature (°C)", domain: [0, 30]},
     marks: [Plot.line(rows(u, 0, n), {x: "das", y: "v", stroke: faint}),
             Plot.line(rows(u, 0, d + 1), {x: "das", y: "v", stroke: blue, strokeWidth: 1.5}),
@@ -85,7 +85,7 @@ toy = {
   });
   const growth = Plot.plot({
     width: 228, height: 230, style, marginLeft: 38,
-    x: {label: "days after sowing", domain: [das[0], das[n - 1]]},
+    x: {label: "days after sowing", domain: [weather.das0, last]},
     y: {label: "biomass (t/ha)", domain: [0, 14]},
     marks: [Plot.line(rows(ref, 0, n), {x: "das", y: "v", stroke: "#9CA3AF", strokeDasharray: "4 3"}),
             Plot.line(rows(y, 0, n), {x: "das", y: "v", stroke: faint, strokeWidth: 2}),
