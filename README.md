@@ -2,7 +2,7 @@
 
 Hands-on workshop (AAGI 2026 Symposium): learning growth equations from crop-model data with sparse regression, using base R only.
 
-Site: step-by-step pages (idea, data, design matrix, fitting, validation, reading the model, genotypes, pitfalls) with copyable code and pre-run output.
+Site: step-by-step pages (method, data, design matrix, fitting, validation, interpretation, genotypes, limitations, extensions) with copyable code and pre-run output.
 
 ## Run it yourself
 

@@ -7,6 +7,10 @@ title: "1 · Method"
 source("R/functions.R"); source("R/show.R")
 ```
 
+## Overview
+
+![Schematic. Weather drivers $U$ and the response $Y$ are measured over time. The growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation.](images/method_overview.png){width=100%}
+
 ## Model
 
 Let $y(t)$ denote biomass and $u(t) = (\mathrm{TT}, \mathrm{DL}, \mathrm{RAW}, \mathrm{RAD})$ the daily weather drivers: accumulated thermal time, day length, relative available water and solar radiation. The growth rate is modelled as

@@ -295,36 +295,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> coef, <span class="at">support =</span> S)</span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ols <span class="ot">&lt;-</span> <span class="fu">fit_ols</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>rdg <span class="ot">&lt;-</span> <span class="fu">fit_ridge</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">lambda =</span> <span class="fl">0.01</span>)</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>ssr <span class="ot">&lt;-</span> <span class="fu">fit_ssr</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">k =</span> <span class="dv">8</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>tab <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">term =</span> terms, <span class="at">OLS =</span> ols<span class="sc">$</span>coef, <span class="at">ridge =</span> rdg<span class="sc">$</span>coef, <span class="at">SSR_8 =</span> ssr<span class="sc">$</span>coef)</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>tab[, <span class="sc">-</span><span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="fu">round</span>(tab[, <span class="sc">-</span><span class="dv">1</span>], <span class="dv">3</span>)</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>tab</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="at">OLS   =</span> <span class="fu">fit_ols</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b),</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>             <span class="at">ridge =</span> <span class="fu">fit_ridge</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">lambda =</span> <span class="fl">0.01</span>),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">SSR_8 =</span> <span class="fu">fit_ssr</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">k =</span> <span class="dv">8</span>))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> <span class="fu">sapply</span>(fits, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, <span class="st">"coef"</span>); <span class="fu">rownames</span>(coefs) <span class="ot">&lt;-</span> terms</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(coefs, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>    term    OLS  ridge  SSR_8
-1      1  0.156  0.143  0.154
-2     TT -0.034  0.002 -0.016
-3   TT^2 -0.032 -0.033 -0.030
-4   TT^3  0.018  0.005  0.011
-5     DL  0.019 -0.007  0.002
-6   DL^2 -0.055 -0.040 -0.056
-7   DL^3  0.024  0.020  0.026
-8    RAW  0.011  0.009  0.000
-9  RAW^2 -0.017 -0.015 -0.020
-10 RAW^3 -0.001  0.002  0.000
-11   RAD  0.007  0.008  0.000
-12 RAD^2 -0.003 -0.003  0.000
-13 RAD^3 -0.001 -0.002  0.000</code></pre>
+<pre><code>         OLS  ridge  SSR_8
+1      0.156  0.143  0.154
+TT    -0.034  0.002 -0.016
+TT^2  -0.032 -0.033 -0.030
+TT^3   0.018  0.005  0.011
+DL     0.019 -0.007  0.002
+DL^2  -0.055 -0.040 -0.056
+DL^3   0.024  0.020  0.026
+RAW    0.011  0.009  0.000
+RAW^2 -0.017 -0.015 -0.020
+RAW^3 -0.001  0.002  0.000
+RAD    0.007  0.008  0.000
+RAD^2 -0.003 -0.003  0.000
+RAD^3 -0.001 -0.002  0.000</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">reshape</span>(tab, <span class="at">direction =</span> <span class="st">"long"</span>, <span class="at">varying =</span> <span class="fu">list</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>), <span class="at">v.names =</span> <span class="st">"coef"</span>, <span class="at">timevar =</span> <span class="st">"method"</span>, <span class="at">times =</span> <span class="fu">names</span>(tab)[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>], <span class="at">idvar =</span> <span class="st">"term"</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>d<span class="sc">$</span>term <span class="ot">&lt;-</span> <span class="fu">factor</span>(d<span class="sc">$</span>term, <span class="fu">rev</span>(terms)); d<span class="sc">$</span>method <span class="ot">&lt;-</span> <span class="fu">factor</span>(d<span class="sc">$</span>method, <span class="fu">names</span>(tab)[<span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>])</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(coef, term, <span class="at">colour =</span> method, <span class="at">shape =</span> method)) <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.2</span>, <span class="at">alpha =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"grey"</span>, <span class="st">"burgundy"</span>)])) <span class="sc">+</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"coefficient (scaled library)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>, <span class="at">legend.title =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">term =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(terms, <span class="dv">3</span>), <span class="fu">rev</span>(terms)), <span class="at">method =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">names</span>(fits), <span class="at">each =</span> <span class="fu">length</span>(terms)), <span class="fu">names</span>(fits)), <span class="at">coef =</span> <span class="fu">as.vector</span>(coefs))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(d, <span class="fu">aes</span>(coef, term, <span class="at">colour =</span> method, <span class="at">shape =</span> method)) <span class="sc">+</span> <span class="fu">geom_vline</span>(<span class="at">xintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">2.2</span>, <span class="at">alpha =</span> <span class="fl">0.9</span>) <span class="sc">+</span> <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> <span class="fu">unname</span>(dgxe[<span class="fu">c</span>(<span class="st">"blue"</span>, <span class="st">"grey"</span>, <span class="st">"burgundy"</span>)])) <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"coefficient (scaled library)"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span> <span class="fu">theme_dgxe</span>() <span class="sc">+</span> <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">"top"</span>, <span class="at">legend.title =</span> <span class="fu">element_blank</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -338,17 +335,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="order-of-elimination">Order of elimination</h2>
 <p>Sequential thresholding removes one term at a time; the order is the following.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(terms); out <span class="ot">&lt;-</span> <span class="fu">character</span>(<span class="dv">0</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>S <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(terms); removed <span class="ot">&lt;-</span> <span class="fu">character</span>(<span class="dv">0</span>)</span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="cf">while</span> (<span class="fu">length</span>(S) <span class="sc">&gt;</span> <span class="dv">1</span>) {</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  co <span class="ot">&lt;-</span> <span class="fu">solve</span>(sc<span class="sc">$</span>A[S, S, <span class="at">drop =</span> <span class="cn">FALSE</span>] <span class="sc">+</span> <span class="fl">1e-6</span> <span class="sc">*</span> <span class="fu">diag</span>(<span class="fu">length</span>(S)), sc<span class="sc">$</span>b[S])</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  w <span class="ot">&lt;-</span> <span class="fu">which.min</span>(<span class="fu">abs</span>(co)); out <span class="ot">&lt;-</span> <span class="fu">c</span>(out, terms[S[w]]); S <span class="ot">&lt;-</span> S[<span class="sc">-</span>w]</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  coef <span class="ot">&lt;-</span> <span class="fu">solve</span>(sc<span class="sc">$</span>A[S, S] <span class="sc">+</span> <span class="fl">1e-6</span> <span class="sc">*</span> <span class="fu">diag</span>(<span class="fu">length</span>(S)), sc<span class="sc">$</span>b[S])</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  removed <span class="ot">&lt;-</span> <span class="fu">c</span>(removed, terms[S[<span class="fu">which.min</span>(<span class="fu">abs</span>(coef))]]); S <span class="ot">&lt;-</span> S[<span class="sc">-</span><span class="fu">which.min</span>(<span class="fu">abs</span>(coef))]</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(<span class="at">removed =</span> out, <span class="at">last =</span> terms[S])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">c</span>(removed, <span class="at">last =</span> terms[S])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> removed1  removed2  removed3  removed4  removed5  removed6  removed7  removed8 
-  "RAW^3"   "RAD^3"   "RAD^2"     "RAD"     "RAW"      "DL"    "TT^3"      "TT" 
- removed9 removed10 removed11 removed12      last 
-  "RAW^2"    "DL^3"    "DL^2"    "TT^2"       "1" </code></pre>
+<pre><code>                                                                                
+"RAW^3" "RAD^3" "RAD^2"   "RAD"   "RAW"    "DL"  "TT^3"    "TT" "RAW^2"  "DL^3" 
+                   last 
+ "DL^2"  "TT^2"     "1" </code></pre>
 </div>
 </div>
 <p>The order depends on the library and on correlations among its terms, and is not a ranking of importance. The number of terms is chosen by validation (step 5).</p>
@@ -356,8 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="another-method-lasso" class="level2">
 <h2 class="anchored" data-anchor-id="another-method-lasso">Another method: lasso</h2>
 <p>Any method that maps <code>(A, b)</code> to coefficients can be used. As an example, the lasso by coordinate descent on the same scaled normal equations:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="cf">function</span>(A, b, <span class="at">lambda =</span> <span class="fl">0.01</span>, <span class="at">iters =</span> <span class="dv">2000</span>, ...) {</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="cf">function</span>(A, b, <span class="at">lambda =</span> <span class="fl">2e-4</span>, <span class="at">iters =</span> <span class="dv">2000</span>, ...) {</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  xi <span class="ot">&lt;-</span> <span class="fu">numeric</span>(<span class="fu">length</span>(b))</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (it <span class="cf">in</span> <span class="fu">seq_len</span>(iters)) {</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    old <span class="ot">&lt;-</span> xi</span>
@@ -368,9 +364,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">max</span>(<span class="fu">abs</span>(xi <span class="sc">-</span> old)) <span class="sc">&lt;</span> <span class="fl">1e-9</span>) <span class="cf">break</span></span>
 <span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">coef =</span> xi, <span class="at">support =</span> <span class="fu">which</span>(xi <span class="sc">!=</span> <span class="dv">0</span>))</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>las <span class="ot">&lt;-</span> <span class="fu">fit_lasso</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">lambda =</span> <span class="fl">2e-4</span>)</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="fu">setNames</span>(<span class="fu">round</span>(las<span class="sc">$</span>coef, <span class="dv">3</span>), terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>las <span class="ot">&lt;-</span> <span class="fu">fit_lasso</span>(sc<span class="sc">$</span>A, sc<span class="sc">$</span>b, <span class="at">lambda =</span> <span class="fl">2e-4</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">setNames</span>(<span class="fu">round</span>(las<span class="sc">$</span>coef, <span class="dv">3</span>), terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     1     TT   TT^2   TT^3     DL   DL^2   DL^3    RAW  RAW^2  RAW^3    RAD 
  0.149  0.000 -0.034  0.004 -0.003 -0.045  0.023  0.010 -0.017  0.000  0.005 

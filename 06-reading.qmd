@@ -26,10 +26,10 @@ Predicted growth rate for the weather of each season (grey) and the mean (blue).
 
 ```{r}
 #| fig-height: 2.8
-ny <- length(tr$years); nd <- dim(Theta)[2]
-R  <- sapply(seq_len(ny), function(y) as.vector(Theta[y, , ] %*% mu))
-d  <- data.frame(das = rep(seq_len(nd) + tr$das0 - 1, ny), year = rep(tr$years, each = nd), rate = as.vector(R))
-d  <- d[d$das <= 15 + max(tr$nend) - 1, ]
+nd <- dim(Theta)[2]
+d  <- data.frame(das = rep(1:nd + tr$das0 - 1, length(tr$years)), year = rep(tr$years, each = nd),
+                 rate = unlist(lapply(seq_along(tr$years), function(y) Theta[y, , ] %*% mu)))
+d  <- d[d$das <= tr$das0 + max(tr$nend) - 1, ]
 ggplot(d, aes(das, rate)) + geom_line(aes(group = year), colour = dgxe[["grey"]], linewidth = 0.3, alpha = 0.7) +
   stat_summary(fun = mean, geom = "line", colour = dgxe[["blue"]], linewidth = 0.9) +
   labs(x = "days after sowing", y = "growth rate (t/ha/day)") + theme_dgxe()

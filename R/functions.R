@@ -1,56 +1,48 @@
 ## ============================================================================
-##  Dynamic GxE from scratch -- all functions used in the workshop (base R only)
+##  Sparse identification of crop growth: all functions used in the workshop (base R)
 ##
-##  The pipeline is a chain of small steps. Each step takes the output of the
-##  previous one, and every fitting method has the same signature, fit(A, b, ...),
-##  so any step can be swapped without touching the others.
+##    wx   --make_drivers-->       drv --make_library--> Theta     (candidate functions)
+##    traj --make_trajectories-->  tr                              (biomass trajectories)
+##    Theta, tr --gram_stats-->    gram                            (A = X'X and b = X'z)
+##    gram --fit_*-->              coefficients --simulate--> predictions --evaluate--> RMSE
 ##
-##    wx, traj  --make_drivers-->  drv  --make_library-->  Theta
-##    traj      --make_trajectories-->  tr
-##    Theta, tr --gram_stats-->  gram          (everything a linear fit needs)
-##    gram      --fit_*  -->  coefficients
-##    coefficients, Theta --simulate--> predicted trajectories --evaluate--> metrics
+##  Every fitting method has the signature fit(A, b, ...), so methods are interchangeable.
 ## ============================================================================
 
-## ---- Step 1: weather -> drivers ---------------------------------------------
-## Returns an array U[year, day, driver] of standardised drivers. Day 1 of the
-## array is the first day in the data (das0 days after sowing).
+## ---- Drivers: array U[year, day, driver], standardised ---------------------------
 make_drivers <- function(wx, drivers = c("TT", "DL", "RAW", "RAD")) {
   years <- sort(unique(wx$year)); das0 <- min(wx$das); nd <- max(wx$das) - das0 + 1
   U <- array(NA_real_, c(length(years), nd, length(drivers)), dimnames = list(years, NULL, drivers))
-  for (i in seq_along(years)) {
-    w <- wx[wx$year == years[i], ]
-    U[i, w$das - das0 + 1, ] <- as.matrix(w[, drivers])
-    last <- max(w$das) - das0 + 1                       # years end on different days:
-    if (last < nd) U[i, (last + 1):nd, ] <- matrix(rep(U[i, last, ], each = nd - last), nd - last)  # carry last value (never used)
+  for (j in seq_along(drivers)) U[cbind(match(wx$year, years), wx$das - das0 + 1, j)] <- wx[[drivers[j]]]
+  for (y in seq_along(years)) for (j in seq_along(drivers)) {      # seasons end on different days:
+    u <- U[y, , j]; U[y, is.na(u), j] <- tail(u[!is.na(u)], 1)     # pad with the last value (never used in fits)
   }
-  center <- apply(U, 3, mean); scale <- apply(U, 3, function(x) sqrt(mean((x - mean(x))^2)))
-  for (j in seq_along(drivers)) U[, , j] <- (U[, , j] - center[j]) / scale[j]
-  list(U = U, years = years, das0 = das0, drivers = drivers, center = center, scale = scale)
+  center <- apply(U, 3, mean)
+  scale  <- apply(U, 3, function(x) sqrt(mean((x - mean(x))^2)))
+  list(U = sweep(sweep(U, 3, center), 3, scale, "/"), years = years, das0 = das0,
+       drivers = drivers, center = center, scale = scale)
 }
 
-## ---- Step 2: drivers -> library of candidate functions -------------------------
-## library_matrix(): n x d matrix of standardised drivers -> n x K matrix of candidate terms.
-## Default: constant + cubic polynomial of every driver = 1 + 3 x 4 = 13 terms.
-## pairs = TRUE adds the products x_i^p * x_j^q (p, q in 1:2) of every pair of drivers (37 terms).
+## ---- Library of candidate functions ------------------------------------------------
+## Z: n x d matrix of standardised drivers -> n x K matrix of terms.
+## A constant and powers 1..degree of every driver; pairs = TRUE adds products of pairs.
 library_matrix <- function(Z, degree = 3, pairs = FALSE) {
-  pw <- function(x, p) if (p == 1) x else paste0(x, "^", p)
-  d <- colnames(Z); cols <- list(rep(1, nrow(Z))); nm <- "1"
-  for (j in seq_along(d)) for (p in seq_len(degree)) { cols[[length(cols) + 1]] <- Z[, j]^p; nm <- c(nm, pw(d[j], p)) }
-  if (pairs) for (i in 1:(length(d) - 1)) for (j in (i + 1):length(d)) for (p in 1:2) for (q in 1:2) {
-    cols[[length(cols) + 1]] <- Z[, i]^p * Z[, j]^q; nm <- c(nm, paste0(pw(d[i], p), "*", pw(d[j], q)))
-  }
-  L <- do.call(cbind, cols); colnames(L) <- nm; L
+  term <- function(x, p) if (p == 1) x else paste0(x, "^", p)
+  cols <- list(`1` = rep(1, nrow(Z)))
+  for (d in colnames(Z)) for (p in 1:degree) cols[[term(d, p)]] <- Z[, d]^p
+  if (pairs) for (ij in combn(colnames(Z), 2, simplify = FALSE)) for (p in 1:2) for (q in 1:2)
+    cols[[paste0(term(ij[1], p), "*", term(ij[2], q))]] <- Z[, ij[1]]^p * Z[, ij[2]]^q
+  do.call(cbind, cols)
 }
-## Theta[year, day, term] = value of each candidate function on each day.
+## Theta[year, day, term]
 make_library <- function(drv, degree = 3, pairs = FALSE) {
-  nd <- dim(drv$U); Z <- matrix(drv$U, ncol = nd[3]); colnames(Z) <- drv$drivers
+  d <- dim(drv$U); Z <- matrix(drv$U, ncol = d[3], dimnames = list(NULL, drv$drivers))
   L <- library_matrix(Z, degree, pairs)
-  array(L, c(nd[1:2], ncol(L)), dimnames = list(NULL, NULL, colnames(L)))
+  array(L, c(d[1:2], ncol(L)), dimnames = list(NULL, NULL, colnames(L)))
 }
 
-## ---- Step 3: long trajectory table -> array Y[genotype, year, day] -------------
-## Days after maturity are NA. nend[g, y] = number of daily increments of that trajectory.
+## ---- Trajectories: array Y[genotype, year, day], NA after maturity -----------------
+## nend[g, y] is the number of daily steps of trajectory (g, y).
 make_trajectories <- function(traj, drv, var = "biomass") {
   gen <- sort(unique(traj$genotype)); nd <- dim(drv$U)[2]
   Y <- array(NA_real_, c(length(gen), length(drv$years), nd), dimnames = list(gen, drv$years, NULL))
@@ -59,58 +51,55 @@ make_trajectories <- function(traj, drv, var = "biomass") {
   list(Y = Y, nend = nend, genotypes = gen, years = drv$years, das0 = drv$das0)
 }
 
-## ---- Step 4: the regression problem ------------------------------------------
-## For each trajectory the daily growth increments are  z_t = y_{t+1} - y_t  and the
-## regressors are the library values on day t:  X_t = Theta[year, t, ].  Stacking all
-## days of all trajectories gives the design matrix; build_design() shows it explicitly.
-build_design <- function(Theta, tr, genotypes = tr$genotypes) {
-  X <- list(); z <- list(); id <- list()
-  for (g in genotypes) for (y in seq_along(tr$years)) {
-    gi <- match(g, tr$genotypes); n <- tr$nend[gi, y]; v <- tr$Y[gi, y, 1:(n + 1)]
-    X[[length(X) + 1]] <- matrix(Theta[y, 1:n, ], n); z[[length(z) + 1]] <- diff(v)
-    id[[length(id) + 1]] <- data.frame(genotype = g, year = tr$years[y], day = 0:(n - 1))
-  }
-  X <- do.call(rbind, X); colnames(X) <- dimnames(Theta)[[3]]
-  list(X = X, z = unlist(z), id = do.call(rbind, id))
+## ---- Regression problem ---------------------------------------------------------------
+## One trajectory: increments z_t = y_{t+1} - y_t regressed on the library at day t.
+trajectory_xz <- function(Theta, tr, g, y) {
+  n <- tr$nend[g, y]
+  list(X = matrix(Theta[y, 1:n, ], n), z = diff(tr$Y[g, y, 1:(n + 1)]))
 }
 
-## Everything a linear regression needs from the data is  A = X'X  and  b = X'z.
-## We store them per genotype and per year, so that leave-one-year-out cross-validation
-## only needs additions and subtractions of these small matrices (no refitting from scratch).
+## Explicit design matrix X and response z for a set of genotypes (all seasons stacked).
+build_design <- function(Theta, tr, genotypes = tr$genotypes) {
+  idx <- expand.grid(y = seq_along(tr$years), g = match(genotypes, tr$genotypes))
+  xz  <- Map(function(g, y) trajectory_xz(Theta, tr, g, y), idx$g, idx$y)
+  n   <- tr$nend[cbind(idx$g, idx$y)]
+  X   <- do.call(rbind, lapply(xz, `[[`, "X")); colnames(X) <- dimnames(Theta)[[3]]
+  list(X = X, z = unlist(lapply(xz, `[[`, "z")),
+       id = data.frame(genotype = rep(tr$genotypes[idx$g], n), year = rep(tr$years[idx$y], n), day = sequence(n) - 1))
+}
+
+## A = X'X and b = X'z for every genotype and season. A linear fit needs nothing else,
+## and cross-validation reduces to adding and subtracting these small matrices.
 gram_stats <- function(Theta, tr) {
   G <- dim(tr$Y)[1]; ny <- length(tr$years); K <- dim(Theta)[3]
   A <- array(0, c(G, ny, K, K)); b <- array(0, c(G, ny, K))
   for (g in seq_len(G)) for (y in seq_len(ny)) {
-    n <- tr$nend[g, y]; X <- matrix(Theta[y, 1:n, ], n)
-    A[g, y, , ] <- crossprod(X); b[g, y, ] <- crossprod(X, diff(tr$Y[g, y, 1:(n + 1)]))
+    s <- trajectory_xz(Theta, tr, g, y)
+    A[g, y, , ] <- crossprod(s$X); b[g, y, ] <- crossprod(s$X, s$z)
   }
   list(A = A, b = b, n = tr$nend, names = dimnames(Theta)[[3]])
 }
 
-## Sum the statistics over a set of years (the training years of one fold).
+## Sum the statistics over a set of seasons.
 sum_years <- function(gram, years) {
-  list(A = apply(gram$A[, years, , , drop = FALSE], c(1, 3, 4), sum),    # genotype x K x K
-       b = apply(gram$b[, years, , drop = FALSE], c(1, 3), sum),          # genotype x K
-       n = apply(gram$n[, years, drop = FALSE], 1, sum))                  # genotype
+  list(A = apply(gram$A[, years, , , drop = FALSE], c(1, 3, 4), sum),     # genotype x K x K
+       b = apply(gram$b[, years, , drop = FALSE], c(1, 3), sum),           # genotype x K
+       n = rowSums(gram$n[, years, drop = FALSE]))                         # genotype
 }
 
-## Put all terms on a common scale (unit root-mean-square column), so that coefficients
-## can be compared and penalised fairly. Returns scaled A, b and the scale s.
-scale_gram <- function(A, b, n, s = NULL) {
-  if (is.null(s)) s <- sqrt(diag(A) / n)                       # RMS of every library column
+## Scale the library columns to unit root-mean-square (coefficients become comparable).
+scale_gram <- function(A, b, n, s = sqrt(diag(A) / n)) {
   list(A = A / n / outer(s, s), b = b / n / s, s = s)
 }
 
-## ---- Step 5: fitting methods (all with the same signature fit(A, b, ...)) ----------
-## Every method returns list(coef, support) with coef on the scaled problem.
+## ---- Fitting methods: fit(A, b, ...) -> list(coef, support) ----------------------------
 fit_ols <- function(A, b, ...) {
   list(coef = solve(A, b), support = seq_along(b))
 }
 fit_ridge <- function(A, b, lambda = 0.01, ...) {
   list(coef = solve(A + lambda * mean(diag(A)) * diag(nrow(A)), b), support = seq_along(b))
 }
-## Sequential thresholding / backward elimination: refit, drop the smallest coefficient,
-## repeat until k terms remain.
+## Sequential thresholding: refit, drop the smallest coefficient, repeat until k terms remain.
 fit_ssr <- function(A, b, k = 8, alpha = 1e-6, ...) {
   S <- seq_along(b)
   repeat {
@@ -122,101 +111,124 @@ fit_ssr <- function(A, b, k = 8, alpha = 1e-6, ...) {
   list(coef = coef, support = S)
 }
 
-## ---- Step 5b: shared coefficients + genotype deviations -----------------------------
-## xi_g = mu + delta_g on a fixed support: mu from the pooled problem (light ridge),
-## delta_g from a ridge-shrunk fit of each genotype's own residual growth.
+## Lasso by coordinate descent on the scaled normal equations (soft thresholding).
+fit_lasso <- function(A, b, lambda = 2e-4, iters = 2000, ...) {
+  xi <- numeric(length(b))
+  for (it in seq_len(iters)) {
+    old <- xi
+    for (j in seq_along(b)) {
+      r <- b[j] - sum(A[j, -j] * xi[-j])
+      xi[j] <- sign(r) * max(abs(r) - lambda, 0) / A[j, j]
+    }
+    if (max(abs(xi - old)) < 1e-9) break
+  }
+  list(coef = xi, support = which(xi != 0))
+}
+
+## ---- Genotypes: xi_g = mu + delta_g on a common support -------------------------------
+## mu: ridge fit of the pooled data; delta_g: ridge-shrunk fit of the residual of genotype g.
 fit_hier <- function(Ag, bg, support, lam_mu = 1e-4, lam_g = 0.01) {
-  K <- dim(Ag)[2]; k <- length(support); G <- dim(Ag)[1]
-  Apool <- apply(Ag[, support, support, drop = FALSE], c(2, 3), sum); bpool <- colSums(bg[, support, drop = FALSE])
-  mu <- numeric(K); mu[support] <- solve(Apool + lam_mu * mean(diag(Apool)) * diag(k), bpool)
+  G <- dim(Ag)[1]; K <- dim(Ag)[2]; k <- length(support)
+  Ap <- apply(Ag[, support, support, drop = FALSE], c(2, 3), sum); bp <- colSums(bg[, support, drop = FALSE])
+  mu <- numeric(K); mu[support] <- solve(Ap + lam_mu * mean(diag(Ap)) * diag(k), bp)
   delta <- matrix(0, G, K)
   for (g in seq_len(G)) {
-    Aq <- Ag[g, support, support]; tr <- sum(diag(Aq)) / k
-    delta[g, support] <- solve(Aq + lam_g * tr * diag(k), bg[g, support] - Aq %*% mu[support])
+    Ags <- Ag[g, support, support]
+    delta[g, support] <- solve(Ags + lam_g * mean(diag(Ags)) * diag(k), bg[g, support] - Ags %*% mu[support])
   }
   list(mu = mu, delta = delta, xi = sweep(delta, 2, mu, "+"), support = support)
 }
 
-## ---- Step 6: simulate (roll the equation forward) ----------------------------------
-## For a library that only depends on the weather the "ODE solution" is a running total:
-##   y(t) = y0 + sum_{s < t} Theta(s) %*% xi        -> no ODE solver needed.
-## xi: genotype x term matrix (unscaled coefficients); Theta_y: day x term for one year.
-simulate <- function(xi, Theta_y, y0) {
-  inc <- Theta_y[-nrow(Theta_y), , drop = FALSE] %*% t(xi)         # (days-1) x genotype increments
-  sweep(rbind(0, apply(inc, 2, cumsum)), 2, y0, "+")               # day x genotype
-}
-
-## ---- Step 7: leave-one-year-out cross-validation -------------------------------------
-## fitter: any function fit(A, b, ...) returning list(coef, support); extra arguments are passed on.
-## support_k: number of library terms kept (used to pick the shared support by `fitter`).
-## Fit on a set of years: pooled fit by `fitter` chooses the support, then shared + genotype deviations.
-## Returns coefficients in the original (unscaled) units of the library.
+## Fit on a set of seasons: `fitter` selects the shared support on the pooled problem,
+## fit_hier gives mu and the deviations. Coefficients are returned in library units.
 fit_years <- function(gram, years, fitter = fit_ssr, k = 12, lam_mu = 1e-4, lam_g = 0.01, ...) {
-  K <- dim(gram$A)[3]; st <- sum_years(gram, years); ntot <- sum(st$n)
-  Apool <- apply(st$A, c(2, 3), sum); bpool <- colSums(st$b); s <- sqrt(diag(Apool) / ntot)
-  Ag <- st$A / ntot; for (i in 1:K) for (j in 1:K) Ag[, i, j] <- st$A[, i, j] / ntot / (s[i] * s[j])
-  bg <- sweep(st$b / ntot, 2, s, "/")
-  sp <- fitter(Apool / ntot / outer(s, s), bpool / ntot / s, k = k, ...)$support
-  h <- fit_hier(Ag, bg, sp, lam_mu, lam_g)
-  list(xi = sweep(h$xi, 2, s, "/"), mu = h$mu / s, support = sp, names = gram$names)
+  st <- sum_years(gram, years); n <- sum(st$n)
+  Apool <- apply(st$A, c(2, 3), sum); bpool <- colSums(st$b); s <- sqrt(diag(Apool) / n)
+  Ag <- sweep(sweep(st$A, 2, s, "/"), 3, s, "/") / n
+  bg <- sweep(st$b, 2, s, "/") / n
+  support <- fitter(Apool / n / outer(s, s), bpool / n / s, k = k, ...)$support
+  h <- fit_hier(Ag, bg, support, lam_mu, lam_g)
+  list(xi = sweep(h$xi, 2, s, "/"), mu = h$mu / s, support = support, names = gram$names)
 }
 
+## ---- Simulation: for a weather-only library the solution is a cumulative sum -------------
+## xi: genotype x term; Theta_y: day x term (one season); y0: initial biomass per genotype.
+simulate <- function(xi, Theta_y, y0) {
+  increments <- Theta_y[-nrow(Theta_y), , drop = FALSE] %*% t(xi)        # (days - 1) x genotype
+  sweep(rbind(0, apply(increments, 2, cumsum)), 2, y0, "+")              # day x genotype
+}
+
+## ---- Validation: leave-one-year-out ---------------------------------------------------------
+## Each season is predicted by a model fitted to the others, starting from their mean initial biomass.
 cv_blocked <- function(Theta, tr, gram, fitter = fit_ssr, k = 12, lam_mu = 1e-4, lam_g = 0.01, ...) {
-  ny <- length(tr$years); G <- length(tr$genotypes); nd <- dim(Theta)[2]
-  P <- array(NA_real_, c(G, ny, nd)); S_all <- vector("list", ny)
-  for (yv in seq_len(ny)) {
-    train <- setdiff(seq_len(ny), yv); f <- fit_years(gram, train, fitter, k, lam_mu, lam_g, ...)
-    y0 <- apply(tr$Y[, train, 1, drop = FALSE], 1, mean)                        # initial biomass: mean of training years
-    P[, yv, ] <- t(simulate(f$xi, Theta[yv, , ], y0)); S_all[[yv]] <- f$support
+  ny <- length(tr$years); P <- array(NA_real_, c(dim(tr$Y)[1], ny, dim(Theta)[2])); support <- vector("list", ny)
+  for (v in seq_len(ny)) {
+    train <- setdiff(seq_len(ny), v)
+    f <- fit_years(gram, train, fitter, k, lam_mu, lam_g, ...)
+    P[, v, ] <- t(simulate(f$xi, Theta[v, , ], rowMeans(tr$Y[, train, 1])))
+    support[[v]] <- f$support
   }
-  list(pred = P, support = S_all)
+  list(pred = P, support = support)
 }
 
-## ---- Step 8: metrics ------------------------------------------------------------------
-## RMSE over the whole trajectory (days up to maturity), at a fixed day, and at maturity.
+## RMSE over whole trajectories, on a fixed day (array index; 99 is day 113 after sowing), and at maturity.
 evaluate <- function(P, tr, fixed_day = 99) {
-  G <- dim(P)[1]; ny <- dim(P)[2]; se <- 0; cnt <- 0; fin <- numeric(0)
-  for (g in seq_len(G)) for (y in seq_len(ny)) {
-    n <- tr$nend[g, y]; d <- 2:(n + 1)                      # day index 1..n (day 0 is the given start)
-    se <- se + sum((P[g, y, d] - tr$Y[g, y, d])^2); cnt <- cnt + length(d)
-    fin <- c(fin, P[g, y, n + 1] - tr$Y[g, y, n + 1])
+  se <- 0; cnt <- 0; final <- numeric(0)
+  for (g in seq_len(dim(P)[1])) for (y in seq_len(dim(P)[2])) {
+    n <- tr$nend[g, y]; d <- 2:(n + 1)                         # index 1 is the given initial value
+    se <- se + sum((P[g, y, d] - tr$Y[g, y, d])^2); cnt <- cnt + n
+    final <- c(final, P[g, y, n + 1] - tr$Y[g, y, n + 1])
   }
-  c(trajectory_rmse = sqrt(se / cnt), fixed_day_rmse = sqrt(mean((P[, , fixed_day] - tr$Y[, , fixed_day])^2, na.rm = TRUE)),
-    maturity_rmse = sqrt(mean(fin^2)))
+  c(trajectory_rmse = sqrt(se / cnt),
+    fixed_day_rmse  = sqrt(mean((P[, , fixed_day] - tr$Y[, , fixed_day])^2, na.rm = TRUE)),
+    maturity_rmse   = sqrt(mean(final^2)))
 }
 
-## ---- Step 9: reading the model --------------------------------------------------------
-## Standardised drivers on the days that actually occur in the data (rows = year x day).
+## RMSE on each day, over all genotype-season pairs that are still growing on that day.
+rmse_by_day <- function(P, tr) {
+  sapply(2:dim(P)[3], function(d) sqrt(mean((P[, , d] - tr$Y[, , d])^2, na.rm = TRUE)))
+}
+
+## Baseline without weather: each trajectory is the mean curve of the same genotype in the other
+## seasons (held at its last value once all other seasons have ended), with the true initial value.
+lookup_trajectory <- function(tr) {
+  P <- array(NA_real_, dim(tr$Y))
+  for (y in seq_along(tr$years)) {
+    m <- apply(tr$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)
+    P[, y, ] <- t(apply(m, 1, function(v) replace(v, is.nan(v), tail(v[!is.nan(v)], 1))))
+    P[, y, 1] <- tr$Y[, y, 1]
+  }
+  P
+}
+
+## ---- Interpretation: accumulated local effects (ALE) --------------------------------------
+## Standardised drivers on the days that occur in the data (rows = season x day).
 observed_points <- function(drv, tr) {
-  Z <- NULL
-  for (y in seq_along(drv$years)) {
-    n <- max(tr$nend[, y]); Z <- rbind(Z, matrix(drv$U[y, 1:n, ], n, dimnames = list(NULL, drv$drivers)))
-  }
-  Z
+  do.call(rbind, lapply(seq_along(drv$years), function(y) {
+    n <- max(tr$nend[, y]); matrix(drv$U[y, 1:n, ], n, dimnames = list(NULL, drv$drivers))
+  }))
 }
-## Accumulated local effects (ALE) of driver j on the growth rate. We move only driver j across a
-## small interval around each observed value and average the change in the rate. Unlike partial
-## dependence it never asks the model about weather combinations that do not occur.
-## rate: function(Z) -> growth rate for an n x d matrix of standardised drivers.
+## Effect of driver j on the growth rate. Within each of K quantile intervals, driver j is moved
+## from the lower to the upper end while the other drivers keep their observed values; the mean
+## changes in the rate are accumulated and centred. rate: function(Z) -> growth rate.
 ale_curve <- function(rate, Z, j, K = 24) {
-  e <- unique(quantile(Z[, j], seq(0, 1, length.out = K + 1))); nb_ <- length(e) - 1
-  b <- pmin(pmax(findInterval(Z[, j], e), 1), nb_)
-  Zu <- Z; Zl <- Z; Zu[, j] <- e[b + 1]; Zl[, j] <- e[b]
-  d <- rate(Zu) - rate(Zl); nb <- tabulate(b, nb_)
-  md <- vapply(split(d, factor(b, levels = seq_len(nb_))), sum, 0) / pmax(nb, 1)
-  A <- c(0, cumsum(md)); mid <- (A[-1] + A[-length(A)]) / 2
-  data.frame(z = e, effect = A - sum(mid * nb) / sum(nb))
+  edge <- unique(quantile(Z[, j], seq(0, 1, length.out = K + 1))); nb <- length(edge) - 1
+  bin  <- pmin(pmax(findInterval(Z[, j], edge), 1), nb)
+  Zu <- Zl <- Z; Zu[, j] <- edge[bin + 1]; Zl[, j] <- edge[bin]
+  count  <- tabulate(bin, nb)
+  change <- vapply(split(rate(Zu) - rate(Zl), factor(bin, levels = seq_len(nb))), sum, 0) / pmax(count, 1)
+  A <- c(0, cumsum(change)); mid <- (A[-1] + A[-length(A)]) / 2
+  data.frame(z = edge, effect = A - sum(mid * count) / sum(count))
 }
 
-## ---- Step 10: ranking genotypes on a fixed day ----------------------------------------------
-## Pd, Yd: genotype x year matrices (predicted and APSIM biomass on the same day).
-## For every year: Spearman correlation between predicted and true ranking of the genotypes,
-## and the overlap of the predicted and true top 10 %.
+## ---- Genotype ranking ---------------------------------------------------------------------
+## Pd, Yd: genotype x season matrices of predicted and APSIM biomass on one day. For each season:
+## Spearman correlation of the two rankings and overlap of the predicted and true top 10 %.
 rank_scores <- function(Pd, Yd, top = 0.1) {
   k <- max(1, round(top * nrow(Yd)))
   do.call(rbind, lapply(seq_len(ncol(Yd)), function(y) data.frame(
     year = y, rho = cor(Pd[, y], Yd[, y], method = "spearman"),
     top = length(intersect(order(-Pd[, y])[1:k], order(-Yd[, y])[1:k])) / k)))
 }
-## Baseline that uses no weather at all: the genotype's mean on that day in the other years.
+## Baseline without weather: the genotype's mean on that day in the other seasons.
 lookup_baseline <- function(Yd) (rowSums(Yd) - Yd) / (ncol(Yd) - 1)

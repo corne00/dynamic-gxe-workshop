@@ -14,6 +14,8 @@ $$
 
 Because the state appears on the right-hand side, the solution requires numerical integration. The regression remains linear in the coefficients, so steps 3 and 4 apply unchanged, but errors in the states feed back into the rates.
 
+![Fitting and prediction for three model variants: weather only (driving-only), coupled with leaf area index $L$ predicted by its own equation, and driven by measured $L$.](images/model_variants.png){width=100%}
+
 ## Physical terms in the library
 
 A candidate term for biomass growth is the light intercepted by the canopy, $I = 1 - \exp(-0.5\,L)$, multiplied by radiation: $\mathrm{d}B/\mathrm{d}t \ni I \cdot \mathrm{RAD}$.

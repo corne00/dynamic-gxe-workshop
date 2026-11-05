@@ -43,9 +43,8 @@ Each grey line is one season; the blue line is the mean over seasons.
 
 ```{r}
 #| fig-height: 3.4
-w <- reshape(wx, direction = "long", varying = c("TT", "DL", "RAW", "RAD"), v.names = "value", timevar = "driver",
-             times = c("TT", "DL", "RAW", "RAD"), idvar = c("year", "das"))
-w$driver <- factor(w$driver, c("TT", "DL", "RAW", "RAD"))
+drivers <- c("TT", "DL", "RAW", "RAD")
+w <- data.frame(year = wx$year, das = wx$das, driver = factor(rep(drivers, each = nrow(wx)), drivers), value = unlist(wx[drivers]))
 m <- aggregate(value ~ driver + das, w, mean)
 ggplot(w, aes(das, value)) + geom_line(aes(group = year), colour = dgxe[["grey"]], linewidth = 0.25, alpha = 0.6) +
   geom_line(data = m, colour = dgxe[["blue"]], linewidth = 0.8) + facet_wrap(~driver, scales = "free_y") +

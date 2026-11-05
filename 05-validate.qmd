@@ -5,13 +5,6 @@ title: "5 · Validation"
 ```{r}
 #| echo: false
 library(ggplot2); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
-fit_lasso <- function(A, b, lambda = 0.01, iters = 2000, ...) {
-  xi <- numeric(length(b))
-  for (it in seq_len(iters)) { old <- xi
-    for (j in seq_along(b)) { r <- b[j] - sum(A[j, -j] * xi[-j]); xi[j] <- sign(r) * max(abs(r) - lambda, 0) / A[j, j] }
-    if (max(abs(xi - old)) < 1e-9) break }
-  list(coef = xi, support = which(xi != 0))
-}
 ```
 
 ## Simulation
@@ -29,22 +22,21 @@ show_fun("simulate")
 The model is fitted to all seasons except 1998 (shared support of 12 terms, plus genotype deviations) and used to predict 1998 from its weather. All 199 genotypes are shown.
 
 ```{r}
-yv    <- match(1998, tr$years)
-train <- setdiff(seq_along(tr$years), yv)
+v     <- match(1998, tr$years)
+train <- setdiff(seq_along(tr$years), v)
 f     <- fit_years(gram, train, fit_ssr, k = 12)
-y0    <- apply(tr$Y[, train, 1], 1, mean)
-pred  <- simulate(f$xi, Theta[yv, , ], y0)
+pred  <- simulate(f$xi, Theta[v, , ], y0 = rowMeans(tr$Y[, train, 1]))     # day x genotype
 f$names[f$support]
 ```
 
 ```{r}
 #| fig-height: 3
-rows <- lapply(seq_along(tr$genotypes), function(g) { n <- tr$nend[g, yv] + 1
-  data.frame(genotype = g, das = 1:n + tr$das0 - 1, APSIM = tr$Y[g, yv, 1:n], Model = pred[1:n, g]) })
-d <- do.call(rbind, rows)
-d <- reshape(d, direction = "long", varying = c("APSIM", "Model"), v.names = "biomass", timevar = "source", times = c("APSIM", "Model"), idvar = c("genotype", "das"))
-d$source <- factor(d$source, c("APSIM", "Model"))
-ggplot(d, aes(das, biomass, group = genotype)) + geom_line(aes(colour = source), linewidth = 0.2, alpha = 0.3) + facet_wrap(~source) +
+obs  <- tr$Y[, v, ]                                                         # genotype x day
+idx  <- which(!is.na(obs), arr.ind = TRUE)
+base <- data.frame(genotype = idx[, 1], das = idx[, 2] + tr$das0 - 1)
+d <- rbind(cbind(base, source = "APSIM", biomass = obs[idx]),
+           cbind(base, source = "Model", biomass = t(pred)[idx]))
+ggplot(d, aes(das, biomass, group = genotype, colour = source)) + geom_line(linewidth = 0.2, alpha = 0.3) + facet_wrap(~source) +
   scale_colour_manual(values = unname(dgxe[c("grey", "blue")])) + labs(x = "days after sowing", y = "biomass (t/ha)") + theme_dgxe()
 ```
 
@@ -60,7 +52,7 @@ show_fun("cv_blocked", "evaluate")
 
 ```{r}
 system.time(cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12))
-round(evaluate(cv$pred, tr, fixed_day = 99), 3)       # index 99 = day 113 after sowing
+round(evaluate(cv$pred, tr), 3)                       # fixed day: index 99 = day 113 after sowing
 ```
 
 Predicted against APSIM biomass at day 113, all genotype-season pairs:
@@ -69,10 +61,11 @@ Predicted against APSIM biomass at day 113, all genotype-season pairs:
 #| fig-height: 3.6
 #| fig-width: 4.2
 d <- data.frame(obs = as.vector(tr$Y[, , 99]), pred = as.vector(cv$pred[, , 99]))
-r <- sqrt(mean((d$obs - d$pred)^2, na.rm = TRUE))
-ggplot(d, aes(obs, pred)) + geom_abline(colour = "#9CA3AF", linewidth = 0.4) + geom_point(colour = dgxe[["blue"]], size = 0.5, alpha = 0.2) +
-  annotate("text", x = min(d$obs, na.rm = TRUE), y = max(d$pred, na.rm = TRUE), label = sprintf("RMSE %.2f t/ha", r), hjust = 0, vjust = 1, size = 3.4) +
-  coord_equal() + labs(x = "APSIM biomass (t/ha)", y = "predicted biomass (t/ha)") + theme_dgxe()
+ggplot(d, aes(obs, pred)) + geom_abline(colour = dgxe[["grey"]], linewidth = 0.4) +
+  geom_point(colour = dgxe[["blue"]], size = 0.5, alpha = 0.2) + coord_equal() +
+  annotate("text", x = min(d$obs), y = max(d$pred), hjust = 0, vjust = 1, size = 3.4,
+           label = sprintf("RMSE %.2f t/ha", sqrt(mean((d$obs - d$pred)^2)))) +
+  labs(x = "APSIM biomass (t/ha)", y = "predicted biomass (t/ha)") + theme_dgxe()
 ```
 
 ## Baseline without weather
@@ -80,27 +73,26 @@ ggplot(d, aes(obs, pred)) + geom_abline(colour = "#9CA3AF", linewidth = 0.4) + g
 As a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons.
 
 ```{r}
-base <- array(NA_real_, dim(tr$Y))
-for (y in seq_along(tr$years)) base[, y, ] <- apply(tr$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)
-for (g in 1:dim(base)[1]) for (y in 1:dim(base)[2]) {
-  v <- base[g, y, ]; ok <- which(!is.nan(v)); v[is.nan(v)] <- v[max(ok)]      # hold the last mean after the last other season ends
-  base[g, y, ] <- v; base[g, y, 1] <- tr$Y[g, y, 1]
-}
-round(evaluate(base, tr, fixed_day = 99), 3)
+#| echo: false
+#| results: asis
+show_fun("lookup_trajectory")
+```
+
+```{r}
+base <- lookup_trajectory(tr)
+round(evaluate(base, tr), 3)
 ```
 
 The error as a function of time:
 
 ```{r}
 #| fig-height: 3
-err <- function(P) sapply(2:dim(P)[3], function(d) { ok <- !is.na(tr$Y[, , d]); sqrt(mean((P[, , d][ok] - tr$Y[, , d][ok])^2)) })
-nd <- dim(tr$Y)[3] - 1
-d <- data.frame(das = rep(2:(nd + 1) + tr$das0 - 1, 2), rmse = c(err(cv$pred), err(base)),
-                model = factor(rep(c("model", "no-weather baseline"), each = nd), c("model", "no-weather baseline")))
-d <- d[d$das <= 15 + 140, ]
-ggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +
-  scale_colour_manual(values = unname(dgxe[c("blue", "burgundy")])) +
-  annotate("text", x = 40, y = 0.5, label = "model", colour = dgxe[["blue"]], size = 3.4, hjust = 0) +
+days <- 2:dim(tr$Y)[3] + tr$das0 - 1
+d <- rbind(data.frame(das = days, rmse = rmse_by_day(cv$pred, tr), model = "model"),
+           data.frame(das = days, rmse = rmse_by_day(base, tr),    model = "baseline"))
+ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +
+  scale_colour_manual(values = unname(dgxe[c("burgundy", "blue")])) +
+  annotate("text", x = 40, y = 0.5, label = "model",    colour = dgxe[["blue"]],     size = 3.4, hjust = 0) +
   annotate("text", x = 40, y = 0.2, label = "baseline", colour = dgxe[["burgundy"]], size = 3.4, hjust = 0) +
   labs(x = "days after sowing", y = "held-out RMSE (t/ha)") + theme_dgxe()
 ```
@@ -110,13 +102,14 @@ ggplot(d, aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +
 All methods share the signature `fit(A, b, ...)`, so they can be compared in one loop.
 
 ```{r}
-methods <- list(OLS = list(fit_ols), ridge = list(fit_ridge, lambda = 0.01),
-                SSR_8 = list(fit_ssr, k = 8), SSR_12 = list(fit_ssr, k = 12), lasso = list(fit_lasso, lambda = 2e-4))
-res <- cached("swap_methods.rds", do.call(rbind, lapply(names(methods), function(nm) {
-  m <- methods[[nm]]; cv <- do.call(cv_blocked, c(list(Theta, tr, gram, m[[1]]), m[-1]))
-  data.frame(method = nm, t(round(evaluate(cv$pred, tr), 3))) })))
-res <- rbind(res, data.frame(method = "baseline", t(round(evaluate(base, tr), 3))))
-res
+methods <- list(OLS    = list(fitter = fit_ols),
+                ridge  = list(fitter = fit_ridge, lambda = 0.01),
+                SSR_8  = list(fitter = fit_ssr, k = 8),
+                SSR_12 = list(fitter = fit_ssr, k = 12),
+                lasso  = list(fitter = fit_lasso, lambda = 2e-4))
+compare <- function(m) round(evaluate(do.call(cv_blocked, c(list(Theta, tr, gram), m))$pred, tr), 3)
+res <- cached("swap_methods.rds", data.frame(method = names(methods), t(sapply(methods, compare)), row.names = NULL))
+rbind(res, data.frame(method = "baseline", t(round(evaluate(base, tr), 3))))
 ```
 
 ## Number of terms
@@ -126,7 +119,8 @@ With the 13-term library the sparse model has little room to reduce complexity. 
 ```{r}
 Theta2 <- make_library(drv, pairs = TRUE); gram2 <- gram_stats(Theta2, tr)
 ks <- c(6, 8, 12, 16, 20, 30, 37)
-rk <- cached("rmse_vs_k_pairs.rds", data.frame(k = ks, rmse = sapply(ks, function(k) evaluate(cv_blocked(Theta2, tr, gram2, fit_ssr, k = k)$pred, tr)[1])))
+rk <- cached("rmse_vs_k_pairs.rds", data.frame(k = ks, rmse = sapply(ks, function(k)
+  evaluate(cv_blocked(Theta2, tr, gram2, fit_ssr, k = k)$pred, tr)[[1]])))
 ```
 
 ```{r}

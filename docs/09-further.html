@@ -267,6 +267,12 @@ window.Quarto = {
 \frac{\mathrm{d}L}{\mathrm{d}t} = f_L(L, B, u_t), \qquad \frac{\mathrm{d}B}{\mathrm{d}t} = f_B(L, B, u_t),
 \]</span></p>
 <p>Because the state appears on the right-hand side, the solution requires numerical integration. The regression remains linear in the coefficients, so steps 3 and 4 apply unchanged, but errors in the states feed back into the rates.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/model_variants.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Fitting and prediction for three model variants: weather only (driving-only), coupled with leaf area index <span class="math inline">\(L\)</span> predicted by its own equation, and driven by measured <span class="math inline">\(L\)</span>.</figcaption>
+</figure>
+</div>
 </section>
 <section id="physical-terms-in-the-library" class="level2">
 <h2 class="anchored" data-anchor-id="physical-terms-in-the-library">Physical terms in the library</h2>
