@@ -14,3 +14,10 @@ theme_dgxe <- function(base_size = 10.5) {
       panel.spacing = ggplot2::unit(1.1, "lines"),
       plot.margin = ggplot2::margin(4, 8, 4, 4))
 }
+
+scale_colour_dgxe <- function(...) {
+  ggplot2::scale_colour_manual(values = unname(dgxe[c(...)]))
+}
+legend_top <- function() {
+  ggplot2::theme(legend.position = "top", legend.title = ggplot2::element_blank())
+}

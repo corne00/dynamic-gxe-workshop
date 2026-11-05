@@ -4,7 +4,8 @@ title: "7 · Genotypes"
 
 ```{r}
 #| echo: false
-library(ggplot2); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
+source("R/page_setup.R")
+source("R/pipeline.R")
 ```
 
 ## Shared coefficients and deviations
@@ -28,13 +29,21 @@ Growth rate along the mean weather path for each genotype (grey) and for the sha
 
 ```{r}
 #| fig-height: 2.8
-Tbar <- apply(Theta, c(2, 3), mean)
-das  <- seq_len(nrow(Tbar)) + tr$das0 - 1
-d <- data.frame(das = rep(das, nrow(f$xi)), genotype = rep(seq_len(nrow(f$xi)), each = length(das)), rate = as.vector(Tbar %*% t(f$xi)))
-m <- data.frame(das = das, rate = as.vector(Tbar %*% f$mu))
-d <- d[d$das <= 15 + 140, ]; m <- m[m$das <= 15 + 140, ]
-ggplot(d, aes(das, rate)) + geom_line(aes(group = genotype), colour = dgxe[["grey"]], linewidth = 0.2, alpha = 0.4) +
-  geom_line(data = m, colour = dgxe[["blue"]], linewidth = 0.9) + labs(x = "days after sowing", y = "growth rate (t/ha/day)") + theme_dgxe()
+Tbar <- apply(Theta, c(2, 3), mean)               # library on the mean weather
+das <- 1:nrow(Tbar) + tr$das0 - 1
+G <- nrow(f$xi)
+d <- data.frame(das = rep(das, G), genotype = rep(1:G, each = length(das)),
+                rate = as.vector(Tbar %*% t(f$xi)))
+shared <- data.frame(das = das, rate = as.vector(Tbar %*% f$mu))
+d <- d[d$das <= 155, ]
+shared <- shared[shared$das <= 155, ]
+
+ggplot(d, aes(das, rate)) +
+  geom_line(aes(group = genotype), colour = dgxe[["grey"]],
+            linewidth = 0.2, alpha = 0.4) +
+  geom_line(data = shared, colour = dgxe[["blue"]], linewidth = 0.9) +
+  labs(x = "days after sowing", y = "growth rate (t/ha/day)") +
+  theme_dgxe()
 ```
 
 ## Ranking genotypes
@@ -48,21 +57,38 @@ show_fun("rank_scores", "lookup_baseline")
 ```
 
 ```{r}
-cv   <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)
-days <- c(35, 50, 63, 84, 99)                         # day index; das = index + 14
-out  <- do.call(rbind, lapply(days, function(d) {
-  Yd <- tr$Y[, , d]; a <- rank_scores(cv$pred[, , d], Yd); b <- rank_scores(lookup_baseline(Yd), Yd)
+cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)
+days <- c(35, 50, 63, 84, 99)       # day index (das = index + 14)
+
+scores <- function(d) {
+  Yd <- tr$Y[, , d]
+  model <- rank_scores(cv$pred[, , d], Yd)
+  baseline <- rank_scores(lookup_baseline(Yd), Yd)
   data.frame(das = d + tr$das0 - 1, method = c("model", "baseline"),
-             rho = c(mean(a$rho), mean(b$rho)), top10 = c(mean(a$top), mean(b$top))) }))
-out$rho <- round(out$rho, 3); out$top10 <- round(out$top10, 3); out
+             rho = c(mean(model$rho), mean(baseline$rho)),
+             top10 = c(mean(model$top), mean(baseline$top)))
+}
+out <- do.call(rbind, lapply(days, scores))
+out[, c("rho", "top10")] <- round(out[, c("rho", "top10")], 3)
+out
 ```
 
 ```{r}
 #| fig-height: 2.8
-o <- reshape(out, direction = "long", varying = c("rho", "top10"), v.names = "score", timevar = "metric", times = c("Spearman correlation", "top-10% overlap"), idvar = c("das", "method"))
-ggplot(o, aes(das, score, colour = method)) + geom_line(linewidth = 0.8) + geom_point(size = 1.8) + facet_wrap(~metric, scales = "free_y") +
-  scale_colour_manual(values = unname(dgxe[c("burgundy", "blue")])) + labs(x = "days after sowing", y = NULL) + theme_dgxe() +
-  theme(legend.position = "top", legend.title = element_blank())
+long <- rbind(
+  data.frame(out[c("das", "method")], metric = "Spearman correlation",
+             score = out$rho),
+  data.frame(out[c("das", "method")], metric = "top-10% overlap",
+             score = out$top10))
+
+ggplot(long, aes(das, score, colour = method)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 1.8) +
+  facet_wrap(~metric, scales = "free_y") +
+  scale_colour_dgxe("burgundy", "blue") +
+  labs(x = "days after sowing", y = NULL) +
+  theme_dgxe() +
+  legend_top()
 ```
 
 Early in the season the baseline ranks genotypes better, since the order is determined mainly by genotype and not yet by weather. From about day 100 the model is better. These results are for genotypes included in fitting and seasons that were held out.

@@ -4,8 +4,9 @@ title: "3 · Library and design matrix"
 
 ```{r}
 #| echo: false
-library(ggplot2); source("R/functions.R"); source("R/theme_dgxe.R"); source("R/show.R")
-wx <- read.csv("data/narrabri_weather.csv"); traj <- read.csv("data/narrabri_biomass.csv.gz")
+source("R/page_setup.R")
+wx <- read.csv("data/narrabri_weather.csv")
+traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
 ## Drivers
@@ -85,8 +86,11 @@ show_fun("gram_stats")
 
 ```{r}
 gram <- gram_stats(Theta, tr)
-A <- apply(gram$A[1:3, , , ], c(3, 4), sum); b <- apply(gram$b[1:3, , ], 3, sum)
-c(max_diff_A = max(abs(A - crossprod(des$X))), max_diff_b = max(abs(b - crossprod(des$X, des$z))))
+A <- apply(gram$A[1:3, , , ], c(3, 4), sum)
+b <- apply(gram$b[1:3, , ], 3, sum)
+
+max(abs(A - crossprod(des$X)))
+max(abs(b - crossprod(des$X, des$z)))
 max(abs(solve(A, b) - coef(lm(des$z ~ des$X - 1))))
 ```
 

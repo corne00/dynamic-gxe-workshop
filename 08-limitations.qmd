@@ -4,7 +4,9 @@ title: "8 · Limitations"
 
 ```{r}
 #| echo: false
-library(ggplot2); library(splines); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
+library(splines)
+source("R/page_setup.R")
+source("R/pipeline.R")
 ```
 
 ## Choice of library
@@ -20,21 +22,33 @@ As an alternative library, a B-spline basis in thermal time with the other three
 
 ```{r}
 B <- bs(as.vector(drv$U[, , "TT"]), df = 6)
-Theta_spl <- array(cbind(1, B, matrix(drv$U[, , -1], ncol = 3)), c(dim(drv$U)[1:2], 10))
+others <- matrix(drv$U[, , -1], ncol = 3)             # DL, RAW, RAD
+Theta_spl <- array(cbind(1, B, others), c(dim(drv$U)[1:2], 10))
 cv_spl <- cv_blocked(Theta_spl, trl, gram_stats(Theta_spl, trl), fit_ols)
 
 base <- lookup_trajectory(trl)
-rbind(`cubic polynomial` = evaluate(cv_poly$pred, trl), `B-spline in TT` = evaluate(cv_spl$pred, trl), baseline = evaluate(base, trl)) |> round(3)
+round(rbind(`cubic polynomial` = evaluate(cv_poly$pred, trl),
+            `B-spline in TT` = evaluate(cv_spl$pred, trl),
+            baseline = evaluate(base, trl)), 3)
 ```
 
 ```{r}
 #| fig-height: 2.8
-models <- c("cubic polynomial", "B-spline in TT", "baseline"); days <- 2:dim(trl$Y)[3] + trl$das0 - 1
-d <- do.call(rbind, Map(function(P, m) data.frame(das = days, rmse = rmse_by_day(P, trl), model = m),
-                        list(cv_poly$pred, cv_spl$pred, base), models))
-ggplot(d[d$das <= 155, ], aes(das, rmse, colour = factor(model, models))) + geom_line(linewidth = 0.8) +
-  scale_colour_manual(values = unname(dgxe[c("burgundy", "blue", "grey")])) +
-  labs(x = "days after sowing", y = "held-out LAI RMSE") + theme_dgxe() + theme(legend.position = "top", legend.title = element_blank())
+models <- c("cubic polynomial", "B-spline in TT", "baseline")
+days <- 2:dim(trl$Y)[3] + trl$das0 - 1
+rmse <- function(P, model) {
+  data.frame(das = days, rmse = rmse_by_day(P, trl), model = model)
+}
+d <- rbind(rmse(cv_poly$pred, models[1]), rmse(cv_spl$pred, models[2]),
+           rmse(base, models[3]))
+d$model <- factor(d$model, models)
+
+ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) +
+  geom_line(linewidth = 0.8) +
+  scale_colour_dgxe("burgundy", "blue", "grey") +
+  labs(x = "days after sowing", y = "held-out LAI RMSE") +
+  theme_dgxe() +
+  legend_top()
 ```
 
 A cubic polynomial in the standardised drivers cannot represent the rise and fall of LAI, and its error is larger than that of the baseline throughout. The spline library is considerably better, but over whole trajectories the baseline remains slightly more accurate (0.47 against 0.53); the spline model is better at day 113 and at maturity. When the model is inaccurate, the library should be examined before the fitting method.
@@ -44,14 +58,19 @@ A cubic polynomial in the standardised drivers cannot represent the rise and fal
 Thermal time and day length have a correlation of 0.97. Fitting the same model separately to odd and even seasons gives different coefficients but nearly identical growth rates.
 
 ```{r}
-fit_half <- function(years) fit_years(gram, which(tr$years %in% years), fit_ols)$mu
-mu_odd <- fit_half(tr$years[tr$years %% 2 == 1]); mu_even <- fit_half(tr$years[tr$years %% 2 == 0])
-coefs <- cbind(odd = mu_odd, even = mu_even); rownames(coefs) <- gram$names
-round(coefs[c("TT", "TT^2", "DL", "DL^2"), ], 3)
+odd <- tr$years[tr$years %% 2 == 1]
+even <- tr$years[tr$years %% 2 == 0]
+fit_half <- function(years) {
+  fit_years(gram, which(tr$years %in% years), fit_ols)$mu
+}
+mu <- cbind(odd = fit_half(odd), even = fit_half(even))
+rownames(mu) <- gram$names
+round(mu[c("TT", "TT^2", "DL", "DL^2"), ], 3)
 
-Tbar <- apply(Theta, c(2, 3), mean)                      # library along the mean weather path
-rate_odd <- Tbar %*% mu_odd; rate_even <- Tbar %*% mu_even
-c(correlation = cor(rate_odd, rate_even), max_difference = max(abs(rate_odd - rate_even)))
+Tbar <- apply(Theta, c(2, 3), mean)       # library along the mean weather
+rate <- Tbar %*% mu
+c(correlation = cor(rate[, "odd"], rate[, "even"]),
+  max_difference = max(abs(rate[, "odd"] - rate[, "even"])))
 ```
 
 The data determine the combined effect of correlated drivers better than each coefficient, so response curves are preferable to individual coefficients for interpretation.
@@ -62,9 +81,14 @@ The regression is performed on daily increments, whereas the prediction is their
 
 ```{r}
 cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12)
-increment_error <- unlist(lapply(seq_along(tr$genotypes), function(g) lapply(seq_along(tr$years), function(y) {
-  n <- tr$nend[g, y]; diff(cv$pred[g, y, 1:(n + 1)]) - trajectory_xz(Theta, tr, g, y)$z })))
-c(daily_increment_rmse = sqrt(mean(increment_error^2)), trajectory_rmse = evaluate(cv$pred, tr)[[1]])
+increment_error <- function(g, y) {
+  n <- tr$nend[g, y]
+  diff(cv$pred[g, y, 1:(n + 1)]) - trajectory_xz(Theta, tr, g, y)$z
+}
+cells <- expand.grid(g = seq_along(tr$genotypes), y = seq_along(tr$years))
+err <- unlist(Map(increment_error, cells$g, cells$y))
+c(daily_increment_rmse = sqrt(mean(err^2)),
+  trajectory_rmse = evaluate(cv$pred, tr)[[1]])
 ```
 
 For this reason the model is assessed on the simulated trajectory and not on the daily increments.

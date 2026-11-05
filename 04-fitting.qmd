@@ -4,7 +4,8 @@ title: "4 · Fitting"
 
 ```{r}
 #| echo: false
-library(ggplot2); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
+source("R/page_setup.R")
+source("R/pipeline.R")
 ```
 
 ## Pooled normal equations
@@ -30,19 +31,28 @@ show_fun("fit_ols", "fit_ridge", "fit_ssr")
 ```
 
 ```{r}
-fits <- list(OLS   = fit_ols(sc$A, sc$b),
+fits <- list(OLS = fit_ols(sc$A, sc$b),
              ridge = fit_ridge(sc$A, sc$b, lambda = 0.01),
              SSR_8 = fit_ssr(sc$A, sc$b, k = 8))
-coefs <- sapply(fits, `[[`, "coef"); rownames(coefs) <- terms
+coefs <- sapply(fits, `[[`, "coef")
+rownames(coefs) <- terms
 round(coefs, 3)
 ```
 
 ```{r}
 #| fig-height: 3.6
-d <- data.frame(term = factor(rep(terms, 3), rev(terms)), method = factor(rep(names(fits), each = length(terms)), names(fits)), coef = as.vector(coefs))
-ggplot(d, aes(coef, term, colour = method, shape = method)) + geom_vline(xintercept = 0, colour = "#D1D5DB", linewidth = 0.3) +
-  geom_point(size = 2.2, alpha = 0.9) + scale_colour_manual(values = unname(dgxe[c("blue", "grey", "burgundy")])) +
-  labs(x = "coefficient (scaled library)", y = NULL) + theme_dgxe() + theme(legend.position = "top", legend.title = element_blank())
+d <- data.frame(term = factor(rep(terms, 3), rev(terms)),
+                method = factor(rep(names(fits), each = length(terms)),
+                                names(fits)),
+                coef = as.vector(coefs))
+
+ggplot(d, aes(coef, term, colour = method, shape = method)) +
+  geom_vline(xintercept = 0, colour = "#D1D5DB", linewidth = 0.3) +
+  geom_point(size = 2.2, alpha = 0.9) +
+  scale_colour_dgxe("blue", "grey", "burgundy") +
+  labs(x = "coefficient (scaled library)", y = NULL) +
+  theme_dgxe() +
+  legend_top()
 ```
 
 ## Order of elimination
@@ -50,10 +60,13 @@ ggplot(d, aes(coef, term, colour = method, shape = method)) + geom_vline(xinterc
 Sequential thresholding removes one term at a time; the order is the following.
 
 ```{r}
-S <- seq_along(terms); removed <- character(0)
+S <- seq_along(terms)
+removed <- character(0)
 while (length(S) > 1) {
   coef <- solve(sc$A[S, S] + 1e-6 * diag(length(S)), sc$b[S])
-  removed <- c(removed, terms[S[which.min(abs(coef))]]); S <- S[-which.min(abs(coef))]
+  drop <- which.min(abs(coef))
+  removed <- c(removed, terms[S[drop]])
+  S <- S[-drop]
 }
 c(removed, last = terms[S])
 ```

@@ -4,7 +4,8 @@ title: "5 · Validation"
 
 ```{r}
 #| echo: false
-library(ggplot2); source("R/theme_dgxe.R"); source("R/show.R"); source("R/pipeline.R")
+source("R/page_setup.R")
+source("R/pipeline.R")
 ```
 
 ## Simulation
@@ -22,22 +23,28 @@ show_fun("simulate")
 The model is fitted to all seasons except 1998 (shared support of 12 terms, plus genotype deviations) and used to predict 1998 from its weather. All 199 genotypes are shown.
 
 ```{r}
-v     <- match(1998, tr$years)
+v <- match(1998, tr$years)
 train <- setdiff(seq_along(tr$years), v)
-f     <- fit_years(gram, train, fit_ssr, k = 12)
-pred  <- simulate(f$xi, Theta[v, , ], y0 = rowMeans(tr$Y[, train, 1]))     # day x genotype
+f <- fit_years(gram, train, fit_ssr, k = 12)
+y0 <- rowMeans(tr$Y[, train, 1])
+pred <- simulate(f$xi, Theta[v, , ], y0)          # day x genotype
 f$names[f$support]
 ```
 
 ```{r}
 #| fig-height: 3
-obs  <- tr$Y[, v, ]                                                         # genotype x day
-idx  <- which(!is.na(obs), arr.ind = TRUE)
+obs <- tr$Y[, v, ]                                # genotype x day
+idx <- which(!is.na(obs), arr.ind = TRUE)
 base <- data.frame(genotype = idx[, 1], das = idx[, 2] + tr$das0 - 1)
 d <- rbind(cbind(base, source = "APSIM", biomass = obs[idx]),
            cbind(base, source = "Model", biomass = t(pred)[idx]))
-ggplot(d, aes(das, biomass, group = genotype, colour = source)) + geom_line(linewidth = 0.2, alpha = 0.3) + facet_wrap(~source) +
-  scale_colour_manual(values = unname(dgxe[c("grey", "blue")])) + labs(x = "days after sowing", y = "biomass (t/ha)") + theme_dgxe()
+
+ggplot(d, aes(das, biomass, group = genotype, colour = source)) +
+  geom_line(linewidth = 0.2, alpha = 0.3) +
+  facet_wrap(~source) +
+  scale_colour_dgxe("grey", "blue") +
+  labs(x = "days after sowing", y = "biomass (t/ha)") +
+  theme_dgxe()
 ```
 
 ## Leave-one-year-out cross-validation
@@ -52,7 +59,7 @@ show_fun("cv_blocked", "evaluate")
 
 ```{r}
 system.time(cv <- cv_blocked(Theta, tr, gram, fit_ssr, k = 12))
-round(evaluate(cv$pred, tr), 3)                       # fixed day: index 99 = day 113 after sowing
+round(evaluate(cv$pred, tr), 3)       # fixed day: index 99 = day 113
 ```
 
 Predicted against APSIM biomass at day 113, all genotype-season pairs:
@@ -60,12 +67,18 @@ Predicted against APSIM biomass at day 113, all genotype-season pairs:
 ```{r}
 #| fig-height: 3.6
 #| fig-width: 4.2
-d <- data.frame(obs = as.vector(tr$Y[, , 99]), pred = as.vector(cv$pred[, , 99]))
-ggplot(d, aes(obs, pred)) + geom_abline(colour = dgxe[["grey"]], linewidth = 0.4) +
-  geom_point(colour = dgxe[["blue"]], size = 0.5, alpha = 0.2) + coord_equal() +
-  annotate("text", x = min(d$obs), y = max(d$pred), hjust = 0, vjust = 1, size = 3.4,
-           label = sprintf("RMSE %.2f t/ha", sqrt(mean((d$obs - d$pred)^2)))) +
-  labs(x = "APSIM biomass (t/ha)", y = "predicted biomass (t/ha)") + theme_dgxe()
+d <- data.frame(obs = as.vector(tr$Y[, , 99]),
+                pred = as.vector(cv$pred[, , 99]))
+rmse <- sqrt(mean((d$obs - d$pred)^2))
+
+ggplot(d, aes(obs, pred)) +
+  geom_abline(colour = dgxe[["grey"]], linewidth = 0.4) +
+  geom_point(colour = dgxe[["blue"]], size = 0.5, alpha = 0.2) +
+  annotate("text", x = min(d$obs), y = max(d$pred), hjust = 0, vjust = 1,
+           size = 3.4, label = sprintf("RMSE %.2f t/ha", rmse)) +
+  coord_equal() +
+  labs(x = "APSIM biomass (t/ha)", y = "predicted biomass (t/ha)") +
+  theme_dgxe()
 ```
 
 ## Baseline without weather
@@ -88,13 +101,20 @@ The error as a function of time:
 ```{r}
 #| fig-height: 3
 days <- 2:dim(tr$Y)[3] + tr$das0 - 1
-d <- rbind(data.frame(das = days, rmse = rmse_by_day(cv$pred, tr), model = "model"),
-           data.frame(das = days, rmse = rmse_by_day(base, tr),    model = "baseline"))
-ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) + geom_line(linewidth = 0.8) +
-  scale_colour_manual(values = unname(dgxe[c("burgundy", "blue")])) +
-  annotate("text", x = 40, y = 0.5, label = "model",    colour = dgxe[["blue"]],     size = 3.4, hjust = 0) +
-  annotate("text", x = 40, y = 0.2, label = "baseline", colour = dgxe[["burgundy"]], size = 3.4, hjust = 0) +
-  labs(x = "days after sowing", y = "held-out RMSE (t/ha)") + theme_dgxe()
+d <- rbind(data.frame(das = days, rmse = rmse_by_day(cv$pred, tr),
+                      model = "model"),
+           data.frame(das = days, rmse = rmse_by_day(base, tr),
+                      model = "baseline"))
+
+ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) +
+  geom_line(linewidth = 0.8) +
+  scale_colour_dgxe("burgundy", "blue") +
+  annotate("text", x = 40, y = 0.5, label = "model",
+           colour = dgxe[["blue"]], size = 3.4, hjust = 0) +
+  annotate("text", x = 40, y = 0.2, label = "baseline",
+           colour = dgxe[["burgundy"]], size = 3.4, hjust = 0) +
+  labs(x = "days after sowing", y = "held-out RMSE (t/ha)") +
+  theme_dgxe()
 ```
 
 ## Choice of fitting method
@@ -102,14 +122,22 @@ ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) + geom_line(linewidth 
 All methods share the signature `fit(A, b, ...)`, so they can be compared in one loop.
 
 ```{r}
-methods <- list(OLS    = list(fitter = fit_ols),
-                ridge  = list(fitter = fit_ridge, lambda = 0.01),
-                SSR_8  = list(fitter = fit_ssr, k = 8),
+methods <- list(OLS = list(fitter = fit_ols),
+                ridge = list(fitter = fit_ridge, lambda = 0.01),
+                SSR_8 = list(fitter = fit_ssr, k = 8),
                 SSR_12 = list(fitter = fit_ssr, k = 12),
-                lasso  = list(fitter = fit_lasso, lambda = 2e-4))
-compare <- function(m) round(evaluate(do.call(cv_blocked, c(list(Theta, tr, gram), m))$pred, tr), 3)
-res <- cached("swap_methods.rds", data.frame(method = names(methods), t(sapply(methods, compare)), row.names = NULL))
-rbind(res, data.frame(method = "baseline", t(round(evaluate(base, tr), 3))))
+                lasso = list(fitter = fit_lasso, lambda = 2e-4))
+
+compare <- function(m) {
+  cv <- do.call(cv_blocked, c(list(Theta, tr, gram), m))
+  round(evaluate(cv$pred, tr), 3)
+}
+res <- cached("swap_methods.rds", {
+  scores <- t(sapply(methods, compare))
+  data.frame(method = names(methods), scores, row.names = NULL)
+})
+baseline <- data.frame(method = "baseline", t(round(evaluate(base, tr), 3)))
+rbind(res, baseline)
 ```
 
 ## Number of terms
@@ -117,18 +145,30 @@ rbind(res, data.frame(method = "baseline", t(round(evaluate(base, tr), 3))))
 With the 13-term library the sparse model has little room to reduce complexity. Adding products of drivers (`pairs = TRUE`, 37 terms) gives a larger dictionary:
 
 ```{r}
-Theta2 <- make_library(drv, pairs = TRUE); gram2 <- gram_stats(Theta2, tr)
+Theta2 <- make_library(drv, pairs = TRUE)
+gram2 <- gram_stats(Theta2, tr)
+
 ks <- c(6, 8, 12, 16, 20, 30, 37)
-rk <- cached("rmse_vs_k_pairs.rds", data.frame(k = ks, rmse = sapply(ks, function(k)
-  evaluate(cv_blocked(Theta2, tr, gram2, fit_ssr, k = k)$pred, tr)[[1]])))
+rmse_k <- function(k) {
+  evaluate(cv_blocked(Theta2, tr, gram2, fit_ssr, k = k)$pred, tr)[[1]]
+}
+rk <- cached("rmse_vs_k_pairs.rds",
+             data.frame(k = ks, rmse = sapply(ks, rmse_k)))
 ```
 
 ```{r}
 #| fig-height: 2.8
 #| fig-width: 5
 ols13 <- res$trajectory_rmse[res$method == "OLS"]
-ggplot(rk, aes(k, rmse)) + geom_hline(yintercept = ols13, colour = dgxe[["burgundy"]], linewidth = 0.4, linetype = 2) +
-  geom_line(colour = dgxe[["blue"]], linewidth = 0.8) + geom_point(colour = dgxe[["blue"]], size = 2) +
-  annotate("text", x = 37, y = ols13, label = "13-term library, OLS", vjust = -0.7, hjust = 1, colour = dgxe[["burgundy"]], size = 3.3) +
-  labs(x = "number of terms (37-term library)", y = "held-out trajectory RMSE (t/ha)") + theme_dgxe()
+
+ggplot(rk, aes(k, rmse)) +
+  geom_hline(yintercept = ols13, colour = dgxe[["burgundy"]],
+             linewidth = 0.4, linetype = 2) +
+  geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
+  geom_point(colour = dgxe[["blue"]], size = 2) +
+  annotate("text", x = 37, y = ols13, label = "13-term library, OLS",
+           vjust = -0.7, hjust = 1, colour = dgxe[["burgundy"]], size = 3.3) +
+  labs(x = "number of terms (37-term library)",
+       y = "held-out trajectory RMSE (t/ha)") +
+  theme_dgxe()
 ```

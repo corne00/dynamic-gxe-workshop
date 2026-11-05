@@ -4,7 +4,8 @@ title: "1 · Method"
 
 ```{r}
 #| echo: false
-source("R/functions.R"); source("R/show.R")
+source("R/functions.R")
+source("R/show.R")
 ```
 
 ## Overview

@@ -4,7 +4,7 @@ title: "2 · Data"
 
 ```{r}
 #| echo: false
-library(ggplot2); source("R/functions.R"); source("R/theme_dgxe.R"); source("R/show.R")
+source("R/page_setup.R")
 ```
 
 The data are APSIM simulations of wheat at Narrabri (New South Wales): 199 genotypes in 31 seasons (1983 to 2013), daily from 15 days after sowing to maturity. Weather is common to all genotypes within a season and is stored in a separate table.
@@ -32,9 +32,12 @@ Each line is one genotype. The four seasons were chosen to span the range of wea
 
 ```{r}
 #| fig-height: 3
-sel <- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]
-ggplot(sel, aes(das, biomass, group = genotype)) + geom_line(colour = dgxe[["blue"]], linewidth = 0.2, alpha = 0.25) +
-  facet_wrap(~year, nrow = 1) + labs(x = "days after sowing", y = "biomass (t/ha)") + theme_dgxe()
+seasons <- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]
+ggplot(seasons, aes(das, biomass, group = genotype)) +
+  geom_line(colour = dgxe[["blue"]], linewidth = 0.2, alpha = 0.25) +
+  facet_wrap(~year, nrow = 1) +
+  labs(x = "days after sowing", y = "biomass (t/ha)") +
+  theme_dgxe()
 ```
 
 ## Weather
@@ -44,11 +47,18 @@ Each grey line is one season; the blue line is the mean over seasons.
 ```{r}
 #| fig-height: 3.4
 drivers <- c("TT", "DL", "RAW", "RAD")
-w <- data.frame(year = wx$year, das = wx$das, driver = factor(rep(drivers, each = nrow(wx)), drivers), value = unlist(wx[drivers]))
-m <- aggregate(value ~ driver + das, w, mean)
-ggplot(w, aes(das, value)) + geom_line(aes(group = year), colour = dgxe[["grey"]], linewidth = 0.25, alpha = 0.6) +
-  geom_line(data = m, colour = dgxe[["blue"]], linewidth = 0.8) + facet_wrap(~driver, scales = "free_y") +
-  labs(x = "days after sowing", y = NULL) + theme_dgxe()
+w <- data.frame(year = wx$year, das = wx$das,
+                driver = factor(rep(drivers, each = nrow(wx)), drivers),
+                value = unlist(wx[drivers]))
+mean_path <- aggregate(value ~ driver + das, w, mean)
+
+ggplot(w, aes(das, value)) +
+  geom_line(aes(group = year), colour = dgxe[["grey"]],
+            linewidth = 0.25, alpha = 0.6) +
+  geom_line(data = mean_path, colour = dgxe[["blue"]], linewidth = 0.8) +
+  facet_wrap(~driver, scales = "free_y") +
+  labs(x = "days after sowing", y = NULL) +
+  theme_dgxe()
 ```
 
 Trajectories end on different days, since genotypes mature at different times. The end of each trajectory is tracked in step 3.
