@@ -531,6 +531,12 @@ window.Quarto = {
 <section id="design-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="design-matrix">Design matrix</h2>
 <p>For one genotype, the rows of <span class="math inline">\(\mathbf{X}\)</span> are the days of all seasons and the columns are the library terms; <span class="math inline">\(\Delta\mathbf{y}\)</span> holds the daily biomass increments <span class="math inline">\(y_{i+1} - y_i\)</span>.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/concept_design.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>The regression problem for genotype <code>g114</code> (first 30 rows shown; entries of <span class="math inline">\(\mathbf{X}\)</span> and <span class="math inline">\(\Delta\mathbf{y}\)</span> standardised, coloured from negative (red) to positive (blue)). The coefficient vector <span class="math inline">\(\boldsymbol{\xi}\)</span> is sparse: grey cells are removed terms.</figcaption>
+</figure>
+</div>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">

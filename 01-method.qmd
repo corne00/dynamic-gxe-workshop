@@ -22,11 +22,17 @@ $$
 
 where most coefficients $\xi_j$ are expected to be zero. The library contains, for example, a constant, powers of the drivers and of the states, and products of them.
 
+![The driver $u(t)$ (a) enters a response function (b) that gives the growth rate; accumulated over time, the growth rate gives the trajectory of $y$ (c). The two marked days show how a value of $u$ maps to a growth rate and to a position on the trajectory.](images/concept_response.png){width=100%}
+
 In this workshop the state is a single quantity, biomass $y$, and the library contains functions of the drivers only, so that the growth rate depends on the environment but not on the current biomass. Libraries that contain the state are treated in step 9.
 
 ## Regression
 
-Let $y_i = y(t_i)$ be observations on consecutive days. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\dot{y}(t_i)$ for a time step of one day. Collecting the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
+Let $y_i = y(t_i)$ be observations on consecutive days. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\dot{y}(t_i)$ for a time step of one day.
+
+![Observed biomass of one genotype in one season (a), and its daily increments (b). The regression is performed on the increments.](images/concept_increments.png){width=100%}
+
+ Collecting the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
 
 $$
 \Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
@@ -54,6 +60,8 @@ $$
 
 If the library depends on the drivers only, this is a cumulative sum, $y_i = y_0 + \sum_{s<i} \boldsymbol{\theta}(\mathbf{u}_s)^\top \hat{\boldsymbol{\xi}}$, and no ODE solver is needed.
 
+![Season 1998 of one genotype, predicted by a model fitted to the other seasons. The predicted daily growth (a) is accumulated from the initial value $y_0$ (b) and compared with the APSIM trajectory.](images/concept_solution.png){width=100%}
+
 ## Genotypes
 
 Each genotype $g$ has its own coefficient vector $\boldsymbol{\xi}_g$, estimated from the trajectories of that genotype in all available seasons.
@@ -61,6 +69,8 @@ Each genotype $g$ has its own coefficient vector $\boldsymbol{\xi}_g$, estimated
 ## Validation
 
 The independent units are seasons, since the weather of neighbouring days is strongly correlated. The model of a genotype is validated by leave-one-season-out cross-validation: each season is predicted from a model fitted to the other seasons and compared with the observed trajectory.
+
+![Leave-one-season-out cross-validation. Each row is one fit; the season in red is left out and predicted.](images/concept_validation.png){width=85%}
 
 ## Steps
 

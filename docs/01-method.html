@@ -282,11 +282,24 @@ window.Quarto = {
 \dot{y} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 \]</span></p>
 <p>where most coefficients <span class="math inline">\(\xi_j\)</span> are expected to be zero. The library contains, for example, a constant, powers of the drivers and of the states, and products of them.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/concept_response.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>The driver <span class="math inline">\(u(t)\)</span> (a) enters a response function (b) that gives the growth rate; accumulated over time, the growth rate gives the trajectory of <span class="math inline">\(y\)</span> (c). The two marked days show how a value of <span class="math inline">\(u\)</span> maps to a growth rate and to a position on the trajectory.</figcaption>
+</figure>
+</div>
 <p>In this workshop the state is a single quantity, biomass <span class="math inline">\(y\)</span>, and the library contains functions of the drivers only, so that the growth rate depends on the environment but not on the current biomass. Libraries that contain the state are treated in step 9.</p>
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on consecutive days. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\dot{y}(t_i)\)</span> for a time step of one day. Collecting the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on consecutive days. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\dot{y}(t_i)\)</span> for a time step of one day.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/concept_increments.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Observed biomass of one genotype in one season (a), and its daily increments (b). The regression is performed on the increments.</figcaption>
+</figure>
+</div>
+<p>Collecting the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
 <p><span class="math display">\[
 \Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 \]</span></p>
@@ -307,6 +320,12 @@ window.Quarto = {
 y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\boldsymbol{\xi}} .
 \]</span></p>
 <p>If the library depends on the drivers only, this is a cumulative sum, <span class="math inline">\(y_i = y_0 + \sum_{s&lt;i} \boldsymbol{\theta}(\mathbf{u}_s)^\top \hat{\boldsymbol{\xi}}\)</span>, and no ODE solver is needed.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/concept_solution.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Season 1998 of one genotype, predicted by a model fitted to the other seasons. The predicted daily growth (a) is accumulated from the initial value <span class="math inline">\(y_0\)</span> (b) and compared with the APSIM trajectory.</figcaption>
+</figure>
+</div>
 </section>
 <section id="genotypes" class="level2">
 <h2 class="anchored" data-anchor-id="genotypes">Genotypes</h2>
@@ -315,6 +334,12 @@ y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\bolds
 <section id="validation" class="level2">
 <h2 class="anchored" data-anchor-id="validation">Validation</h2>
 <p>The independent units are seasons, since the weather of neighbouring days is strongly correlated. The model of a genotype is validated by leave-one-season-out cross-validation: each season is predicted from a model fitted to the other seasons and compared with the observed trajectory.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/concept_validation.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>Leave-one-season-out cross-validation. Each row is one fit; the season in red is left out and predicted.</figcaption>
+</figure>
+</div>
 </section>
 <section id="steps" class="level2">
 <h2 class="anchored" data-anchor-id="steps">Steps</h2>
