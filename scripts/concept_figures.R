@@ -37,8 +37,7 @@ win <- (i - 3):(i + 4)                            # days shown in the zoom
 z <- d[win, ]
 pad <- 0.06 * diff(range(z$y))
 p1 <- ggplot(d, aes(das, y)) +
-  geom_line(colour = grey, linewidth = 0.6) +
-  geom_point(colour = blue, size = 0.8) +
+  geom_line(colour = blue, linewidth = 0.7) +
   annotate("rect", xmin = min(z$das) - 1, xmax = max(z$das) + 1,
            ymin = min(z$y) - pad - 0.3, ymax = max(z$y) + pad + 0.3,
            fill = NA, colour = bur, linewidth = 0.5) +
@@ -65,55 +64,83 @@ p2 <- ggplot(z, aes(das, y)) +
        x = "days after sowing", y = "t/ha") +
   concept()
 p3 <- ggplot(d[-nrow(d), ], aes(das, dy)) +
-  geom_col(fill = blue, width = 0.8) +
-  geom_col(data = d[i, ], fill = bur, width = 1.8) +
+  geom_point(colour = blue, size = 1) +
+  geom_point(data = d[i, ], colour = bur, size = 2.6) +
+  annotate("label", x = d$das[i] + 2,
+           y = d$dy[i] + 0.1 * diff(range(d$dy, na.rm = TRUE)),
+           label = "Delta*y[i]", parse = TRUE, colour = bur, size = 3.6,
+           fill = "white", label.size = 0, hjust = 0) +
   labs(title = "(c) Daily increments", x = "days after sowing",
        y = "t/ha/day") +
   concept()
 save(list(p1, p2, p3), "concept_increments.png", 9, 2.5)
 
-## 2. Solution: the fitted equation integrated over the season -----------------------
+## 2. Solution: the fitted equation integrated over the season ---------------
 P <- readRDS("precomputed/cv_stlsq.rds")
 pred <- P[g, v, 1:(tr$nend[g, v] + 1)]
 e <- data.frame(das = d$das, rate = c(diff(pred), NA), pred = pred, obs = yy)
-q1 <- ggplot(e[-nrow(e), ], aes(das, rate)) +
-  geom_col(fill = blue, width = 0.8) +
-  labs(title = expression("(a) Predicted growth " * theta(u[i])^T * hat(xi)),
+e <- e[-nrow(e), ]
+tm <- 100                                         # day shown in the figure
+shade <- e[e$das <= tm, ]
+q1 <- ggplot(e, aes(das, rate)) +
+  geom_area(data = shade, fill = "#B8CBDC") +
+  geom_line(colour = blue, linewidth = 0.7) +
+  geom_vline(xintercept = tm, colour = bur, linewidth = 0.4,
+             linetype = "22") +
+  annotate("text", x = tm - 6, y = max(e$rate) * 0.35, label = "area",
+           colour = "#1F2937", size = 3.4, hjust = 1) +
+  labs(title = "(a) Predicted growth rate",
        x = "days after sowing", y = "t/ha/day") +
   concept()
+yt <- e$pred[e$das == tm]
 q2 <- ggplot(e, aes(das)) +
-  geom_line(aes(y = obs, colour = "APSIM"), linewidth = 0.9) +
-  geom_line(aes(y = pred, colour = "cumulative sum"), linewidth = 0.9) +
-  scale_colour_manual(values = c(APSIM = grey, `cumulative sum` = blue)) +
+  geom_line(aes(y = obs), colour = grey, linewidth = 1) +
+  geom_line(aes(y = pred), colour = blue, linewidth = 0.9) +
+  geom_vline(xintercept = tm, colour = bur, linewidth = 0.4,
+             linetype = "22") +
   annotate("point", x = e$das[1], y = e$pred[1], colour = bur, size = 2.4) +
   annotate("text", x = e$das[1] + 3, y = e$pred[1] + 1.2, label = "y[0]",
-           parse = TRUE, colour = bur, size = 3.4) +
-  labs(title = expression("(b) " * y[i + 1] == y[i] + theta(u[i])^T * hat(xi)),
+           parse = TRUE, colour = bur, size = 3.6) +
+  annotate("point", x = tm, y = yt, colour = bur, size = 2.4) +
+  annotate("text", x = tm - 3, y = yt + 0.9, label = "y(t)", parse = TRUE,
+           colour = bur, size = 3.6, hjust = 1) +
+  annotate("text", x = max(e$das), y = e$obs[nrow(e)] - 0.9, label = "APSIM",
+           colour = "#6B7280", size = 3.4, hjust = 1) +
+  annotate("text", x = max(e$das), y = e$pred[nrow(e)] + 0.9, label = "model",
+           colour = blue, size = 3.4, hjust = 1) +
+  labs(title = expression("(b) Biomass " * y(t) == y[0] + "area"),
        x = "days after sowing", y = "biomass (t/ha)") +
-  concept() +
-  theme(legend.position = c(0.28, 0.85), legend.title = element_blank(),
-        legend.key.height = unit(3.5, "mm"))
-save(list(q1, q2), "concept_solution.png", 8, 2.4)
+  concept()
+save(list(q1, q2), "concept_solution.png", 8, 2.5)
 
 ## 3. Leave-one-season-out validation ----------------------------------------
-n <- length(tr$years)
-folds <- c(1, 2, 3, 31)
-cv <- do.call(rbind, lapply(seq_along(folds), function(k) {
-  data.frame(fold = k, season = 1:n,
-             role = ifelse(1:n == folds[k], "predicted", "fitted"))
-}))
-cv$fold <- factor(cv$fold, 4:1, labels = paste("fit", rev(folds)))
-pv <- ggplot(cv, aes(season, fold, fill = role)) +
-  geom_tile(colour = "white", linewidth = 0.5, height = 0.8) +
-  scale_fill_manual(values = c(fitted = "#B8CBDC", predicted = bur)) +
-  scale_x_continuous(breaks = c(1, 10, 20, 31),
-                     labels = tr$years[c(1, 10, 20, 31)],
-                     expand = c(0.01, 0)) +
+## Seasons 1, 2, 3 and 31; dots stand for the seasons in between.
+shown <- c(1, 2, 3, 5)                            # grid positions
+cv <- expand.grid(col = shown, row = shown)
+cv$role <- factor(ifelse(cv$col == cv$row, "left out and predicted",
+                         "used for fitting"),
+                  c("used for fitting", "left out and predicted"))
+dots <- rbind(
+  data.frame(x = 4 + rep(c(-0.2, 0, 0.2), 4), y = rep(shown, each = 3)),
+  data.frame(x = rep(shown, each = 3), y = 4 + rep(c(-0.2, 0, 0.2), 4)),
+  data.frame(x = 4 + rep(c(-0.2, 0, 0.2), 1), y = 4 + c(-0.2, 0, 0.2)))
+dots$y <- dots$y
+pv <- ggplot() +
+  geom_tile(data = cv, aes(col, row, fill = role), colour = "white",
+            linewidth = 1, width = 1, height = 1) +
+  geom_point(data = dots, aes(x, y), colour = "#6B7280", size = 0.7) +
+  scale_fill_manual(values = c(`used for fitting` = "#B8CBDC",
+                               `left out and predicted` = bur)) +
+  scale_x_continuous(breaks = shown, labels = c("1", "2", "3", "31"),
+                     expand = c(0.02, 0)) +
+  scale_y_reverse(breaks = shown, labels = c("fit 1", "fit 2", "fit 3",
+                                             "fit 31"),
+                  expand = c(0.02, 0)) +
   labs(x = "season", y = NULL) +
   theme_dgxe() +
-  theme(legend.position = "top", legend.title = element_blank(),
-        axis.line.y = element_blank(), axis.ticks.y = element_blank())
-save(pv, "concept_validation.png", 7, 1.9)
+  theme(legend.position = "right", legend.title = element_blank(),
+        axis.line = element_blank(), axis.ticks = element_blank())
+save(pv, "concept_validation.png", 6.5, 2.6)
 
 ## 4. Regression on the library: dy ~ X xi (genotype g114) ------------------
 dd <- make_design(Theta, tr, "g114")

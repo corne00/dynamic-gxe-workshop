@@ -11,26 +11,11 @@ cd dynamic-gxe-workshop
 
 `R/functions.R` contains all functions used in the workshop, and `python/dgxe.py` the same functions in Python. `data/` contains the Narrabri weather and the biomass trajectories.
 
-## Language
-
-Every code block is available in R and in Python. Selecting a language in any of the tabs switches all code on the page, and the choice is remembered. Printed output and figures are produced by the R code; the Python code gives the same numbers (coefficients and errors agree to three decimals, up to the convergence tolerance of the penalised methods).
-
-## Packages
-
-R 4.1 or later. The fitting methods use `glmnet` and `leaps`, the solver `deSolve`; the interpretation page uses `iml` (with `yaImpute`); the figures use `ggplot2`.
-
-```r
-install.packages(c("glmnet", "leaps", "deSolve", "ggplot2", "iml"))
-```
-
-Python 3.9 or later with `numpy`, `pandas`, `scipy`, `scikit-learn` and `matplotlib`; the interpretation page also uses `PyALE`. Python is run from the repository root with `python/` on the path.
-
-```sh
-pip install numpy pandas scipy scikit-learn matplotlib PyALE
-export PYTHONPATH=python
-```
-
 ## Test run
+
+::: {.panel-tabset group="language"}
+
+## R
 
 ```r
 source("R/functions.R")
@@ -46,6 +31,8 @@ P <- cross_validate(Theta, tr, fit_ols, genotypes = tr$genotypes[1:20])
 round(evaluate(P, tr), 3)
 ```
 
+## Python
+
 ```python
 import pandas as pd
 from dgxe import *
@@ -60,5 +47,7 @@ tr = make_trajectories(traj, drv)
 P = cross_validate(Theta, tr, fit_ols, tr.genotypes[:20])
 print(evaluate(P, tr))
 ```
+
+:::
 
 The result is the root-mean-square error (t/ha) of 20 genotypes on seasons that were left out of the fit; it should take a few seconds.

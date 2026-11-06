@@ -83,6 +83,6 @@ format:
       text: |
         <script src="js/d3.min.js?v=7"></script>
         <script src="js/plot.umd.min.js?v=06"></script>
-        <script src="js/controls.js?v=20261105b"></script>
+        <script src="js/controls.js?v=20261106c"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">

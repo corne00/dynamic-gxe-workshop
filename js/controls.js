@@ -75,6 +75,91 @@ function select(label, options, start = options[0]) {
   return control(label, input, (v) => v, () => "");
 }
 
+// Row of buttons, one per option; the value of the control is the selected one.
+function buttons(label, options, start = options[0]) {
+  const box = document.createElement("div");
+  box.className = "dgxe-control";
+  const text = document.createElement("label");
+  text.textContent = label;
+  const group = document.createElement("div");
+  group.className = "dgxe-buttons";
+  const items = options.map((o) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = o;
+    b.addEventListener("click", () => {
+      box.value = o;
+      items.forEach((x) => x.classList.toggle("active", x === b));
+      box.dispatchEvent(new Event("input", {bubbles: true}));
+    });
+    group.append(b);
+    return b;
+  });
+  box.append(text, group);
+  box.value = start;
+  items[options.indexOf(start)].classList.add("active");
+  return box;
+}
+
+// Optimum and upper limit sliders for several genotypes, with a reset button.
+// specs: [{name, colour, optimum, limit}]; the value is a copy of the specs.
+function genotypeControls(specs) {
+  const box = document.createElement("div");
+  box.className = "dgxe-genotypes";
+  const state = specs.map((s) => ({...s}));
+  const rows = specs.map((spec, i) => {
+    const row = document.createElement("div");
+    row.className = "dgxe-genotype";
+    const name = document.createElement("span");
+    name.className = "dgxe-name";
+    name.style.color = spec.colour;
+    name.textContent = spec.name;
+    const add = (label, key, min, max, step) => {
+      const pair = document.createElement("span");
+      pair.className = "dgxe-pair";
+      const input = Object.assign(document.createElement("input"),
+                                  {type: "range", min, max, step});
+      input.style.accentColor = spec.colour;
+      const out = document.createElement("output");
+      const text = document.createElement("label");
+      text.textContent = label;
+      const set = (v) => {
+        input.value = v;
+        out.textContent = (+v).toFixed(step < 1 ? 1 : 0) + " \u00B0C";
+      };
+      input.addEventListener("input", () => {
+        state[i][key] = +input.value;
+        set(input.value);
+        box.value = state.map((s) => ({...s}));
+        box.dispatchEvent(new Event("input", {bubbles: true}));
+      });
+      pair.append(text, input, out);
+      row.append(pair);
+      return () => set(spec[key]);
+    };
+    row.prepend(name);
+    const resets = [add("optimum", "optimum", 8, 24, 0.5),
+                    add("upper limit", "limit", 28, 41, 1)];
+    resets.forEach((r) => r());
+    box.append(row);
+    return resets;
+  });
+  const reset = document.createElement("button");
+  reset.type = "button";
+  reset.className = "dgxe-reset";
+  reset.textContent = "Reset";
+  reset.addEventListener("click", () => {
+    state.forEach((s, i) => Object.assign(s, {optimum: specs[i].optimum,
+                                              limit: specs[i].limit}));
+    rows.forEach((r) => r.forEach((f) => f()));
+    box.value = state.map((s) => ({...s}));
+    box.dispatchEvent(new Event("input", {bubbles: true}));
+  });
+  box.append(reset);
+  box.value = state.map((s) => ({...s}));
+  return box;
+}
+
 // Remove the copy buttons of hidden code cells (outside the language tabs).
 window.addEventListener("load", () => {
   for (const box of document.querySelectorAll(".code-copy-outer-scaffold")) {

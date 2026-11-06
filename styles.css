@@ -13,3 +13,34 @@ figure img, .cell-output-display img { max-width: 100%; }
 .interactive-note { font-size: .85rem; color: #6B7280; }
 .dgxe-play { border: 1px solid #9CA3AF; border-radius: 3px; background: white;
   color: #014E81; width: 2rem; cursor: pointer; padding: 0; }
+
+/* season buttons and genotype controls */
+.dgxe-buttons { display: flex; gap: .4rem; }
+.dgxe-buttons button, .dgxe-reset { padding: .15rem .8rem; cursor: pointer;
+  border: 1px solid #9CA3AF; border-radius: 3px; background: white;
+  color: #374151; font: inherit; font-size: .9rem; }
+.dgxe-buttons button.active { background: #014E81; border-color: #014E81;
+  color: white; }
+.dgxe-genotypes { margin: .4rem 0 .2rem; font-size: .9rem; }
+.dgxe-genotype { display: flex; flex-wrap: wrap; align-items: center;
+  gap: .3rem .8rem; margin: .2rem 0; }
+.dgxe-name { min-width: 8rem; font-weight: 500; }
+.dgxe-pair { display: inline-flex; align-items: center; gap: .5rem; }
+.dgxe-pair label { min-width: 4.3rem; color: #374151; }
+.dgxe-pair input[type=range] { width: 6.5rem; }
+.dgxe-pair output { min-width: 3.2rem; color: #374151; }
+.dgxe-reset { margin-top: .3rem; }
+
+/* step diagram */
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: .6rem 1.4rem;
+  margin: 1rem 0; }
+.flow a { position: relative; flex: 1 1 6.5rem; max-width: 10rem; display: flex;
+  flex-direction: column; gap: .15rem; padding: .55rem .7rem;
+  border: 1px solid #D1D5DB; border-radius: 4px; background: white;
+  color: #1F2937; text-decoration: none; font-size: .85rem; }
+.flow a:hover { border-color: #8B1E3F; }
+.flow a:not(:last-child)::after { content: "\2192"; position: absolute;
+  right: -1.15rem; top: 50%; transform: translateY(-50%); color: #6B7280; }
+.flow .num { color: #8B1E3F; font-weight: 600; }
+.flow .title { font-weight: 600; }
+.flow .io { color: #6B7280; font-size: .8rem; }
