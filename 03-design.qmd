@@ -147,7 +147,7 @@ dim(tr$Y)
 
 For one genotype, the rows of $\mathbf{X}$ are the days of all seasons and the columns are the library terms; $\Delta\mathbf{y}$ holds the daily biomass increments $y_{i+1} - y_i$.
 
-![The regression problem for genotype `g114` (first 30 rows shown; entries of $\mathbf{X}$ and $\Delta\mathbf{y}$ standardised, coloured from negative (red) to positive (blue)). The coefficient vector $\boldsymbol{\xi}$ is sparse: grey cells are removed terms.](images/concept_design.png){width=100%}
+![The regression problem for genotype `g114` as a table: three mid-season days from each of the seasons 1, 2 and 31. The highlighted row is one equation, $\Delta y_i = \sum_j X_{ij}\xi_j$. The columns of $\mathbf{X}$ are standardised; the coefficients $\boldsymbol{\xi}$ (from STLSQ, step 4) are zero for removed terms.](images/concept_design.png){width=100%}
 
 ```{r}
 #| echo: false

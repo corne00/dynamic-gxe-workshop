@@ -60,25 +60,77 @@ d = make_design(Theta, tr, "g001")
 d <- make_design(Theta, tr, "g001")
 ```
 
-## Least squares and penalised regression
+## Methods
 
-Ordinary least squares uses `lm.fit` (Python: `numpy.linalg.lstsq`). Ridge, lasso and elastic net are provided by `glmnet` (Python: scikit-learn `ElasticNet` for lasso and elastic net and a closed form for ridge, with the penalty scaled as in `glmnet`); they differ in the penalty (squared, absolute value, and a mixture of both). The lasso sets coefficients to zero.
+Each tab describes one method and shows its code.
 
-```{r}
-#| echo: false
-#| results: asis
-show_fun("fit_ols", "fit_glmnet", "fit_ridge", "fit_lasso", "fit_enet")
-```
+::: {.panel-tabset}
 
-## Subset selection and thresholding
+## Least squares
 
-Best-subset selection and backward elimination keep $k$ terms (`leaps`; in Python the residual sums of squares are computed directly from the Gram matrix). Sequential thresholded least squares (STLSQ) is the algorithm of the original SINDy method: fit, remove the terms whose scaled coefficient is below a threshold, and refit on the remaining terms.
+Ordinary least squares minimises the residual sum of squares, $\hat{\boldsymbol{\xi}} = \arg\min \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2$. It has no hyperparameter and no term is removed. R: `lm.fit`; Python: `numpy.linalg.lstsq`.
 
 ```{r}
 #| echo: false
 #| results: asis
-show_fun("fit_subset", "fit_stlsq")
+show_fun("fit_ols", level = 3)
 ```
+
+## Ridge
+
+Ridge regression adds a squared penalty, $\lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2 + \lambda \lVert\boldsymbol{\xi}\rVert_2^2$, which shrinks the coefficients of correlated terms but removes none. The hyperparameter is $\lambda$. R: `glmnet`; Python: closed form, with the penalty scaled as in `glmnet`.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_glmnet", "fit_ridge", level = 3)
+```
+
+## Lasso
+
+The lasso penalises the absolute values, $\lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2 + \lambda \lVert\boldsymbol{\xi}\rVert_1$, and sets coefficients to zero: it selects terms. The hyperparameter is $\lambda$. R: `glmnet`; Python: scikit-learn `ElasticNet` with the penalty scaled as in `glmnet`.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_glmnet", "fit_lasso", level = 3)
+```
+
+## Elastic net
+
+The elastic net mixes both penalties (here in equal parts) and keeps groups of correlated terms together more readily than the lasso. The hyperparameter is $\lambda$. Implementation as for the lasso.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_glmnet", "fit_enet", level = 3)
+```
+
+## Best subset
+
+Best-subset selection finds the $k$ terms with the smallest residual sum of squares, $\min \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2$ subject to at most $k$ non-zero coefficients. With $K = 12$ terms all subsets can be searched (R: `leaps`; Python: residual sums of squares from the Gram matrix). The hyperparameter is $k$.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_subset", level = 3)
+```
+
+## Backward elimination
+
+Backward elimination starts from all terms and repeatedly removes the term whose removal increases the residual sum of squares least, until $k$ terms remain. It is the same function as best subset with `method = "backward"`, and is much cheaper for large libraries. The hyperparameter is $k$.
+
+## STLSQ
+
+Sequential thresholded least squares is the algorithm of the original SINDy method: fit by least squares, remove the terms whose scaled coefficient (coefficient times the standard deviation of the term, relative to that of the increments) is below a threshold, and refit on the remaining terms until no term is removed. The hyperparameter is the threshold.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_stlsq", level = 3)
+```
+
+:::
 
 ## Comparison
 
@@ -171,7 +223,7 @@ The coefficients of correlated terms are not determined individually (powers of 
 
 ## Exploring a method
 
-Each method has one hyperparameter: the threshold of STLSQ, the penalty $\lambda$ of ridge, lasso and elastic net, or the number of terms $k$ of subset selection. The left panel shows the scaled coefficients of `g001` for the chosen setting, and the right panel the held-out trajectory error (20 genotypes) for all settings of the method.
+Each method has one hyperparameter: the threshold of STLSQ, the penalty $\lambda$ of ridge, lasso and elastic net, or the number of terms $k$ of subset selection. The left panel shows the scaled coefficients of the selected genotype for the chosen setting. The right panel shows the held-out trajectory error for all settings of the method, as the mean over the same 20 genotypes. The terms that are retained differ between genotypes, so a change of setting can leave the coefficients of one genotype unchanged and still change the error: select other genotypes to see this.
 
 ```{ojs}
 //| echo: false
@@ -180,6 +232,7 @@ Plot = window.Plot
 hyper = FileAttachment("data/interactive/hyper.json").json()
 viewof method = select("Method", Object.keys(hyper.methods), "STLSQ")
 spec = hyper.methods[method]
+viewof genotype = select("Genotype", hyper.genotypes, "g001")
 viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2), v => (+v).toPrecision(2))
 ```
 
@@ -187,9 +240,10 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
 //| echo: false
 {
   const all = Object.values(hyper.methods);
-  const reach = d3.max(all.flatMap(m => m.effect.flat().map(Math.abs)));
+  const reach = d3.max(all.flatMap(m => m.effect.flat(2).map(Math.abs)));
   const rmse = [d3.min(all.flatMap(m => m.rmse)), 0.8];   // cap: very large penalties are off scale
-  const rows = hyper.terms.map((term, i) => ({term, effect: spec.effect[step][i]}));
+  const g = hyper.genotypes.indexOf(genotype);
+  const rows = hyper.terms.map((term, i) => ({term, effect: spec.effect[step][g][i]}));
   const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
   const scale = spec.param === "terms" ? "linear" : "log";
   const coefficients = Plot.plot({
@@ -203,13 +257,13 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
   const error = Plot.plot({
     width: 340, height: 300,
     x: {type: scale, label: spec.param, tickFormat: ".2~g"},
-    y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE (t/ha)"},
+    y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE, mean of 20 genotypes (t/ha)"},
     marks: [Plot.line(curve, {x: "value", y: "rmse", stroke: "#9CA3AF", clip: true}),
             Plot.dot(curve, {x: "value", y: "rmse", fill: "#9CA3AF", r: 3, clip: true}),
             Plot.dot([curve[step]], {x: "value", y: "rmse", fill: "#8B1E3F", r: 6, clip: true})]
   });
   return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${coefficients}${error}</div>
-    <p class="interactive-note">${spec.nterms[step]} of ${hyper.terms.length} terms retained.</p>`;
+    <p class="interactive-note">${genotype}: ${spec.nterms[step][g]} of ${hyper.terms.length} terms retained; mean over the ${hyper.genotypes.length} genotypes: ${d3.mean(spec.nterms[step]).toFixed(1)}.</p>`;
 }
 ```
 

@@ -142,43 +142,164 @@ pv <- ggplot() +
         axis.line = element_blank(), axis.ticks = element_blank())
 save(pv, "concept_validation.png", 6.5, 2.6)
 
-## 4. Regression on the library: dy ~ X xi (genotype g114) ------------------
+## 4. Regression on the library: dy = X xi (genotype g114, as a table) -------
 dd <- make_design(Theta, tr, "g114")
 xi <- fit_stlsq(dd$X, dd$dy)
-rows <- 1:30
-Xs <- scale(dd$X[rows, ])
-k <- ncol(Xs)
-tiles <- data.frame(row = rep(rows, k), col = rep(seq_len(k), each = length(rows)),
-                    v = as.vector(Xs))
-dyd <- data.frame(row = rows, v = dd$dy[rows] / sd(dd$dy[rows]))
-xid <- data.frame(row = seq_len(k) * length(rows) / k, v = xi[-1])
-xid$h <- length(rows) / k
-x0 <- 3 + k + 3                                   # position of xi
-fillscale <- scale_fill_gradient2(low = bur, mid = "white", high = blue,
-                                  limits = c(-3, 3), oob = scales::squish,
-                                  na.value = "#F3F4F6", guide = "none")
-labs_x <- data.frame(x = seq_len(k) + 2, label = colnames(dd$X))
+first <- cumsum(c(1, table(factor(dd$season))))[c(1, 2, 31)]  # first row of seasons 1, 2, 31
+blocks <- lapply(1:3, function(s) first[s] + 70 + 0:2)   # mid-season days
+ypos <- unlist(lapply(1:3, function(s) (s - 1) * 4 + 1:3))
+rows <- unlist(blocks)
+k <- ncol(dd$X)
+xcol <- 2.4 + rep(0:3, each = 3) * 3.35 + rep(0:2, 4) * 1.05
+cells <- data.frame(
+  x = rep(xcol, each = length(rows)), y = rep(ypos, k),
+  label = sub("^-(0\\.0+)$", "\\1", sprintf("%.2f", as.vector(dd$X[rows, ]))))
+dycells <- data.frame(x = 0, y = ypos, label = sprintf("%.2f", dd$dy[rows]))
+xicells <- data.frame(x = 2.4 + 4 * 3.35 + 0.9, y = (seq_len(k) - 0.5) * 11 / k + 0.5,
+                      label = ifelse(xi[-1] == 0, "0", sub("^-(0\\.0+)$", "\\1", sprintf("%.2f", xi[-1]))),
+                      zero = xi[-1] == 0)
+hi <- 2                                           # highlighted row of block 1
+box <- function(x, y, w, h, fill = "#E8EEF4", colour = "white", lw = 0.6) {
+  geom_rect(data = data.frame(x = x, y = y), aes(xmin = x - w / 2,
+            xmax = x + w / 2, ymin = y - h / 2, ymax = y + h / 2),
+            fill = fill, colour = colour, linewidth = lw)
+}
+heads <- data.frame(x = xcol, label = colnames(dd$X))
+groups <- data.frame(x = 2.4 + (0:3) * 3.35 + 1.05, label = c("TT", "DL", "RAW", "RAD"))
+dots <- function(x, y) {                          # three vertical dots
+  p <- expand.grid(i = c(-0.25, 0, 0.25), k = seq_along(x))
+  geom_point(data = data.frame(x = x[p$k], y = y + p$i), aes(x, y),
+             size = 0.6, colour = "#6B7280")
+}
 pd <- ggplot() +
-  geom_tile(data = dyd, aes(0, row, fill = v), colour = "white", width = 0.95,
-            linewidth = 0.2) +
-  geom_tile(data = tiles, aes(col + 2, row, fill = v), colour = "white",
-            linewidth = 0.2) +
-  geom_tile(data = xid, aes(x0, row, fill = ifelse(v == 0, NA, v / max(abs(v)) * 3)),
-            height = xid$h[1] * 0.95, width = 0.95, colour = "white") +
-  annotate("text", x = 1, y = 15.5, label = "''%~~%''", parse = TRUE,
-           size = 6) +
-  annotate("text", x = k + 3.5, y = 15.5, label = "''%*%''", parse = TRUE,
+  box(rep(0, 9), ypos, 1.4, 0.92) +
+  box(rep(xcol, each = 9), rep(ypos, k), 1.0, 0.92) +
+  box(rep(xicells$x[1], k), xicells$y, 1.5, 11 / k * 0.92,
+      fill = ifelse(xicells$zero, "#F3F4F6", "#EBD3DA")) +
+  geom_rect(data = data.frame(y = ypos[hi]),
+            aes(xmin = -0.8, xmax = 2.4 + 3 * 3.35 + 2.55, ymin = y - 0.5,
+                ymax = y + 0.5), fill = NA, colour = bur, linewidth = 0.6) +
+  geom_text(data = dycells, aes(x, y, label = label), size = 2.5,
+            colour = "#1F2937") +
+  geom_text(data = data.frame(x = rep(xcol, each = 9), y = rep(ypos, k),
+                              label = cells$label),
+            aes(x, y, label = label), size = 2.2, colour = "#1F2937") +
+  geom_text(data = xicells, aes(x, y, label = label), size = 2.5,
+            colour = ifelse(xicells$zero, "#9CA3AF", bur)) +
+  dots(c(0, xcol), 4) + dots(c(0, xcol), 8) +
+  annotate("text", x = -1.3, y = c(2, 6, 10), label = c("season 1", "season 2",
+           "season 31"), angle = 90, size = 2.8, colour = "#6B7280") +
+  annotate("text", x = 1.2, y = 6, label = "''%~~%''", parse = TRUE,
            size = 5) +
-  annotate("text", x = c(0, 2 + (k + 1) / 2, x0), y = -1.8, parse = TRUE,
-           label = c("Delta*bold(y)", "bold(X)", "bold(xi)"), size = 4.4) +
-  annotate("text", x = c(0, 2 + (k + 1) / 2, x0), y = -4, size = 3,
-           colour = "#6B7280",
-           label = c("increments", "library terms", "coefficients")) +
-  geom_text(data = labs_x, aes(x, 31.4, label = label), angle = 90,
-            hjust = 1, size = 2.6, colour = "#6B7280") +
+  annotate("text", x = 2.4 + 4 * 3.35 + 0.1 - 0.15, y = 6,
+           label = "''%*%''", parse = TRUE, size = 4.5) +
+  geom_text(data = heads, aes(x, -0.1, label = label), parse = TRUE,
+            size = 2.8, colour = "#374151") +
+  annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -1.6,
+           parse = TRUE, label = c("Delta*bold(y)", "bold(X)", "bold(xi)"),
+           size = 4.4) +
+  annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -2.7,
+           size = 3, colour = "#6B7280",
+           label = c("increments", "library terms (standardised)",
+                     "coefficients")) +
+  annotate("text", x = 2.4 + 1.5 * 3.35 + 1.05, y = 12.3,
+           label = "'row i:'~Delta*y[i] == sum(X[ij]*xi[j], j == 1, K)",
+           parse = TRUE, size = 3.3, colour = bur) +
   scale_y_reverse() +
-  fillscale +
-  coord_cartesian(clip = "off", ylim = c(37, -5)) +
+  coord_cartesian(clip = "off", ylim = c(12.8, -3.2), xlim = c(-1.6, 17.6)) +
   theme_void() +
   theme(plot.margin = margin(4, 4, 4, 4))
-save(pd, "concept_design.png", 8, 3.4)
+save(pd, "concept_design.png", 7.4, 3.5)
+
+## 5. The data at a glance: weather, one season, one genotype ----------------
+v <- match(1998, tr$years)
+g0 <- spread_genotypes(tr)
+gm <- match(g0[2], tr$genotypes)
+traj_long <- function(A, idx) {
+  do.call(rbind, lapply(idx, function(k) {
+    y <- A(k)
+    data.frame(id = k, das = seq_along(y) + tr$das0 - 1, y = y)
+  }))
+}
+season_rows <- traj_long(function(k) {
+  y <- tr$Y[k, v, ]; y[!is.na(y)]
+}, seq_along(tr$genotypes))
+genotype_rows <- traj_long(function(k) {
+  y <- tr$Y[gm, k, ]; y[!is.na(y)]
+}, seq_along(tr$years))
+w98 <- wx[wx$year == 1998, ]
+data_theme <- theme_dgxe(10) +
+  theme(plot.title = element_text(hjust = 0, size = 10, colour = "#1F2937"))
+d1 <- ggplot(w98, aes(das)) +
+  geom_ribbon(aes(ymin = Tmin, ymax = Tmax), fill = "#B8CBDC") +
+  geom_line(aes(y = Tmax), colour = blue, linewidth = 0.4) +
+  geom_line(aes(y = Tmin), colour = blue, linewidth = 0.4) +
+  labs(title = "(a) Weather, season 1998", x = "days after sowing",
+       y = expression("temperature range (" * degree * "C)")) +
+  data_theme
+three_rows <- season_rows[season_rows$id %in% match(g0, tr$genotypes), ]
+d2 <- ggplot(season_rows, aes(das, y, group = id)) +
+  geom_line(colour = grey, linewidth = 0.2) +
+  geom_line(data = three_rows, aes(colour = factor(id)), linewidth = 0.8) +
+  scale_colour_manual(values = c(bur, cyan, blue)) +
+  labs(title = "(b) 199 genotypes, season 1998", x = "days after sowing",
+       y = "biomass (t/ha)") +
+  data_theme
+d3 <- ggplot(genotype_rows, aes(das, y, group = id)) +
+  geom_line(colour = grey, linewidth = 0.3) +
+  geom_line(data = genotype_rows[genotype_rows$id == v, ], colour = cyan,
+            linewidth = 0.8) +
+  labs(title = paste0("(c) Genotype ", g0[2], ", 31 seasons"),
+       x = "days after sowing", y = "biomass (t/ha)") +
+  data_theme
+save(list(d1, d2, d3), "concept_data.png", 8, 2.6)
+
+## 6. Covariates constructed from the weather variables -----------------------
+raw <- data.frame(name = c("Tmin", "Tmax", "Rain", "RAD", "VP", "DL"),
+                  y = 6:1)
+cov <- data.frame(name = c("TT", "RAW", "RAD", "DL"), y = c(5.5, 3.6, 2, 1),
+                  desc = c("thermal time", "relative available water",
+                           "radiation", "day length"))
+edges <- rbind(
+  data.frame(from = c("Tmin", "Tmax"), to = "TT"),
+  data.frame(from = c("Tmin", "Tmax", "Rain", "RAD", "VP"), to = "RAW"),
+  data.frame(from = "RAD", to = "RAD"), data.frame(from = "DL", to = "DL"))
+xr <- 0; xc <- 7.2; wb <- 1.3; wc <- 5.8
+edges$x1 <- xr + wb / 2
+edges$y1 <- raw$y[match(edges$from, raw$name)]
+edges$x2 <- xc - wc / 2
+edges$y2 <- cov$y[match(edges$to, cov$name)]
+pc <- ggplot() +
+  geom_segment(data = edges, aes(x = x1, y = y1, xend = x2, yend = y2),
+               colour = "#9CA3AF", linewidth = 0.4,
+               arrow = arrow(length = unit(1.6, "mm"), type = "closed")) +
+  geom_rect(data = raw, aes(xmin = xr - wb / 2, xmax = xr + wb / 2,
+                            ymin = y - 0.32, ymax = y + 0.32),
+            fill = "#E8EEF4", colour = NA) +
+  geom_text(data = raw, aes(xr, y, label = name), size = 3.6,
+            colour = "#1F2937") +
+  geom_rect(data = cov, aes(xmin = xc - wc / 2, xmax = xc + wc / 2,
+                            ymin = y - 0.42, ymax = y + 0.42),
+            fill = "white", colour = blue, linewidth = 0.5) +
+  geom_text(data = cov, aes(xc - wc / 2 + 0.15, y + 0.12, label = name),
+            hjust = 0, size = 3.8, fontface = "bold", colour = blue) +
+  geom_text(data = cov, aes(xc - wc / 2 + 0.15, y - 0.17, label = desc),
+            hjust = 0, size = 3, colour = "#6B7280") +
+  annotate("text", x = xc + wc / 2 - 0.15, y = 5.5, hjust = 1, size = 3.2,
+           colour = "#1F2937",
+           label = "cumulative sum of max((Tmin + Tmax) / 2, 0)") +
+  annotate("text", x = xc + wc / 2 - 0.15, y = 3.6 + 0.08, hjust = 1,
+           size = 3.3, colour = "#1F2937", parse = TRUE,
+           label = "RAW == W / W[max]") +
+  annotate("text", x = xc + wc / 2 - 0.15, y = 3.6 - 0.22, hjust = 1,
+           label = "soil water W: rain in, demand out", size = 2.6,
+           colour = "#6B7280") +
+  annotate("text", x = xc + wc / 2 - 0.15, y = c(2, 1), hjust = 1,
+           label = "used as given", size = 3, colour = "#6B7280") +
+  annotate("text", x = xr, y = 6.9, label = "weather variables (given)",
+           size = 3.3, colour = "#6B7280") +
+  annotate("text", x = xc, y = 6.9, label = "covariates in the library",
+           size = 3.3, colour = "#6B7280") +
+  coord_cartesian(clip = "off", xlim = c(-0.8, 10.4), ylim = c(0.4, 7)) +
+  theme_void() + theme(plot.margin = margin(4, 4, 4, 4))
+save(pc, "concept_covariates.png", 8, 3)

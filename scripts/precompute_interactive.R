@@ -11,13 +11,19 @@ rounded <- function(a, digits = 2) round(a, digits)
 three <- spread_genotypes(tr)
 some <- union(three, tr$genotypes[seq(1, 199, by = 5)])
 
-## 1. Hyperparameters: scaled coefficients of g001 and held-out error ---------
-d <- make_design(Theta, tr, "g001")
-size <- apply(d$X, 2, sd) / sd(d$dy)
+## 1. Hyperparameters: scaled coefficients per genotype and held-out error ----
+## The error curve is the mean over cv_genotypes; the coefficients are shown
+## for one genotype at a time, and the terms kept differ between genotypes.
 cv_genotypes <- tr$genotypes[seq(1, 199, by = 10)]
+designs <- lapply(cv_genotypes, function(g) make_design(Theta, tr, g))
 setting <- function(fit) {
-  b <- fit(d$X, d$dy)
-  list(effect = unname(b[-1] * size), nterms = sum(b[-1] != 0),
+  fits <- lapply(designs, function(d) {
+    b <- fit(d$X, d$dy)
+    list(effect = unname(b[-1] * apply(d$X, 2, sd) / sd(d$dy)),
+         nterms = sum(b[-1] != 0))
+  })
+  list(effect = lapply(fits, `[[`, "effect"),
+       nterms = sapply(fits, `[[`, "nterms"),
        rmse = evaluate(cross_validate(Theta, tr, fit, cv_genotypes),
                        tr)[["trajectory_rmse"]])
 }
@@ -42,9 +48,10 @@ methods <- lapply(grid, function(m) {
   s <- lapply(m$values, function(v) setting(m$fit(v)))
   list(param = m$param, values = m$values,
        effect = lapply(s, `[[`, "effect"),
-       nterms = sapply(s, `[[`, "nterms"), rmse = sapply(s, `[[`, "rmse"))
+       nterms = t(sapply(s, `[[`, "nterms")), rmse = sapply(s, `[[`, "rmse"))
 })
-out(list(terms = colnames(d$X), methods = methods), "hyper.json", 5)
+out(list(terms = colnames(designs[[1]]$X), genotypes = cv_genotypes,
+         methods = methods), "hyper.json", 5)
 
 ## 2. Held-out trajectories of the sparse model and of the baseline -----------
 P <- readRDS("precomputed/cv_stlsq.rds")

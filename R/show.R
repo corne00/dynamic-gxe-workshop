@@ -37,11 +37,12 @@ py_source <- function(names) {
   vapply(names, one, "")
 }
 
-show_fun <- function(...) {
+show_fun <- function(..., level = 2) {
   f <- c(...)
-  cat('::: {.panel-tabset group="language"}\n\n## R\n\n```r\n',
+  h <- strrep("#", level)
+  cat('::: {.panel-tabset group="language"}\n\n', h, ' R\n\n```r\n',
       paste(r_source(f), collapse = "\n\n"), "\n```\n\n",
-      "## Python\n\n```python\n",
+      h, " Python\n\n```python\n",
       paste(py_source(f), collapse = "\n\n\n"), "\n```\n\n:::\n\n", sep = "")
 }
 
