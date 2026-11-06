@@ -105,22 +105,28 @@ where most coefficients $\xi_j$ are expected to be zero. The library contains ca
 
 ## Regression
 
-Let $y_i = y(t_i)$ be observations on days $t_i$. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\frac{dy}{dt}(t_i)$ for a time step of one day.
-
-![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the increment $\Delta y_i$ is the difference between two consecutive observations. The increments of the whole year are shown in (c); the regression is performed on these.](images/concept_increments.png){width=100%}
-
-Collecting all the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
+Let $y_i = y(t_i)$ be observations on days $t_i$, with time step $\Delta t$ (one day). The growth rate $\dot y_i = \frac{dy}{dt}(t_i)$ is estimated by the centered difference
 
 $$
-\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
+\dot y_i \approx \frac{y_{i+1} - y_{i-1}}{2\,\Delta t}.
 $$
 
-The state $\mathbf{y}_i$ in the library is the observed state on day $t_i$. If data are collected in several environments and for several genotypes, the increments and library values are stacked. With $\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})$ for genotype $g$ in environment $e$ on day $i$:
+Adding the Taylor expansions of $y(t_i \pm \Delta t)$ in the form $y_{i\pm1} = y_i \pm \Delta t\,\dot y_i + \tfrac{1}{2}\Delta t^2\,\ddot y_i \pm \dots$ shows that the error of the centered difference is of order $\Delta t^2$, against order $\Delta t$ for the forward difference $(y_{i+1} - y_i)/\Delta t$. The first and last observation of a trajectory have no neighbour on both sides and are not used. Routines for this are available in standard packages (`numpy.gradient` in Python, `pracma::gradient` in R).
+
+![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations on either side of day $i$ estimates $\dot y_i$. The growth rates of the whole year are shown in (c); the regression is performed on these.](images/concept_derivative.png){width=100%}
+
+Collecting all the growth rates in a vector $\dot{\mathbf{y}}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
+
+$$
+\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}.
+$$
+
+The state $\mathbf{y}_i$ in the library is the observed state on day $t_i$. If data are collected in several environments and for several genotypes, the growth rates and library values are stacked. With $\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})$ for genotype $g$ in environment $e$ on day $i$:
 
 $$
 {\small
 \begin{pmatrix}
-\Delta y_1^{(1, 1)} \\ \vdots \\ \Delta y_n^{(1, 1)} \\ \vdots \\ \Delta y_n^{(g, e)}
+\dot y_1^{(1, 1)} \\ \vdots \\ \dot y_n^{(1, 1)} \\ \vdots \\ \dot y_n^{(g, e)}
 \end{pmatrix}
 \approx
 \begin{pmatrix}
@@ -136,10 +142,10 @@ $$
 }
 $$
 
-The coefficients enter linearly (recall $\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}$), so we just need to solve a linear regression problem to estimate them, for example by least squares:
+The coefficients enter linearly (recall $\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}$), so we just need to solve a linear regression problem to estimate them, for example by least squares:
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
 $$
 
 However, any regression method can be used. We will compare several methods in the workshop.
@@ -158,10 +164,10 @@ If the library depends on the drivers only, the solution is the integral of the 
 
 ## Dealing with multiple genotypes
 
-Differences between genotypes are captured by a separate regression for each genotype $g = 1, \dots, G$, on its own increments and library values (stacked over the environments),
+Differences between genotypes are captured by a separate regression for each genotype $g = 1, \dots, G$, on its own growth rates and library values (stacked over the environments),
 
 $$
-\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y}^{(g)} - \mathbf{X}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}}^{(g)} - \mathbf{X}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
 $$
 
 The environments and the library are shared, so the columns of $\hat{\boldsymbol{\Xi}} = \bigl(\hat{\boldsymbol{\xi}}^{(1)}, \dots, \hat{\boldsymbol{\xi}}^{(G)}\bigr)$ are directly comparable: each column is the growth equation of one genotype, and the differences between columns describe how genotypes differ in their response to the drivers.
@@ -179,7 +185,7 @@ The following steps each have a defined input and output.
 ```{=html}
 <div class="flow">
   <a href="02-data.html"><span class="num">2</span><span class="title">Data</span><span class="io">weather and biomass tables</span></a>
-  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">&theta;(y, u), X and &Delta;y</span></a>
+  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">&theta;(y, u), X and &#7823;</span></a>
   <a href="04-fitting.html"><span class="num">4</span><span class="title">Fitting</span><span class="io">estimate of &xi;</span></a>
   <a href="05-validate.html"><span class="num">5</span><span class="title">Validation</span><span class="io">solution and cross-validation</span></a>
   <a href="06-reading.html"><span class="num">6</span><span class="title">Interpretation</span><span class="io">response curves</span></a>

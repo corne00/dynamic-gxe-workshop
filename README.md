@@ -16,7 +16,7 @@ Python: `PYTHONPATH=python`, then `from dgxe import *`. `scripts/parity_check.R`
 
 ## Build the site
 
-Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet`, `leaps`, `deSolve` and `iml`.
+Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet`, `leaps`, `deSolve`, `pracma` and `iml`.
 
 ```sh
 quarto render      # writes docs/ ; computed outputs are cached in _freeze/ and precomputed/

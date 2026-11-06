@@ -538,39 +538,45 @@ window.Quarto = {
 </section>
 <section id="design-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="design-matrix">Design matrix</h2>
-<p>For one genotype, the rows of <span class="math inline">\(\mathbf{X}\)</span> are the days of all years and the columns are the library terms; <span class="math inline">\(\Delta\mathbf{y}\)</span> holds the daily biomass increments <span class="math inline">\(y_{i+1} - y_i\)</span>.</p>
+<p>For one genotype, the rows of <span class="math inline">\(\mathbf{X}\)</span> are the observations of all years (all except the first and last of each) and the columns are the library terms; <span class="math inline">\(\dot{\mathbf{y}}\)</span> holds the growth rates, estimated by the centered difference <span class="math inline">\((y_{i+1} - y_{i-1})/2\)</span> (<code>numpy.gradient</code> and <code>pracma::gradient</code>). The weather of day <span class="math inline">\(i\)</span> acts between observation <span class="math inline">\(i\)</span> and <span class="math inline">\(i+1\)</span>, so the library at observation <span class="math inline">\(i\)</span> is the mean of the library values of days <span class="math inline">\(i-1\)</span> and <span class="math inline">\(i\)</span>.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_design.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>The regression problem for genotype <code>g114</code> as a table: three days from the middle of each of the years 1, 2 and 31. The highlighted row is one equation, <span class="math inline">\(\Delta y_i = \sum_j X_{ij}\xi_j\)</span>. The columns of <span class="math inline">\(\mathbf{X}\)</span> are standardised; the coefficients <span class="math inline">\(\boldsymbol{\xi}\)</span> are unknown and are estimated in step 4.</figcaption>
+<figcaption>The regression problem for genotype <code>g114</code> as a table: three days from the middle of each of the years 1, 2 and 31. The highlighted row is one equation, <span class="math inline">\(\dot y_i = \sum_j X_{ij}\xi_j\)</span>. The columns of <span class="math inline">\(\mathbf{X}\)</span> are standardised; the coefficients <span class="math inline">\(\boldsymbol{\xi}\)</span> are unknown and are estimated in step 4.</figcaption>
 </figure>
 </div>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Rows: all days of all years. X: library at day t. dy: y(t + 1) - y(t).</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>make_design <span class="ot">&lt;-</span> <span class="cf">function</span>(Theta, tr, genotype) {</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">match</span>(genotype, tr<span class="sc">$</span>genotypes)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> tr<span class="sc">$</span>nend[g, ]</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  years <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years)</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">lapply</span>(years, <span class="cf">function</span>(y) <span class="fu">matrix</span>(Theta[y, <span class="dv">1</span><span class="sc">:</span>n[y], ], n[y]))</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  dy <span class="ot">&lt;-</span> <span class="fu">lapply</span>(years, <span class="cf">function</span>(y) <span class="fu">diff</span>(tr<span class="sc">$</span>Y[g, y, <span class="dv">1</span><span class="sc">:</span>(n[y] <span class="sc">+</span> <span class="dv">1</span>)]))</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, X)</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="fu">dimnames</span>(Theta)[[<span class="dv">3</span>]]</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">X =</span> X, <span class="at">dy =</span> <span class="fu">unlist</span>(dy), <span class="at">year =</span> <span class="fu">rep</span>(years, n))</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Rows: observations 2, ..., n of every year. dy: centered difference of the</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="do">## biomass. X: library at the observation, the mean of the two adjacent days.</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>make_design <span class="ot">&lt;-</span> <span class="cf">function</span>(Theta, tr, genotype) {</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  g <span class="ot">&lt;-</span> <span class="fu">match</span>(genotype, tr<span class="sc">$</span>genotypes)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> tr<span class="sc">$</span>nend[g, ]</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  years <span class="ot">&lt;-</span> <span class="fu">seq_along</span>(tr<span class="sc">$</span>years)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">lapply</span>(years, <span class="cf">function</span>(y)</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    (Theta[y, <span class="dv">1</span><span class="sc">:</span>(n[y] <span class="sc">-</span> <span class="dv">1</span>), ] <span class="sc">+</span> Theta[y, <span class="dv">2</span><span class="sc">:</span>n[y], ]) <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  dy <span class="ot">&lt;-</span> <span class="fu">lapply</span>(years, <span class="cf">function</span>(y)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    pracma<span class="sc">::</span><span class="fu">gradient</span>(tr<span class="sc">$</span>Y[g, y, <span class="dv">1</span><span class="sc">:</span>(n[y] <span class="sc">+</span> <span class="dv">1</span>)])[<span class="dv">2</span><span class="sc">:</span>n[y]])</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>  X <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, X)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="fu">dimnames</span>(Theta)[[<span class="dv">3</span>]]</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">X =</span> X, <span class="at">dy =</span> <span class="fu">unlist</span>(dy), <span class="at">year =</span> <span class="fu">rep</span>(years, n <span class="sc">-</span> <span class="dv">1</span>))</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rows: all days of all years. X: library at day t. dy: y(t + 1) - y(t).</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_design(Theta, tr, genotype):</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    g <span class="op">=</span> <span class="bu">list</span>(tr.genotypes).index(genotype)</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> tr.nend[g]</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    years <span class="op">=</span> <span class="bu">range</span>(<span class="bu">len</span>(tr.years))</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> np.vstack([Theta.array[s, :n[s], :] <span class="cf">for</span> s <span class="kw">in</span> years])</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    dy <span class="op">=</span> np.concatenate([np.diff(tr.Y[g, s, :n[s] <span class="op">+</span> <span class="dv">1</span>]) <span class="cf">for</span> s <span class="kw">in</span> years])</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    year <span class="op">=</span> np.repeat(np.arange(<span class="bu">len</span>(tr.years)), n)</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(X<span class="op">=</span>X, dy<span class="op">=</span>dy, year<span class="op">=</span>year, terms<span class="op">=</span>Theta.terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rows: observations 2, ..., n of every year. dy: centered difference of the</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># biomass. X: library at the observation, the mean of the two adjacent days.</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_design(Theta, tr, genotype):</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    g <span class="op">=</span> <span class="bu">list</span>(tr.genotypes).index(genotype)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    n <span class="op">=</span> tr.nend[g]</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    years <span class="op">=</span> <span class="bu">range</span>(<span class="bu">len</span>(tr.years))</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    A <span class="op">=</span> Theta.array</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> np.vstack([(A[s, :n[s] <span class="op">-</span> <span class="dv">1</span>, :] <span class="op">+</span> A[s, <span class="dv">1</span>:n[s], :]) <span class="op">/</span> <span class="dv">2</span> <span class="cf">for</span> s <span class="kw">in</span> years])</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    dy <span class="op">=</span> np.concatenate([np.gradient(tr.Y[g, s, :n[s] <span class="op">+</span> <span class="dv">1</span>])[<span class="dv">1</span>:n[s]]</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">for</span> s <span class="kw">in</span> years])</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    year <span class="op">=</span> np.repeat(np.arange(<span class="bu">len</span>(tr.years)), n <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(X<span class="op">=</span>X, dy<span class="op">=</span>dy, year<span class="op">=</span>year, terms<span class="op">=</span>Theta.terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -595,20 +601,20 @@ window.Quarto = {
 </div>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 4158   24</code></pre>
+<pre><code>[1] 4127   24</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
 <pre><code>      Tmin Tmin^2 Tmin^3  Tmax Tmax^2 Tmax^3  Rain Rain^2 Rain^3   RAD RAD^2
-[1,]  0.77   0.60   0.46 -0.88   0.78  -0.69 -0.26   0.07  -0.02 -0.68  0.46
-[2,] -0.65   0.42  -0.27 -1.30   1.69  -2.21 -0.26   0.07  -0.02 -0.84  0.71
-[3,] -0.10   0.01   0.00 -1.20   1.43  -1.72 -0.26   0.07  -0.02 -0.51  0.26
+[1,]  0.06   0.51   0.10 -1.09   1.24  -1.45 -0.26   0.07  -0.02 -0.76  0.58
+[2,] -0.37   0.21  -0.14 -1.25   1.56  -1.96 -0.26   0.07  -0.02 -0.68  0.48
+[3,] -0.37   0.21  -0.14 -0.99   1.02  -1.10 -0.26   0.07  -0.02 -0.42  0.19
      RAD^3    VP VP^2 VP^3    DL DL^2  DL^3    TT TT^2  TT^3  RAW RAW^2 RAW^3
-[1,] -0.31  0.23 0.05 0.01 -0.95 0.90 -0.86 -1.58 2.50 -3.95 0.85  0.73  0.62
-[2,] -0.60 -0.12 0.01 0.00 -0.96 0.92 -0.89 -1.56 2.45 -3.83 0.83  0.69  0.58
-[3,] -0.13 -0.12 0.01 0.00 -0.97 0.95 -0.92 -1.55 2.39 -3.69 0.81  0.65  0.53</code></pre>
+[1,] -0.45  0.06 0.03 0.01 -0.96 0.91 -0.87 -1.57 2.47 -3.89 0.84  0.71  0.60
+[2,] -0.37 -0.12 0.01 0.00 -0.97 0.94 -0.91 -1.56 2.42 -3.76 0.82  0.67  0.55
+[3,] -0.08 -0.12 0.01 0.00 -0.98 0.96 -0.94 -1.54 2.36 -3.63 0.80  0.63  0.50</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 0.0026 0.0038 0.0045 0.0053 0.0056 0.0063</code></pre>
+<pre><code>[1] 0.00320 0.00415 0.00490 0.00545 0.00595 0.00705</code></pre>
 </div>
 </div>
 

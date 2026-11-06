@@ -3,10 +3,10 @@
 ##
 ##    weather --make_drivers--> drv --make_library--> Theta   (candidate terms)
 ##    biomass --make_trajectories--> tr
-##    Theta, tr --make_design--> X, dy                (regression of increments)
+##    Theta, tr --make_design--> X, dy                (growth rate by centered differences)
 ##    fit_*(X, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
 ##
-##  Base R, except for glmnet and leaps in some of the fitting methods.
+##  Base R, except for pracma (derivatives), and glmnet and leaps (fitting).
 ## =============================================================================
 
 ## ---- Drivers: array U[year, day, driver], standardised -------------------
@@ -117,16 +117,19 @@ make_trajectories <- function(traj, drv, var = "biomass") {
 }
 
 ## ---- Regression problem for one genotype ------------------------------------
-## Rows: all days of all years. X: library at day t. dy: y(t + 1) - y(t).
+## Rows: observations 2, ..., n of every year. dy: centered difference of the
+## biomass. X: library at the observation, the mean of the two adjacent days.
 make_design <- function(Theta, tr, genotype) {
   g <- match(genotype, tr$genotypes)
   n <- tr$nend[g, ]
   years <- seq_along(tr$years)
-  X <- lapply(years, function(y) matrix(Theta[y, 1:n[y], ], n[y]))
-  dy <- lapply(years, function(y) diff(tr$Y[g, y, 1:(n[y] + 1)]))
+  X <- lapply(years, function(y)
+    (Theta[y, 1:(n[y] - 1), ] + Theta[y, 2:n[y], ]) / 2)
+  dy <- lapply(years, function(y)
+    pracma::gradient(tr$Y[g, y, 1:(n[y] + 1)])[2:n[y]])
   X <- do.call(rbind, X)
   colnames(X) <- dimnames(Theta)[[3]]
-  list(X = X, dy = unlist(dy), year = rep(years, n))
+  list(X = X, dy = unlist(dy), year = rep(years, n - 1))
 }
 
 ## ---- Fitting methods: fit(X, dy) -> coefficients (intercept first) ----------

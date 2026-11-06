@@ -27,13 +27,13 @@ from pipeline import *
 :::
 
 
-For one genotype, the data are the increments $\Delta\mathbf{y}$ and the library values $\mathbf{X}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
+For one genotype, the data are the growth rates $\dot{\mathbf{y}}$ and the library values $\mathbf{X}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
 
 $$
-\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
+\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}.
 $$
 
-Every method maps $(\mathbf{X}, \Delta\mathbf{y})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(X, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
+Every method maps $(\mathbf{X}, \dot{\mathbf{y}})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(X, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
 
 ::: {.panel-tabset group="language"}
 
@@ -68,7 +68,7 @@ d <- make_design(Theta, tr, "g001")
 The reference: all terms are used, so there is no sparsity.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters: none.
@@ -86,7 +86,7 @@ show_fun("fit_ols", level = 3)
 Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters:
@@ -106,7 +106,7 @@ show_fun("fit_ridge", level = 3)
 The $\ell_1$ penalty sets coefficients exactly to zero, which gives a sparse equation.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
 $$
 
 Hyperparameters:
@@ -126,7 +126,7 @@ show_fun("fit_glmnet", "fit_lasso", level = 3)
 A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
 $$
 
 Hyperparameters:
@@ -147,7 +147,7 @@ show_fun("fit_glmnet", "fit_enet", level = 3)
 The best model with exactly $k$ terms, found by searching all subsets.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters:
@@ -187,7 +187,7 @@ show_fun("fit_subset", level = 3)
 Sequential thresholded least squares, the algorithm of the original SINDy method.
 
 $$
-\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \Delta\mathbf{y} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\Delta\mathbf{y})}
+\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\dot{\mathbf{y}})}
 $$
 
 Hyperparameters:
@@ -236,7 +236,7 @@ fits <- sapply(fit_methods, function(fit) fit(d$X, d$dy))
 round(fits, 3)
 ```
 
-Each bar is a coefficient, scaled to a common size (coefficient times the standard deviation of the term, relative to that of the increments). Terms that a method removed have no bar.
+Each bar is a coefficient, scaled to a common size (coefficient times the standard deviation of the term, relative to that of the growth rate). Terms that a method removed have no bar.
 
 ::: {.panel-tabset group="language"}
 

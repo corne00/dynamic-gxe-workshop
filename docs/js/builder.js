@@ -489,10 +489,13 @@ const Builder = (() => {
     for (let y = 0; y < S; y++) {
       const nend = data.nend[g][y], Y = data.Y[g][y];
       const rows = Array.from({length: nend + 1}, (_, d) => lib(y, d));
-      const raw = {n: nend, sx: new Float64Array(K), sy: 0, sxx: new Float64Array(K * K),
+      const raw = {n: 0, sx: new Float64Array(K), sy: 0, sxx: new Float64Array(K * K),
                    sxy: new Float64Array(K), syy: 0};
-      for (let d = 0; d < nend; d++) {
-        const x = rows[d], dy = Y[d + 1] - Y[d];
+      raw.n = nend - 1;
+      const x = new Float64Array(K);
+      for (let d = 1; d < nend; d++) {
+        const dy = (Y[d + 1] - Y[d - 1]) / 2;
+        for (let j = 0; j < K; j++) x[j] = (rows[d - 1][j] + rows[d][j]) / 2;
         raw.sy += dy; raw.syy += dy * dy;
         for (let j = 0; j < K; j++) {
           const xj = x[j];

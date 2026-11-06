@@ -304,11 +304,11 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>For one genotype, the data are the increments <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values <span class="math inline">\(\mathbf{X}\)</span> of step 3, and the unknown is the coefficient vector <span class="math inline">\(\boldsymbol{\xi}\)</span>:</p>
+<p>For one genotype, the data are the growth rates <span class="math inline">\(\dot{\mathbf{y}}\)</span> and the library values <span class="math inline">\(\mathbf{X}\)</span> of step 3, and the unknown is the coefficient vector <span class="math inline">\(\boldsymbol{\xi}\)</span>:</p>
 <p><span class="math display">\[
-\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
+\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}.
 \]</span></p>
-<p>Every method maps <span class="math inline">\((\mathbf{X}, \Delta\mathbf{y})\)</span> to an estimate <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span>, with the intercept first. A method is therefore a function <code>fit(X, dy)</code>, and methods can be exchanged freely. Genotype <code>g001</code> is used here.</p>
+<p>Every method maps <span class="math inline">\((\mathbf{X}, \dot{\mathbf{y}})\)</span> to an estimate <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span>, with the intercept first. A method is therefore a function <code>fit(X, dy)</code>, and methods can be exchanged freely. Genotype <code>g001</code> is used here.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
@@ -330,7 +330,7 @@ window.Quarto = {
 <div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
 <p>The reference: all terms are used, so there is no sparsity.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 \]</span></p>
 <p>Hyperparameters: none.</p>
 <p>R: <code>lm.fit</code>. Python: <code>numpy.linalg.lstsq</code>.</p>
@@ -354,7 +354,7 @@ window.Quarto = {
 <div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
 <p>Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -390,7 +390,7 @@ window.Quarto = {
 <div id="tabset-10-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-3-tab">
 <p>The <span class="math inline">\(\ell_1\)</span> penalty sets coefficients exactly to zero, which gives a sparse equation.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -431,7 +431,7 @@ window.Quarto = {
 <div id="tabset-10-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-4-tab">
 <p>A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -473,7 +473,7 @@ window.Quarto = {
 <div id="tabset-10-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-5-tab">
 <p>The best model with exactly <span class="math inline">\(k\)</span> terms, found by searching all subsets.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -563,7 +563,7 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 <div id="tabset-10-7" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-7-tab">
 <p>Sequential thresholded least squares, the algorithm of the original SINDy method.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \Delta\mathbf{y} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\Delta\mathbf{y})}
+\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\dot{\mathbf{y}})}
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -637,60 +637,60 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>          OLS  ridge  lasso elastic net best subset (k = 8) backward (k = 8)
-1       0.162  0.157  0.156       0.156               0.157            0.155
-Tmin   -0.002 -0.002 -0.001      -0.001               0.000            0.000
-Tmin^2 -0.001  0.000  0.000       0.000               0.000            0.000
-Tmin^3  0.001  0.001  0.000       0.000               0.000            0.000
-Tmax   -0.012 -0.011 -0.010      -0.010              -0.011           -0.012
-Tmax^2 -0.004 -0.004 -0.003      -0.003               0.000            0.000
-Tmax^3  0.003  0.002  0.002       0.002               0.002            0.002
-Rain    0.000  0.000  0.000       0.000               0.000            0.000
-Rain^2  0.000  0.000  0.000       0.000               0.000            0.000
+1       0.164  0.159  0.157       0.157               0.158            0.154
+Tmin    0.001 -0.001  0.000       0.000               0.000            0.000
+Tmin^2 -0.001 -0.001  0.000       0.000               0.000            0.000
+Tmin^3  0.001  0.001  0.001       0.001               0.000            0.000
+Tmax   -0.015 -0.014 -0.013      -0.012               0.000           -0.014
+Tmax^2 -0.005 -0.005 -0.004      -0.004               0.000            0.000
+Tmax^3  0.003  0.003  0.003       0.003               0.000            0.003
+Rain    0.005  0.004  0.001       0.001               0.000            0.000
+Rain^2 -0.001  0.000  0.000       0.000               0.000            0.000
 Rain^3  0.000  0.000  0.000       0.000               0.000            0.000
-RAD     0.008  0.007  0.005       0.005               0.000            0.008
-RAD^2  -0.002 -0.003 -0.003      -0.003               0.000            0.000
-RAD^3   0.000  0.000  0.000       0.000               0.003            0.000
-VP      0.000 -0.001 -0.001      -0.001               0.000            0.000
-VP^2    0.000  0.000  0.000       0.000               0.000            0.000
-VP^3    0.000  0.000  0.000       0.000               0.000            0.000
-DL      0.016 -0.002 -0.003      -0.002               0.000            0.000
-DL^2   -0.053 -0.046 -0.042      -0.042              -0.045           -0.042
-DL^3    0.019  0.017  0.017       0.016               0.018            0.016
-TT     -0.036 -0.006  0.000       0.000               0.000            0.000
-TT^2   -0.032 -0.032 -0.036      -0.035              -0.039           -0.039
-TT^3    0.013  0.006  0.003       0.003               0.000            0.000
-RAW     0.017  0.015  0.013       0.013               0.014            0.014
-RAW^2  -0.015 -0.014 -0.014      -0.014              -0.015           -0.015
+RAD     0.022  0.017  0.014       0.013               0.013            0.015
+RAD^2  -0.005 -0.005 -0.005      -0.005              -0.005            0.000
+RAD^3  -0.002 -0.001  0.000       0.000               0.000            0.000
+VP      0.000  0.000  0.000      -0.001               0.000            0.000
+VP^2    0.001  0.000  0.000       0.000               0.000            0.000
+VP^3   -0.001  0.000  0.000       0.000               0.000            0.000
+DL      0.006 -0.006 -0.009      -0.007              -0.018            0.000
+DL^2   -0.050 -0.043 -0.040      -0.040              -0.042           -0.040
+DL^3    0.019  0.016  0.016       0.015               0.024            0.013
+TT     -0.034 -0.008  0.000       0.000               0.000            0.000
+TT^2   -0.031 -0.032 -0.035      -0.035              -0.040           -0.040
+TT^3    0.014  0.007  0.003       0.003               0.000            0.000
+RAW     0.017  0.015  0.013       0.013               0.015            0.015
+RAW^2  -0.015 -0.014 -0.014      -0.014              -0.014           -0.016
 RAW^3  -0.002 -0.001  0.000       0.000               0.000            0.000
         STLSQ
 1       0.162
 Tmin    0.000
 Tmin^2  0.000
-Tmin^3  0.000
-Tmax   -0.012
-Tmax^2 -0.004
+Tmin^3  0.002
+Tmax   -0.016
+Tmax^2 -0.006
 Tmax^3  0.003
 Rain    0.000
 Rain^2  0.000
 Rain^3  0.000
-RAD     0.009
+RAD     0.020
 RAD^2   0.000
 RAD^3   0.000
 VP      0.000
 VP^2    0.000
 VP^3    0.000
-DL      0.014
-DL^2   -0.055
-DL^3    0.019
-TT     -0.036
-TT^2   -0.031
+DL      0.005
+DL^2   -0.054
+DL^3    0.018
+TT     -0.034
+TT^2   -0.030
 TT^3    0.014
 RAW     0.017
 RAW^2  -0.015
 RAW^3  -0.002</code></pre>
 </div>
 </div>
-<p>Each bar is a coefficient, scaled to a common size (coefficient times the standard deviation of the term, relative to that of the increments). Terms that a method removed have no bar.</p>
+<p>Each bar is a coefficient, scaled to a common size (coefficient times the standard deviation of the term, relative to that of the growth rate). Terms that a method removed have no bar.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">

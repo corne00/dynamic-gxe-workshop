@@ -27,11 +27,11 @@ save <- function(plots, name, w, h) {
 blue <- dgxe[["blue"]]; cyan <- dgxe[["cyan"]]; bur <- dgxe[["burgundy"]]
 grey <- "#D1D5DB"
 
-## 1. Increments of an observed trajectory (genotype g114, year 1998) -------
+## 1. Growth rate of an observed trajectory (genotype g114, year 1998) ------
 g <- match("g114", tr$genotypes); v <- match(1998, tr$years)
 yy <- tr$Y[g, v, 1:(tr$nend[g, v] + 1)]
 d <- data.frame(das = seq_along(yy) + tr$das0 - 1, y = yy)
-d$dy <- c(diff(yy), NA)
+d$dy <- pracma::gradient(yy)                      # centered differences
 i <- 85                                           # highlighted day
 win <- (i - 3):(i + 4)                            # days shown in the zoom
 z <- d[win, ]
@@ -44,41 +44,38 @@ p1 <- ggplot(d, aes(das, y)) +
   labs(title = "(a) Observed biomass", x = "days after sowing",
        y = expression(y[i] ~ "(t/ha)")) +
   concept()
+nb <- d[(i - 1):(i + 1), ]
 p2 <- ggplot(z, aes(das, y)) +
   geom_line(colour = grey, linewidth = 0.8) +
   geom_point(colour = blue, size = 2) +
-  geom_point(data = d[i:(i + 1), ], colour = bur, size = 2.6) +
-  annotate("segment", x = d$das[i], xend = d$das[i + 1], y = d$y[i],
-           yend = d$y[i], colour = bur, linewidth = 0.5, linetype = "22") +
-  annotate("segment", x = d$das[i + 1], xend = d$das[i + 1], y = d$y[i],
-           yend = d$y[i + 1], colour = bur, linewidth = 1) +
-  annotate("text", x = d$das[i + 1] + 0.25, y = mean(d$y[i:(i + 1)]),
-           label = "Delta*y[i]", parse = TRUE, colour = bur, size = 4,
-           hjust = 0) +
-  annotate("text", x = d$das[i] - 0.2, y = d$y[i] + pad, label = "y[i]",
+  geom_point(data = nb, colour = bur, size = 2.6) +
+  annotate("segment", x = nb$das[1], xend = nb$das[3], y = nb$y[1],
+           yend = nb$y[3], colour = bur, linewidth = 0.8) +
+  annotate("text", x = nb$das[1] - 0.2, y = nb$y[1] + pad, label = "y[i-1]",
            parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
-  annotate("text", x = d$das[i + 1] - 0.2, y = d$y[i + 1] + pad,
-           label = "y[i+1]", parse = TRUE, colour = bur, size = 3.4,
-           hjust = 1) +
-  labs(title = expression("(b) Zoom: " * Delta * y[i] == y[i + 1] - y[i]),
+  annotate("text", x = nb$das[2] - 0.2, y = nb$y[2] + pad, label = "y[i]",
+           parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
+  annotate("text", x = nb$das[3] - 0.2, y = nb$y[3] + pad, label = "y[i+1]",
+           parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
+  labs(title = expression("(b) Zoom: " * dot(y)[i] %~~% frac(y[i + 1] - y[i - 1], 2)),
        x = "days after sowing", y = "t/ha") +
   concept()
-p3 <- ggplot(d[-nrow(d), ], aes(das, dy)) +
+p3 <- ggplot(d[2:(nrow(d) - 1), ], aes(das, dy)) +
   geom_point(colour = blue, size = 1) +
   geom_point(data = d[i, ], colour = bur, size = 2.6) +
   annotate("label", x = d$das[i] + 2,
-           y = d$dy[i] + 0.1 * diff(range(d$dy, na.rm = TRUE)),
-           label = "Delta*y[i]", parse = TRUE, colour = bur, size = 3.6,
+           y = d$dy[i] + 0.1 * diff(range(d$dy[2:(nrow(d) - 1)])),
+           label = "dot(y)[i]", parse = TRUE, colour = bur, size = 3.6,
            fill = "white", label.size = 0, hjust = 0) +
-  labs(title = "(c) Daily increments", x = "days after sowing",
-       y = "t/ha/day") +
+  labs(title = "(c) Growth rate by centered differences",
+       x = "days after sowing", y = "t/ha/day") +
   concept()
-save(list(p1, p2, p3), "concept_increments.png", 9, 2.5)
+save(list(p1, p2, p3), "concept_derivative.png", 9, 2.5)
 
 ## 2. Solution: the fitted equation integrated over the year ---------------
 P <- readRDS("precomputed/cv_stlsq.rds")
 pred <- P[g, v, 1:(tr$nend[g, v] + 1)]
-e <- data.frame(das = d$das, rate = c(diff(pred), NA), pred = pred, obs = yy)
+e <- data.frame(das = d$das, rate = pracma::gradient(pred), pred = pred, obs = yy)
 e <- e[-nrow(e), ]
 tm <- 100                                         # day shown in the figure
 shade <- e[e$das <= tm, ]
@@ -140,7 +137,7 @@ pv <- ggplot() +
         axis.line = element_blank(), axis.ticks = element_blank())
 save(pv, "concept_validation.png", 6.5, 2.7)
 
-## 4. Regression on the library: dy = X xi (genotype g114, as a table) -------
+## 4. Regression on the library: dy/dt = X xi (genotype g114, as a table) -------
 dd <- make_design(Theta, tr, "g114")
 first <- cumsum(c(1, table(factor(dd$year))))[c(1, 2, 31)]  # first row of years 1, 2, 31
 blocks <- lapply(1:3, function(s) first[s] + 70 + 0:2)   # mid-year days
@@ -195,14 +192,14 @@ pd <- ggplot() +
   geom_text(data = heads, aes(x, -0.1, label = label), parse = TRUE,
             size = 2.8, colour = "#374151") +
   annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -1.6,
-           parse = TRUE, label = c("Delta*bold(y)", "bold(X)", "bold(xi)"),
+           parse = TRUE, label = c("dot(bold(y))", "bold(X)", "bold(xi)"),
            size = 4.4) +
   annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -2.7,
            size = 3, colour = "#6B7280",
-           label = c("increments", "library terms (standardised)",
+           label = c("growth rates", "library terms (standardised)",
                      "coefficients")) +
   annotate("text", x = 2.4 + 1.5 * 3.35 + 1.05, y = 12.3,
-           label = "'row i:'~Delta*y[i] == sum(X[ij]*xi[j], j == 1, K)",
+           label = "'row i:'~dot(y)[i] == sum(X[ij]*xi[j], j == 1, K)",
            parse = TRUE, size = 3.3, colour = bur) +
   scale_y_reverse() +
   coord_cartesian(clip = "off", ylim = c(12.8, -3.2), xlim = c(-1.6, 17.6)) +

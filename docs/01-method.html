@@ -443,22 +443,26 @@ window.Quarto = {
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on days <span class="math inline">\(t_i\)</span>. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\frac{dy}{dt}(t_i)\)</span> for a time step of one day.</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on days <span class="math inline">\(t_i\)</span>, with time step <span class="math inline">\(\Delta t\)</span> (one day). The growth rate <span class="math inline">\(\dot y_i = \frac{dy}{dt}(t_i)\)</span> is estimated by the centered difference</p>
+<p><span class="math display">\[
+\dot y_i \approx \frac{y_{i+1} - y_{i-1}}{2\,\Delta t}.
+\]</span></p>
+<p>Adding the Taylor expansions of <span class="math inline">\(y(t_i \pm \Delta t)\)</span> in the form <span class="math inline">\(y_{i\pm1} = y_i \pm \Delta t\,\dot y_i + \tfrac{1}{2}\Delta t^2\,\ddot y_i \pm \dots\)</span> shows that the error of the centered difference is of order <span class="math inline">\(\Delta t^2\)</span>, against order <span class="math inline">\(\Delta t\)</span> for the forward difference <span class="math inline">\((y_{i+1} - y_i)/\Delta t\)</span>. The first and last observation of a trajectory have no neighbour on both sides and are not used. Routines for this are available in standard packages (<code>numpy.gradient</code> in Python, <code>pracma::gradient</code> in R).</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
-<p><img src="images/concept_increments.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>Observed biomass of one genotype in one year (a). The box is enlarged in (b): the increment <span class="math inline">\(\Delta y_i\)</span> is the difference between two consecutive observations. The increments of the whole year are shown in (c); the regression is performed on these.</figcaption>
+<p><img src="images/concept_derivative.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption>Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations on either side of day <span class="math inline">\(i\)</span> estimates <span class="math inline">\(\dot y_i\)</span>. The growth rates of the whole year are shown in (c); the regression is performed on these.</figcaption>
 </figure>
 </div>
-<p>Collecting all the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
+<p>Collecting all the growth rates in a vector <span class="math inline">\(\dot{\mathbf{y}}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
 <p><span class="math display">\[
-\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
+\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}.
 \]</span></p>
-<p>The state <span class="math inline">\(\mathbf{y}_i\)</span> in the library is the observed state on day <span class="math inline">\(t_i\)</span>. If data are collected in several environments and for several genotypes, the increments and library values are stacked. With <span class="math inline">\(\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})\)</span> for genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(i\)</span>:</p>
+<p>The state <span class="math inline">\(\mathbf{y}_i\)</span> in the library is the observed state on day <span class="math inline">\(t_i\)</span>. If data are collected in several environments and for several genotypes, the growth rates and library values are stacked. With <span class="math inline">\(\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})\)</span> for genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(i\)</span>:</p>
 <p><span class="math display">\[
 {\small
 \begin{pmatrix}
-\Delta y_1^{(1, 1)} \\ \vdots \\ \Delta y_n^{(1, 1)} \\ \vdots \\ \Delta y_n^{(g, e)}
+\dot y_1^{(1, 1)} \\ \vdots \\ \dot y_n^{(1, 1)} \\ \vdots \\ \dot y_n^{(g, e)}
 \end{pmatrix}
 \approx
 \begin{pmatrix}
@@ -473,9 +477,9 @@ window.Quarto = {
 \end{pmatrix}
 }
 \]</span></p>
-<p>The coefficients enter linearly (recall <span class="math inline">\(\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}\)</span>), so we just need to solve a linear regression problem to estimate them, for example by least squares:</p>
+<p>The coefficients enter linearly (recall <span class="math inline">\(\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}\)</span>), so we just need to solve a linear regression problem to estimate them, for example by least squares:</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
 \]</span></p>
 <p>However, any regression method can be used. We will compare several methods in the workshop.</p>
 </section>
@@ -495,9 +499,9 @@ window.Quarto = {
 </section>
 <section id="dealing-with-multiple-genotypes" class="level2">
 <h2 class="anchored" data-anchor-id="dealing-with-multiple-genotypes">Dealing with multiple genotypes</h2>
-<p>Differences between genotypes are captured by a separate regression for each genotype <span class="math inline">\(g = 1, \dots, G\)</span>, on its own increments and library values (stacked over the environments),</p>
+<p>Differences between genotypes are captured by a separate regression for each genotype <span class="math inline">\(g = 1, \dots, G\)</span>, on its own growth rates and library values (stacked over the environments),</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y}^{(g)} - \mathbf{X}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}}^{(g)} - \mathbf{X}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
 \]</span></p>
 <p>The environments and the library are shared, so the columns of <span class="math inline">\(\hat{\boldsymbol{\Xi}} = \bigl(\hat{\boldsymbol{\xi}}^{(1)}, \dots, \hat{\boldsymbol{\xi}}^{(G)}\bigr)\)</span> are directly comparable: each column is the growth equation of one genotype, and the differences between columns describe how genotypes differ in their response to the drivers.</p>
 </section>
@@ -516,7 +520,7 @@ window.Quarto = {
 <p>The following steps each have a defined input and output.</p>
 <div class="flow">
   <a href="02-data.html"><span class="num">2</span><span class="title">Data</span><span class="io">weather and biomass tables</span></a>
-  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">θ(y, u), X and Δy</span></a>
+  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">θ(y, u), X and ẏ</span></a>
   <a href="04-fitting.html"><span class="num">4</span><span class="title">Fitting</span><span class="io">estimate of ξ</span></a>
   <a href="05-validate.html"><span class="num">5</span><span class="title">Validation</span><span class="io">solution and cross-validation</span></a>
   <a href="06-reading.html"><span class="num">6</span><span class="title">Interpretation</span><span class="io">response curves</span></a>

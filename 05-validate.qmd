@@ -46,7 +46,7 @@ Each genotype has trajectories in the years $E$. A year $e$ is predicted by a mo
 $$
 \begin{array}{ll}
 \textbf{for each genotype } g, \textbf{ for each year } e \in E: & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\mathbf{X}^{(-e)},\, \Delta\mathbf{y}^{(-e)}\bigr) & \text{fit on the other years} \\[2pt]
+\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\mathbf{X}^{(-e)},\, \dot{\mathbf{y}}^{(-e)}\bigr) & \text{fit on the other years} \\[2pt]
 \quad \bar{y}_0^{(-e)} \leftarrow \tfrac{1}{|E|-1} \textstyle\sum_{e' \ne e} y_0^{(e')} & \text{mean initial biomass} \\[2pt]
 \quad \dfrac{d\hat y}{dt} = \boldsymbol{\theta}\bigl(\mathbf{u}^{(e)}(t)\bigr)^\top \hat{\boldsymbol{\xi}}^{(-e)}, \quad \hat y(t_0) = \bar{y}_0^{(-e)} & \text{predict year } e \text{ from its drivers}
 \end{array}
@@ -90,7 +90,7 @@ round(evaluate(P, tr), 3)
 
 ## Predicted trajectories
 
-Held-out predictions of the sparse model, for genotypes spread over the ranking of final biomass and for selected years. Thick lines: APSIM; thin lines: model. Switch genotypes and years on and off. The right panel shows the daily growth rate, the increment of biomass per day, of the same curves.
+Held-out predictions of the sparse model, for genotypes spread over the ranking of final biomass and for selected years. Thick lines: APSIM; thin lines: model. Switch genotypes and years on and off. The right panel shows the growth rate of the same curves, estimated by centered differences.
 
 ```{ojs}
 //| echo: false
@@ -108,7 +108,7 @@ viewof years = toggles("Years", [1983, 1989, 1998, 2008], ["#374151", "#374151",
   const rows = genos.flatMap(name => years.flatMap(year => {
     const g = traj.genotypes.indexOf(name), s = traj.years.indexOf(year);
     return ["observed", "model"].flatMap(source => traj[source][g][s].map((y, i, a) => ({
-      name, year, source, das: traj.das0 + i, y, rate: i ? y - a[i - 1] : null})));
+      name, year, source, das: traj.das0 + i, y, rate: i > 0 && i < a.length - 1 ? (a[i + 1] - a[i - 1]) / 2 : null})));
   }));
   const panel = (key, label, domain) => Plot.plot({
     width: 262, height: 70 + 120 * years.length, marginLeft: 42, marginRight: 8,

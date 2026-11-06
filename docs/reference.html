@@ -291,8 +291,8 @@ window.Quarto = {
 <td>coefficient vector</td>
 </tr>
 <tr class="even">
-<td><span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span>, <span class="math inline">\(\Delta\mathbf{y}\)</span></td>
-<td>daily increment, and the vector of increments</td>
+<td><span class="math inline">\(\dot y_i \approx (y_{i+1} - y_{i-1}) / 2\)</span>, <span class="math inline">\(\dot{\mathbf{y}}\)</span></td>
+<td>growth rate by centered differences, and the vector of growth rates</td>
 </tr>
 <tr class="odd">
 <td><span class="math inline">\(\mathbf{X}\)</span></td>
@@ -338,7 +338,7 @@ window.Quarto = {
 </tr>
 <tr class="odd">
 <td><code>make_design(Theta, tr, genotype)</code></td>
-<td>design matrix <code>X</code> and increments <code>dy</code></td>
+<td>design matrix <code>X</code> and growth rates <code>dy</code> (centered differences)</td>
 </tr>
 <tr class="even">
 <td><code>fit_ols</code>, <code>fit_ridge</code>, <code>fit_lasso</code>, <code>fit_enet</code>, <code>fit_subset</code>, <code>fit_stlsq</code></td>

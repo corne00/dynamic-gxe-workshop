@@ -2,7 +2,7 @@
 
   weather --make_drivers--> drv --make_library--> Theta   (candidate terms)
   biomass --make_trajectories--> tr
-  Theta, tr --make_design--> X, dy                (regression of increments)
+  Theta, tr --make_design--> X, dy                (growth rate by centered differences)
   fit_*(X, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
 
 numpy, pandas, scipy and scikit-learn. Indices are 0-based; days are given
@@ -120,14 +120,17 @@ def make_trajectories(traj, drv, var="biomass"):
 
 
 # ---- Regression problem for one genotype -----------------------------------
-# Rows: all days of all years. X: library at day t. dy: y(t + 1) - y(t).
+# Rows: observations 2, ..., n of every year. dy: centered difference of the
+# biomass. X: library at the observation, the mean of the two adjacent days.
 def make_design(Theta, tr, genotype):
     g = list(tr.genotypes).index(genotype)
     n = tr.nend[g]
     years = range(len(tr.years))
-    X = np.vstack([Theta.array[s, :n[s], :] for s in years])
-    dy = np.concatenate([np.diff(tr.Y[g, s, :n[s] + 1]) for s in years])
-    year = np.repeat(np.arange(len(tr.years)), n)
+    A = Theta.array
+    X = np.vstack([(A[s, :n[s] - 1, :] + A[s, 1:n[s], :]) / 2 for s in years])
+    dy = np.concatenate([np.gradient(tr.Y[g, s, :n[s] + 1])[1:n[s]]
+                         for s in years])
+    year = np.repeat(np.arange(len(tr.years)), n - 1)
     return SimpleNamespace(X=X, dy=dy, year=year, terms=Theta.terms)
 
 
