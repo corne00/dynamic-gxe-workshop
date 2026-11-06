@@ -13,6 +13,7 @@ project:
     - 05-validate.qmd
     - 06-reading.qmd
     - 07-genotypes.qmd
+    - 08-build.qmd
     - reference.qmd
 
 execute:
@@ -52,6 +53,8 @@ website:
             href: 06-reading.qmd
           - text: "7 · Genotypes"
             href: 07-genotypes.qmd
+          - text: "8 · Build your own"
+            href: 08-build.qmd
       - text: "Reference"
         href: reference.qmd
   page-footer:
@@ -78,5 +81,6 @@ format:
         <script src="js/d3.min.js?v=7"></script>
         <script src="js/plot.umd.min.js?v=06"></script>
         <script src="js/controls.js?v=20261106f"></script>
+        <script src="js/builder.js?v=20261106f"></script>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">

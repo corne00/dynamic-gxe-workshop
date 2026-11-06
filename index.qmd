@@ -17,6 +17,7 @@ The data are APSIM simulations for one site (Narrabri): 199 genotypes, 31 years 
 | [5 · Validation](05-validate.html) | Simulation and leave-one-year-out cross-validation |
 | [6 · Interpretation](06-reading.html) | Response curves |
 | [7 · Genotypes](07-genotypes.html) | Genotype-specific equations; ranking |
+| [8 · Build your own](08-build.html) | Choose drivers, library and method, and inspect the result |
 | [Reference](reference.html) | Symbols, functions, data, sources |
 
 Data: [APSIM simulation dataset](https://figshare.com/articles/dataset/24843705) of wheat (Bustos-Korts et al., 2019).

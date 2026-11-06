@@ -2,7 +2,7 @@
 
 Hands-on workshop (AAGI 2026 Symposium): learning growth equations from crop-model data with sparse regression, in R and Python.
 
-Site: step-by-step pages (method, data, design matrix, fitting, validation, interpretation, genotypes) with copyable code and pre-run output.
+Site: step-by-step pages (method, data, design matrix, fitting, validation, interpretation, genotypes, build your own) with copyable code and pre-run output.
 
 ## Run it yourself
 
@@ -26,7 +26,7 @@ Publish with GitHub Pages: Settings → Pages → Deploy from a branch → `main
 
 ## Interactive figures
 
-Pages 1 and 4–7 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute_interactive.R` (a few minutes) and `scripts/precompute_weather.R`; both write `data/interactive/*.json`. Page 1 has a toy of the chain environment, response and biomass, driven by the observed temperature of a Narrabri year.
+Pages 1 and 4–8 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute_interactive.R` (a few minutes) and `scripts/precompute_weather.R`; both write `data/interactive/*.json`. Page 8 fits models in the browser (`js/builder.js`, data from `scripts/export_builder.R`); `scripts/builder_check.js` compares it with the R functions (`scripts/builder_reference.R`). Page 1 has a toy of the chain environment, response and biomass, driven by the observed temperature of a Narrabri year.
 
 ## Layout
 
