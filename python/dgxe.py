@@ -65,6 +65,47 @@ def make_library(drv, degree=3, pairs=False):
     return SimpleNamespace(array=L.reshape(n_year, n_day, -1), terms=terms)
 
 
+# ---- Extra terms: functions of the raw weather, standardised like the drivers
+# exprs: dict name -> expression in Python syntax (^ is accepted for powers).
+# Available are the columns of wx, Tmean, VPD (hPa) and das, and the functions
+# roll(x, k) (mean of the last k days), cum(x) and lag(x, k); max and min act
+# elementwise.
+def extra_terms(wx, exprs, years=None):
+    years = sorted(wx["year"].unique()) if years is None else years
+    das0 = wx["das"].min()
+    nd = wx["das"].max() - das0 + 1
+
+    def roll(x, k):
+        run = np.concatenate([[0.0], np.cumsum(x)])
+        t = np.arange(len(x))
+        start = np.maximum(0, t - k + 1)
+        return (run[t + 1] - run[start]) / (t + 1 - start)
+
+    funs = dict(exp=np.exp, log=np.log, sqrt=np.sqrt, abs=np.abs, sin=np.sin,
+                cos=np.cos, tan=np.tan, tanh=np.tanh, pi=np.pi, max=np.maximum,
+                min=np.minimum, cum=np.cumsum, roll=roll,
+                lag=lambda x, k: x[np.maximum(np.arange(len(x)) - k, 0)])
+    X = np.full((len(years), nd, len(exprs)), np.nan)
+    for s, year in enumerate(years):
+        w = wx[wx["year"] == year]
+        v = {c: np.concatenate([w[c], np.full(nd - len(w), w[c].iloc[-1])])
+             for c in w.columns if c not in ("year", "das")}
+        v["das"] = das0 + np.arange(nd)
+        v["Tmean"] = (v["Tmin"] + v["Tmax"]) / 2
+        v["VPD"] = 6.108 * np.exp(17.27 * v["Tmax"] / (v["Tmax"] + 237.3)) - v["VP"]
+        for j, expr in enumerate(exprs.values()):
+            X[s, :, j] = eval(expr.replace("^", "**"), {"__builtins__": {}},
+                              {**funs, **v})
+    X = (X - X.mean(axis=(0, 1))) / X.std(axis=(0, 1))
+    return SimpleNamespace(array=X, terms=list(exprs))
+
+
+# Appends extra terms to a library.
+def bind_terms(Theta, extra):
+    return SimpleNamespace(array=np.concatenate([Theta.array, extra.array], axis=2),
+                           terms=Theta.terms + extra.terms)
+
+
 # ---- Trajectories: array Y[genotype, year, day], NaN after maturity ------
 # nend[g, s] is the number of daily steps of trajectory (g, s).
 def make_trajectories(traj, drv, var="biomass"):

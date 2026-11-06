@@ -13,12 +13,30 @@ palette = ["#014E81", "#00A6D6", "#8B1E3F", "#469C2A", "#6F1D77", "#EF60A3", "#0
 viewof chosen = toggles("Drivers", builder.drivers, builder.drivers.map(() => "#014E81"), builder.drivers)
 viewof degree = buttons("Powers up to degree", [1, 2, 3], 3)
 viewof products = buttons("Products of pairs", ["no", "yes"], "no")
+examples = [
+  {label: "heat", line: "heat = max(Tmax - 30, 0)"},
+  {label: "frost", line: "frost = max(2 - Tmin, 0)"},
+  {label: "optimum", line: "opt = exp(-(Tmean - 20)^2 / (2 * 5^2))"},
+  {label: "log rain", line: "lograin = log(1 + Rain)"},
+  {label: "rain, 7 days", line: "rain7 = roll(Rain, 7)"},
+  {label: "cumulative RAD", line: "cumRAD = cum(RAD)"},
+  {label: "vapour deficit", line: "vpd = VPD"},
+  {label: "RAD / DL", line: "ratio = RAD / DL"},
+  {label: "temperature × water", line: "TW = Tmean * RAW"},
+  {label: "lagged Tmax", line: "lag3 = lag(Tmax, 3)"},
+  {label: "yearly cycle", line: "cycle = sin(2 * pi * das / 365)"}]
+viewof extraText = expressions("Extra terms", examples)
+parsed = Builder.parseExtras(extraText)
+extras = parsed.terms
+html`${parsed.errors.map(e => html`<p class="interactive-note">Line ${e.line}: ${e.message}</p>`)}`
 ```
+
+Extra terms are functions of the raw weather. Each line adds one term to the library, standardised like the drivers: write `name = expression`, or click an example. The variables are `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT`, `RAW`, `Tmean`, `VPD` (vapour pressure deficit, from `Tmax` and `VP`) and `das` (days after sowing). The operators are `+ - * / ^`, and the functions are `exp`, `log`, `sqrt`, `abs`, `sin`, `cos`, `tan`, `tanh`, `min` and `max` (elementwise), `roll(x, k)` (mean of the last `k` days), `cum(x)` and `lag(x, k)`.
 
 ```{ojs}
 //| echo: false
 library = Builder.termSpecs(chosen, degree, products === "yes")
-K = library.names.length
+K = library.names.length + extras.length
 catalogue = Builder.methods(K)
 available = Object.keys(catalogue).filter(m => catalogue[m].values.length > 0)
 viewof method = select("Method", available, "STLSQ")
@@ -32,18 +50,25 @@ viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
 
 ```{ojs}
 //| echo: false
-result = Builder.run(builder, builder.genotypes.indexOf(genotype), {
-  drivers: chosen, degree, pairs: products === "yes", method, value: spec.values[step]})
+result = {
+  try {
+    return Builder.run(builder, builder.genotypes.indexOf(genotype), {
+      drivers: chosen, degree, pairs: products === "yes", extras, method, value: spec.values[step]});
+  } catch (e) {
+    return {error: e.message};
+  }
+}
 ```
 
 ```{ojs}
 //| echo: false
-html`<p class="interactive-note">${K} terms in the library, ${result.nterms} retained. Held-out RMSE ${result.rmse.toFixed(3)} t/ha over all years; at maturity ${result.maturityRmse.toFixed(3)} t/ha. (${result.ms.toFixed(0)} ms)</p>`
+result.error ? html`<p class="interactive-note">${result.error}</p>` : html`<p class="interactive-note">${K} terms in the library, ${result.nterms} retained. Held-out RMSE ${result.rmse.toFixed(3)} t/ha over all years; at maturity ${result.maturityRmse.toFixed(3)} t/ha. (${result.ms.toFixed(0)} ms)</p>`
 ```
 
 ```{ojs}
 //| echo: false
 {
+  if (result.error) return html``;
   const kept = result.terms.map((term, i) => ({term, effect: result.scaled[i]})).filter(d => d.effect !== 0);
   const reach = d3.max(kept, d => Math.abs(d.effect)) || 1;
   const coefficients = Plot.plot({
@@ -102,9 +127,15 @@ code = {
   const rDrivers = `c(${chosen.map(d => `"${d}"`).join(", ")})`;
   const pyDrivers = `[${chosen.map(d => `"${d}"`).join(", ")}]`;
   const pairs = products === "yes";
+  const rExtra = extras.length ? `
+extra <- extra_terms(wx, c(${extras.map(e => `${e.name} = "${e.expr}"`).join(",\n                           ")}))
+Theta <- bind_terms(Theta, extra)` : "";
+  const pyExtra = extras.length ? `
+extra = extra_terms(wx, {${extras.map(e => `"${e.name}": "${e.expr}"`).join(",\n                         ")}})
+Theta = bind_terms(Theta, extra)` : "";
   return {
     r: `drv <- make_drivers(wx, ${rDrivers})
-Theta <- make_library(drv, degree = ${degree}, pairs = ${pairs ? "TRUE" : "FALSE"})
+Theta <- make_library(drv, degree = ${degree}, pairs = ${pairs ? "TRUE" : "FALSE"})${rExtra}
 tr <- make_trajectories(traj, drv)
 fit <- function(X, dy) ${call[0]}(X, dy${rArgs})
 
@@ -113,7 +144,7 @@ coef <- fit(d$X, d$dy)
 P <- cross_validate(Theta, tr, fit, "${genotype}")
 evaluate(P, tr)`,
     py: `drv = make_drivers(wx, ${pyDrivers})
-Theta = make_library(drv, degree=${degree}, pairs=${pairs ? "True" : "False"})
+Theta = make_library(drv, degree=${degree}, pairs=${pairs ? "True" : "False"})${pyExtra}
 tr = make_trajectories(traj, drv)
 
 def fit(X, dy):

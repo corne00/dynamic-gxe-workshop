@@ -198,3 +198,45 @@ function toggles(label, options, colours, start = options) {
   box.value = read();
   return box;
 }
+
+// Text area for expressions, with buttons that add example lines; the value is
+// the text. examples: [{label, line, title}]
+function expressions(label, examples) {
+  const box = document.createElement("div");
+  box.className = "dgxe-control dgxe-expressions";
+  const text = document.createElement("label");
+  text.textContent = label;
+  const area = document.createElement("textarea");
+  area.rows = 4;
+  area.spellcheck = false;
+  area.placeholder = "name = expression, one per line";
+  const chips = document.createElement("div");
+  chips.className = "dgxe-buttons";
+  let timer;
+  const mark = () => {
+    const lines = area.value.split("\n").map((l) => l.trim());
+    [...chips.children].forEach((b, i) => b.classList.toggle("active", lines.includes(examples[i].line)));
+  };
+  const emit = () => {
+    mark();
+    box.value = area.value;
+    box.dispatchEvent(new Event("input", {bubbles: true}));
+  };
+  area.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(emit, 350); });
+  for (const e of examples) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = e.label;
+    b.title = e.line;
+    b.addEventListener("click", () => {
+      const lines = area.value.split("\n").map((l) => l.trim());
+      area.value = lines.includes(e.line) ? lines.filter((l) => l && l !== e.line).join("\n")
+                                          : lines.filter(Boolean).concat(e.line).join("\n");
+      emit();
+    });
+    chips.append(b);
+  }
+  box.append(text, area, chips);
+  box.value = "";
+  return box;
+}

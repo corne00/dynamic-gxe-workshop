@@ -78,8 +78,8 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261106f"></script>
-<script src="js/builder.js?v=20261106f"></script>
+<script src="js/controls.js?v=20261106h"></script>
+<script src="js/builder.js?v=20261106h"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -329,34 +329,38 @@ window.Quarto = {
 <td>library <code>Theta[year, day, term]</code></td>
 </tr>
 <tr class="odd">
+<td><code>extra_terms(wx, exprs)</code>, <code>bind_terms(Theta, extra)</code></td>
+<td>extra library terms from expressions of the raw weather</td>
+</tr>
+<tr class="even">
 <td><code>make_trajectories(traj, drv, var)</code></td>
 <td>response <code>Y[genotype, year, day]</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>make_design(Theta, tr, genotype)</code></td>
 <td>design matrix <code>X</code> and increments <code>dy</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>fit_ols</code>, <code>fit_ridge</code>, <code>fit_lasso</code>, <code>fit_enet</code>, <code>fit_subset</code>, <code>fit_stlsq</code></td>
 <td>fitting methods <code>fit(X, dy)</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>simulate(coef, U, y0)</code></td>
 <td>solution of the fitted equation with an ODE solver</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>cross_validate(Theta, tr, fit)</code></td>
 <td>leave-one-year-out predictions</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>evaluate(P, tr)</code></td>
 <td>trajectory, fixed-day and maturity RMSE</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>ale_curve(rate, Z, j)</code></td>
 <td>accumulated local effect of driver <code>j</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>rank_scores(Pd, Yd)</code></td>
 <td>ranking metrics</td>
 </tr>

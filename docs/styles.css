@@ -61,3 +61,10 @@ figure img, .cell-output-display img { max-width: 100%; }
   color: var(--colour); }
 .dgxe-buttons button[style*="--colour"].active { background: var(--colour);
   color: white; }
+.dgxe-expressions { display: block !important; margin: .6rem 0; }
+.dgxe-expressions label { display: block; margin-bottom: .2rem; }
+.dgxe-expressions textarea { width: 100%; box-sizing: border-box; padding: .4rem .5rem;
+  font-family: "Roboto Mono", monospace; font-size: .8rem; border: 1px solid #9CA3AF;
+  border-radius: 3px; resize: vertical; }
+.dgxe-expressions .dgxe-buttons { margin-top: .4rem; }
+.dgxe-expressions .dgxe-buttons button { font-size: .8rem; padding: .1rem .55rem; }

@@ -65,6 +65,43 @@ make_library <- function(drv, degree = 3, pairs = FALSE) {
   array(L, c(d[1:2], ncol(L)), dimnames = list(NULL, NULL, colnames(L)))
 }
 
+## ---- Extra terms: functions of the raw weather, standardised like the drivers
+## exprs: named character vector in R syntax. Available are the columns of wx,
+## Tmean, VPD (hPa) and das, and the functions roll(x, k) (mean of the last k
+## days), cum(x) and lag(x, k); max and min act elementwise.
+extra_terms <- function(wx, exprs, years = sort(unique(wx$year))) {
+  das0 <- min(wx$das); nd <- max(wx$das) - das0 + 1
+  fun <- new.env(parent = baseenv())
+  fun$max <- pmax; fun$min <- pmin; fun$cum <- cumsum
+  fun$roll <- function(x, k) {
+    vapply(seq_along(x), function(t) mean(x[max(1, t - k + 1):t]), 0)
+  }
+  fun$lag <- function(x, k) x[pmax(seq_along(x) - k, 1)]
+  X <- array(NA_real_, c(length(years), nd, length(exprs)),
+             dimnames = list(years, NULL, names(exprs)))
+  for (y in seq_along(years)) {
+    w <- wx[wx$year == years[y], ]
+    v <- lapply(w[setdiff(names(w), c("year", "das"))],
+                function(x) c(x, rep(tail(x, 1), nd - length(x))))
+    v$das <- das0 + seq_len(nd) - 1
+    v$Tmean <- (v$Tmin + v$Tmax) / 2
+    v$VPD <- 6.108 * exp(17.27 * v$Tmax / (v$Tmax + 237.3)) - v$VP
+    for (j in seq_along(exprs)) X[y, , j] <- eval(parse(text = exprs[[j]]), v, fun)
+  }
+  for (j in seq_along(exprs)) {
+    x <- X[, , j]
+    X[, , j] <- (x - mean(x)) / sqrt(mean((x - mean(x))^2))
+  }
+  X
+}
+
+## Appends extra terms to a library Theta[year, day, term].
+bind_terms <- function(Theta, extra) {
+  d <- dim(Theta)
+  array(c(Theta, extra), c(d[1:2], d[3] + dim(extra)[3]),
+        dimnames = list(NULL, NULL, c(dimnames(Theta)[[3]], dimnames(extra)[[3]])))
+}
+
 ## ---- Trajectories: array Y[genotype, year, day], NA after maturity --------
 ## nend[g, y] is the number of daily steps of trajectory (g, y).
 make_trajectories <- function(traj, drv, var = "biomass") {

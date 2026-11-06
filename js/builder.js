@@ -248,21 +248,210 @@ const Builder = (() => {
     };
   };
 
+  // ---- Extra terms: expressions of the raw weather -----------------------------
+  // A small expression language (no code is evaluated): numbers, the variables of
+  // the weather table, + - * / ^, parentheses, and the functions exp, log, sqrt,
+  // abs, sin, cos, tan, tanh, min, max (elementwise), roll(x, k) (mean of the last
+  // k days), cum(x) (cumulative sum) and lag(x, k).
+  const functions = {
+    exp: Math.exp, log: Math.log, sqrt: Math.sqrt, abs: Math.abs,
+    sin: Math.sin, cos: Math.cos, tan: Math.tan, tanh: Math.tanh
+  };
+
+  function tokenize(src) {
+    const tokens = [], re = /\s*(?:(\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+)|([A-Za-z_][A-Za-z0-9_.]*)|(.))/gy;
+    let m;
+    while (re.lastIndex < src.length && (m = re.exec(src))) {
+      if (m[1] !== undefined) tokens.push({type: "num", value: +m[1]});
+      else if (m[2] !== undefined) tokens.push({type: "id", value: m[2]});
+      else if (m[3] !== undefined && m[3].trim()) tokens.push({type: "op", value: m[3]});
+    }
+    return tokens;
+  }
+
+  function parseExpression(src) {
+    const t = tokenize(src);
+    let i = 0;
+    const peek = () => t[i], take = () => t[i++];
+    const expect = (v) => {
+      if (!peek() || peek().value !== v) throw new Error(`expected "${v}"`);
+      take();
+    };
+    function atom() {
+      const tok = take();
+      if (!tok) throw new Error("unexpected end of expression");
+      if (tok.type === "num") return {num: tok.value};
+      if (tok.type === "id") {
+        if (peek() && peek().value === "(") {
+          take();
+          const args = [];
+          if (peek() && peek().value !== ")") {
+            args.push(sum());
+            while (peek() && peek().value === ",") { take(); args.push(sum()); }
+          }
+          expect(")");
+          return {call: tok.value, args};
+        }
+        return {id: tok.value};
+      }
+      if (tok.value === "(") { const e = sum(); expect(")"); return e; }
+      throw new Error(`unexpected "${tok.value}"`);
+    }
+    function power() {
+      const base = atom();
+      if (peek() && peek().value === "^") { take(); return {op: "^", a: base, b: unary()}; }
+      return base;
+    }
+    function unary() {
+      if (peek() && peek().value === "-") { take(); return {op: "neg", a: unary()}; }
+      if (peek() && peek().value === "+") { take(); return unary(); }
+      return power();
+    }
+    function product() {
+      let e = unary();
+      while (peek() && (peek().value === "*" || peek().value === "/")) e = {op: take().value, a: e, b: unary()};
+      return e;
+    }
+    function sum() {
+      let e = product();
+      while (peek() && (peek().value === "+" || peek().value === "-")) e = {op: take().value, a: e, b: product()};
+      return e;
+    }
+    const ast = sum();
+    if (i < t.length) throw new Error(`unexpected "${t[i].value}"`);
+    return ast;
+  }
+
+  // Evaluates an expression on one year; vars maps names to Float64Array(D).
+  function evaluate(ast, vars, D) {
+    const vec = (v) => (typeof v === "number" ? new Float64Array(D).fill(v) : v);
+    const map2 = (a, b, f) => {
+      const x = vec(a), y = vec(b), out = new Float64Array(D);
+      for (let d = 0; d < D; d++) out[d] = f(x[d], y[d]);
+      return out;
+    };
+    const scalar = (node, what) => {
+      if (node.num === undefined) throw new Error(`${what} must be a number`);
+      return node.num;
+    };
+    const go = (n) => {
+      if (n.num !== undefined) return n.num;
+      if (n.id !== undefined) {
+        if (n.id === "pi") return Math.PI;
+        if (!(n.id in vars)) throw new Error(`unknown variable "${n.id}"`);
+        return vars[n.id];
+      }
+      if (n.op === "neg") return map2(go(n.a), 0, (x) => -x);
+      if (n.op) {
+        const f = {"+": (x, y) => x + y, "-": (x, y) => x - y, "*": (x, y) => x * y,
+                   "/": (x, y) => x / y, "^": (x, y) => x ** y}[n.op];
+        return map2(go(n.a), go(n.b), f);
+      }
+      const f = n.call;
+      if (functions[f]) {
+        if (n.args.length !== 1) throw new Error(`${f} takes one argument`);
+        const a = go(n.args[0]);
+        return typeof a === "number" ? functions[f](a) : Float64Array.from(a, functions[f]);
+      }
+      if (f === "min" || f === "max") {
+        if (n.args.length < 2) throw new Error(`${f} takes at least two arguments`);
+        const pick = f === "min" ? Math.min : Math.max;
+        return n.args.map(go).reduce((a, b) => map2(a, b, pick));
+      }
+      if (f === "roll" || f === "lag") {
+        if (n.args.length !== 2) throw new Error(`${f} takes two arguments`);
+        const x = vec(go(n.args[0])), k = scalar(n.args[1], "the second argument of " + f);
+        const out = new Float64Array(D);
+        if (f === "lag") for (let d = 0; d < D; d++) out[d] = x[Math.max(d - k, 0)];
+        else {
+          const run = new Float64Array(D + 1);
+          for (let d = 0; d < D; d++) run[d + 1] = run[d] + x[d];
+          for (let d = 0; d < D; d++) { const from = Math.max(0, d - k + 1); out[d] = (run[d + 1] - run[from]) / (d + 1 - from); }
+        }
+        return out;
+      }
+      if (f === "cum") {
+        if (n.args.length !== 1) throw new Error("cum takes one argument");
+        const x = vec(go(n.args[0])), out = new Float64Array(D);
+        let a = 0;
+        for (let d = 0; d < D; d++) out[d] = a += x[d];
+        return out;
+      }
+      throw new Error(`unknown function "${f}"`);
+    };
+    return vec(go(ast));
+  }
+
+  // One line per term, "name = expression" or just "expression".
+  const dummy = Object.fromEntries(["Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW", "Tmean", "VPD", "das"]
+    .map((v) => [v, new Float64Array([1, 2, 3])]));
+  function parseExtras(text) {
+    const terms = [], errors = [];
+    text.split("\n").forEach((line, i) => {
+      const raw = line.trim();
+      if (!raw || raw.startsWith("#")) return;
+      const eq = raw.match(/^([A-Za-z_][A-Za-z0-9_.]*)\s*=(?!=)\s*(.+)$/);
+      const [name, expr] = eq ? [eq[1], eq[2]] : [raw.replace(/\s+/g, ""), raw];
+      try { evaluate(parseExpression(expr), dummy, 3); terms.push({name, expr}); }
+      catch (e) { errors.push({line: i + 1, text: raw, message: e.message}); }
+    });
+    return {terms, errors};
+  }
+
+  // Standardised columns [year][day] for the extra terms (like the drivers).
+  const extraCache = new Map();
+  function extraColumns(data, extras) {
+    const key = extras.map((e) => `${e.name}=${e.expr}`).join(";");
+    if (extraCache.has(key)) return extraCache.get(key);
+    const S = data.years.length, D = data.U[0].length;
+    const raw = (y) => {
+      const v = {};
+      data.drivers.forEach((name, k) => {
+        v[name] = Float64Array.from({length: D}, (_, d) => data.U[y][d][k] * data.scale[k] + data.center[k]);
+      });
+      v.Tmean = Float64Array.from({length: D}, (_, d) => (v.Tmin[d] + v.Tmax[d]) / 2);
+      v.VPD = Float64Array.from({length: D}, (_, d) => 6.108 * Math.exp((17.27 * v.Tmax[d]) / (v.Tmax[d] + 237.3)) - v.VP[d]);
+      v.das = Float64Array.from({length: D}, (_, d) => data.das0 + d);
+      return v;
+    };
+    const vars = Array.from({length: S}, (_, y) => raw(y));
+    const columns = extras.map((e) => {
+      const ast = parseExpression(e.expr);
+      const values = vars.map((v) => evaluate(ast, v, D));
+      let n = 0, sum = 0, sq = 0;
+      for (const row of values) for (const x of row) {
+        if (!Number.isFinite(x)) throw new Error(`"${e.name}" is not finite on some days (for example a logarithm of a negative number)`);
+        n++; sum += x; sq += x * x;
+      }
+      const mean = sum / n, sd = Math.sqrt(Math.max(sq / n - mean * mean, 0));
+      if (!(sd > 1e-12)) throw new Error(`"${e.name}" is constant`);
+      return {name: e.name, values: values.map((row) => Float64Array.from(row, (x) => (x - mean) / sd))};
+    });
+    if (extraCache.size > 20) extraCache.delete(extraCache.keys().next().value);
+    extraCache.set(key, columns);
+    return columns;
+  }
+
   // ---- Design of one genotype ----------------------------------------------
   const cache = new Map();
 
   // Library rows (days 0..nend of every year), and raw sums per year.
-  function prepare(data, g, selected, degree, pairs) {
-    const key = [g, selected.join(","), degree, pairs].join("|");
+  function prepare(data, g, selected, degree, pairs, extras = []) {
+    const key = [g, selected.join(","), degree, pairs, extras.map((e) => `${e.name}=${e.expr}`).join(";")].join("|");
     if (cache.has(key)) return cache.get(key);
     if (cache.size > 6) cache.delete(cache.keys().next().value);
-    const {specs, names} = termSpecs(selected, degree, pairs);
-    const K = specs.length, S = data.years.length;
+    const base = termSpecs(selected, degree, pairs), specs = base.specs;
+    const extra = extraColumns(data, extras);
+    const names = base.names.concat(extra.map((e) => e.name));
+    const K = specs.length + extra.length, S = data.years.length;
     const col = selected.map((d) => data.drivers.indexOf(d));
     const years = [];
     const lib = (y, d) => {
       const u = col.map((c) => data.U[y][d][c]);
-      return Float64Array.from(specs, (s) => s.reduce((acc, [i, p]) => acc * u[i] ** p, 1));
+      const row = new Float64Array(K);
+      specs.forEach((s, j) => { row[j] = s.reduce((acc, [i, p]) => acc * u[i] ** p, 1); });
+      extra.forEach((e, j) => { row[specs.length + j] = e.values[y][d]; });
+      return row;
     };
     for (let y = 0; y < S; y++) {
       const nend = data.nend[g][y], Y = data.Y[g][y];
@@ -324,7 +513,7 @@ const Builder = (() => {
   // ---- Run: fit to all years, validate leaving one year out ------------------
   function run(data, g, config) {
     const t0 = (typeof performance !== "undefined" ? performance : Date).now();
-    const design = prepare(data, g, config.drivers, config.degree, config.pairs);
+    const design = prepare(data, g, config.drivers, config.degree, config.pairs, config.extras || []);
     const {K, years, total} = design;
     const method = methods(K)[config.method];
     const full = method.fit(centred(total, K), config.value);
@@ -358,7 +547,7 @@ const Builder = (() => {
     };
   }
 
-  return {termSpecs, methods, prepare, run, centred, fits, integrate};
+  return {termSpecs, methods, prepare, run, centred, fits, integrate, parseExtras, parseExpression, evaluate, extraColumns};
 })();
 
 if (typeof module !== "undefined") module.exports = Builder;
