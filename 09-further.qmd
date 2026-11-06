@@ -6,7 +6,7 @@ The numbers and figures on this page come from the research code (Python), not f
 
 ## Coupled states
 
-In steps 4 to 8 the library depends on the drivers only, so the fitted ODE can be solved by accumulating the daily growth. In a crop, a larger leaf area intercepts more light and increases biomass growth. Including the state in the library gives a coupled system in the leaf area index $L$ and the biomass $B$, with $\mathbf{y} = (L, B)$:
+In steps 4 to 8 the library depends on the drivers only, so the fitted ODE is solved with the `terms` argument of `simulate` (step 5), which evaluates the library along the solution. In a crop, a larger leaf area intercepts more light and increases biomass growth. Including the state in the library gives a coupled system in the leaf area index $L$ and the biomass $B$, with $\mathbf{y} = (L, B)$:
 
 $$
 \dot{L} = \boldsymbol{\theta}_L(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi}_L, \qquad

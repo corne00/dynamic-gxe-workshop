@@ -142,11 +142,21 @@ fit_methods <- list(
   `backward (k = 8)` = function(X, dy) fit_subset(X, dy, 8, "backward"),
   STLSQ = fit_stlsq)
 
-## ---- Simulation: for a weather-only library the solution is a cumulative sum
-## coef: intercept and term coefficients; Theta_y: day x term (one season).
-simulate <- function(coef, Theta_y, y0) {
-  rate <- cbind(1, Theta_y[-nrow(Theta_y), ]) %*% coef
-  y0 + c(0, cumsum(rate))
+## ---- Simulation: solve dy/dt = (1, theta(y, u)) coef with a standard solver
+## coef: seasons x (1 + terms), one fitted equation per season. U: season x day
+## x variable, daily values placed in the middle of each day and interpolated
+## linearly. terms(y, u) gives the library for states y and drivers u; by
+## default U already holds the library (drivers only). Returns day x season.
+simulate <- function(coef, U, y0, terms = function(y, u) u, method = "lsoda") {
+  S <- dim(U)[1]; D <- dim(U)[2]
+  day <- function(j) matrix(U[, j, ], S)
+  rhs <- function(t, y, parms) {
+    x <- min(max(t - 0.5, 0), D - 1.5)           # constant outside the data
+    j <- floor(x)
+    u <- (1 - (x - j)) * day(j + 1) + (x - j) * day(j + 2)
+    list(coef[, 1] + rowSums(terms(y, u) * coef[, -1]))
+  }
+  deSolve::ode(y0, 0:(D - 1), rhs, NULL, method = method)[, -1, drop = FALSE]
 }
 
 ## Genotypes with the lowest, median and highest mean final biomass.
@@ -164,13 +174,15 @@ spread_genotypes <- function(tr) {
 ## Returns P[genotype, season, day].
 cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
   P <- array(NA_real_, dim(tr$Y))
+  S <- length(tr$years)
   for (g in match(genotypes, tr$genotypes)) {
     d <- make_design(Theta, tr, tr$genotypes[g])
-    for (v in seq_along(tr$years)) {
+    coef <- t(sapply(seq_len(S), function(v) {
       train <- d$season != v
-      coef <- fit(d$X[train, ], d$dy[train])
-      P[g, v, ] <- simulate(coef, Theta[v, , ], mean(tr$Y[g, -v, 1]))
-    }
+      fit(d$X[train, ], d$dy[train])
+    }))
+    y0 <- (sum(tr$Y[g, , 1]) - tr$Y[g, , 1]) / (S - 1)
+    P[g, , ] <- t(simulate(coef, Theta, y0))
   }
   P
 }

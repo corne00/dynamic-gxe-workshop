@@ -33,29 +33,46 @@ yy <- tr$Y[g, v, 1:(tr$nend[g, v] + 1)]
 d <- data.frame(das = seq_along(yy) + tr$das0 - 1, y = yy)
 d$dy <- c(diff(yy), NA)
 i <- 85                                           # highlighted day
-hi <- d[i:(i + 1), ]
+win <- (i - 3):(i + 4)                            # days shown in the zoom
+z <- d[win, ]
+pad <- 0.06 * diff(range(z$y))
 p1 <- ggplot(d, aes(das, y)) +
   geom_line(colour = grey, linewidth = 0.6) +
   geom_point(colour = blue, size = 0.8) +
-  geom_point(data = d[i:(i + 1), ], colour = bur, size = 1.4) +
-  annotate("segment", x = d$das[i] + 3, xend = d$das[i] + 3, y = d$y[i],
-           yend = d$y[i + 1], colour = bur, linewidth = 0.8) +
-  annotate("text", x = d$das[i] + 6, y = (d$y[i] + d$y[i + 1]) / 2 - 0.4,
-           label = "Delta*y[i]", parse = TRUE, colour = bur, size = 3.6,
-           hjust = 0) +
+  annotate("rect", xmin = min(z$das) - 1, xmax = max(z$das) + 1,
+           ymin = min(z$y) - pad - 0.3, ymax = max(z$y) + pad + 0.3,
+           fill = NA, colour = bur, linewidth = 0.5) +
   labs(title = "(a) Observed biomass", x = "days after sowing",
        y = expression(y[i] ~ "(t/ha)")) +
   concept()
-p2 <- ggplot(d[-nrow(d), ], aes(das, dy)) +
-  geom_col(fill = blue, width = 0.8) +
-  geom_col(data = d[i, ], fill = bur, width = 0.8) +
-  labs(title = expression("(b) Daily increments " * Delta * y[i] ==
-                            y[i + 1] - y[i]),
-       x = "days after sowing", y = "t/ha/day") +
+p2 <- ggplot(z, aes(das, y)) +
+  geom_line(colour = grey, linewidth = 0.8) +
+  geom_point(colour = blue, size = 2) +
+  geom_point(data = d[i:(i + 1), ], colour = bur, size = 2.6) +
+  annotate("segment", x = d$das[i], xend = d$das[i + 1], y = d$y[i],
+           yend = d$y[i], colour = bur, linewidth = 0.5, linetype = "22") +
+  annotate("segment", x = d$das[i + 1], xend = d$das[i + 1], y = d$y[i],
+           yend = d$y[i + 1], colour = bur, linewidth = 1) +
+  annotate("text", x = d$das[i + 1] + 0.25, y = mean(d$y[i:(i + 1)]),
+           label = "Delta*y[i]", parse = TRUE, colour = bur, size = 4,
+           hjust = 0) +
+  annotate("text", x = d$das[i] - 0.2, y = d$y[i] + pad, label = "y[i]",
+           parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
+  annotate("text", x = d$das[i + 1] - 0.2, y = d$y[i + 1] + pad,
+           label = "y[i+1]", parse = TRUE, colour = bur, size = 3.4,
+           hjust = 1) +
+  labs(title = expression("(b) Zoom: " * Delta * y[i] == y[i + 1] - y[i]),
+       x = "days after sowing", y = "t/ha") +
   concept()
-save(list(p1, p2), "concept_increments.png", 8, 2.4)
+p3 <- ggplot(d[-nrow(d), ], aes(das, dy)) +
+  geom_col(fill = blue, width = 0.8) +
+  geom_col(data = d[i, ], fill = bur, width = 1.8) +
+  labs(title = "(c) Daily increments", x = "days after sowing",
+       y = "t/ha/day") +
+  concept()
+save(list(p1, p2, p3), "concept_increments.png", 9, 2.5)
 
-## 2. Solution: cumulative sum of the predicted growth -----------------------
+## 2. Solution: the fitted equation integrated over the season -----------------------
 P <- readRDS("precomputed/cv_stlsq.rds")
 pred <- P[g, v, 1:(tr$nend[g, v] + 1)]
 e <- data.frame(das = d$das, rate = c(diff(pred), NA), pred = pred, obs = yy)

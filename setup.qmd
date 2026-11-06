@@ -17,10 +17,10 @@ Every code block is available in R and in Python. Selecting a language in any of
 
 ## Packages
 
-R 4.1 or later. The fitting methods use `glmnet` and `leaps`; the interpretation page uses `iml` (with `yaImpute`); the figures use `ggplot2`.
+R 4.1 or later. The fitting methods use `glmnet` and `leaps`, the solver `deSolve`; the interpretation page uses `iml` (with `yaImpute`); the figures use `ggplot2`.
 
 ```r
-install.packages(c("glmnet", "leaps", "ggplot2", "iml"))
+install.packages(c("glmnet", "leaps", "deSolve", "ggplot2", "iml"))
 ```
 
 Python 3.9 or later with `numpy`, `pandas`, `scipy`, `scikit-learn` and `matplotlib`; the interpretation page also uses `PyALE`. Python is run from the repository root with `python/` on the path.

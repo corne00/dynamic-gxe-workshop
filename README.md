@@ -12,11 +12,11 @@ wx   <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
-Python: `PYTHONPATH=python`, then `from dgxe import *`. `scripts/parity_check.R` and `scripts/parity_check.py` cross-validate all fitting methods on a few genotypes and give the same errors. R packages: `glmnet`, `leaps`, `iml`, `ggplot2` (and `splines` for one example). Python packages: `numpy`, `pandas`, `scipy`, `scikit-learn`, `matplotlib`, `PyALE`.
+Python: `PYTHONPATH=python`, then `from dgxe import *`. `scripts/parity_check.R` and `scripts/parity_check.py` cross-validate all fitting methods on a few genotypes and give the same errors. R packages: `glmnet`, `leaps`, `deSolve`, `iml`, `ggplot2` (and `splines` for one example). Python packages: `numpy`, `pandas`, `scipy`, `scikit-learn`, `matplotlib`, `PyALE`.
 
 ## Build the site
 
-Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet`, `leaps` and `iml`.
+Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet`, `leaps`, `deSolve` and `iml`.
 
 ```sh
 quarto render      # writes docs/ ; computed outputs are cached in _freeze/ and precomputed/

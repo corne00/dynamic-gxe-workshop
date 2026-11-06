@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
+from scipy.integrate import solve_ivp
 from sklearn.linear_model import ElasticNet
 
 DRIVERS = ["TT", "DL", "RAW", "RAD"]
@@ -177,11 +178,22 @@ fit_methods = {
 }
 
 
-# ---- Simulation: for a weather-only library the solution is a cumulative sum
-# coef: intercept and term coefficients; Theta_s: day x term (one season).
-def simulate(coef, Theta_s, y0):
-    rate = coef[0] + Theta_s[:-1] @ coef[1:]
-    return y0 + np.concatenate([[0], np.cumsum(rate)])
+# ---- Simulation: solve dy/dt = (1, theta(y, u)) coef with a standard solver
+# coef: seasons x (1 + terms), one fitted equation per season. U: season x day
+# x variable, daily values placed in the middle of each day and interpolated
+# linearly. terms(y, u) gives the library for states y and drivers u; by
+# default U already holds the library (drivers only). Returns season x day.
+def simulate(coef, U, y0, terms=lambda y, u: u, method="LSODA"):
+    D = U.shape[1]
+
+    def rhs(t, y):
+        x = min(max(t - 0.5, 0.0), D - 1.5)      # constant outside the data
+        j = int(x)
+        u = (1 - (x - j)) * U[:, j] + (x - j) * U[:, j + 1]
+        return coef[:, 0] + np.einsum("sk,sk->s", terms(y, u), coef[:, 1:])
+
+    return solve_ivp(rhs, (0, D - 1), y0, method=method, t_eval=np.arange(D),
+                     rtol=1e-6, atol=1e-6).y
 
 
 # Genotypes with the lowest, median and highest mean final biomass.
@@ -198,14 +210,14 @@ def spread_genotypes(tr):
 # Returns P[genotype, season, day].
 def cross_validate(Theta, tr, fit, genotypes=None):
     P = np.full(tr.Y.shape, np.nan)
+    S = len(tr.years)
     for g in (tr.genotypes if genotypes is None else genotypes):
         i = list(tr.genotypes).index(g)
         d = make_design(Theta, tr, g)
-        for s in range(len(tr.years)):
-            train = d.season != s
-            coef = fit(d.X[train], d.dy[train])
-            y0 = np.delete(tr.Y[i, :, 0], s).mean()
-            P[i, s] = simulate(coef, Theta.array[s], y0)
+        coef = np.array([fit(d.X[d.season != s], d.dy[d.season != s])
+                         for s in range(S)])
+        y0 = (tr.Y[i, :, 0].sum() - tr.Y[i, :, 0]) / (S - 1)
+        P[i] = simulate(coef, Theta.array, y0)
     return P
 
 

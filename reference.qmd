@@ -27,7 +27,7 @@ All functions are in `R/functions.R`.
 | `make_trajectories(traj, drv, var)` | response `Y[genotype, season, day]` |
 | `make_design(Theta, tr, genotype)` | design matrix `X` and increments `dy` |
 | `fit_ols`, `fit_ridge`, `fit_lasso`, `fit_enet`, `fit_subset`, `fit_stlsq` | fitting methods `fit(X, dy)` |
-| `simulate(coef, Theta_y, y0)` | solution as a cumulative sum |
+| `simulate(coef, U, y0)` | solution of the fitted equation with an ODE solver |
 | `cross_validate(Theta, tr, fit)` | leave-one-season-out predictions |
 | `evaluate(P, tr)` | trajectory, fixed-day and maturity RMSE |
 | `ale_curve(rate, Z, j)` | accumulated local effect of driver `j` |

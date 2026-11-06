@@ -461,59 +461,33 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_increments.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>Observed biomass of one genotype in one season (a), and its daily increments (b). The regression is performed on the increments.</figcaption>
+<figcaption>Observed biomass of one genotype in one season (a). The box is enlarged in (b): the increment <span class="math inline">\(\Delta y_i\)</span> is the difference between two consecutive observations. The increments of the whole season are shown in (c); the regression is performed on these.</figcaption>
 </figure>
 </div>
 <p>Collecting all the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
 <p><span class="math display">\[
 \Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 \]</span></p>
-<p>If we have collected data in several environments, and for several genotypes, the increments and library values are stacked in <span class="math inline">\(\Delta\mathbf{y}\)</span> and <span class="math inline">\(\mathbf{X}\)</span>, respectively. Hence, the matrix and vector look like this, with <span class="math inline">\(y_i^{(g, e)}\)</span> the observation of genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(t_i\)</span>:</p>
+<p>If data are collected in several environments and for several genotypes, the increments and library values are stacked, with <span class="math inline">\(\Delta y_i^{(g, e)}\)</span> the increment of genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(i\)</span>:</p>
 <p><span class="math display">\[
-\Delta\mathbf{y} = \begin{pmatrix}
-\Delta y_1^{(1, 1)} \\
-\Delta y_2^{(1, 1)} \\
-\vdots \\
-\Delta y_n^{(1, 1)} \\
-\Delta y_1^{(2, 1)} \\
-\Delta y_2^{(2, 1)} \\
-\vdots \\
-\Delta y_n^{(2, 1)} \\
-\vdots \\
-\Delta y_1^{(g, e)} \\
-\Delta y_2^{(g, e)} \\
-\vdots \\
-\Delta y_n^{(g, e)}
+{\small
+\begin{pmatrix}
+\Delta y_1^{(1, 1)} \\ \vdots \\ \Delta y_n^{(1, 1)} \\ \vdots \\ \Delta y_n^{(g, e)}
 \end{pmatrix}
-\]</span></p>
-<p>and</p>
-<p><span class="math display">\[
-\mathbf{X} = \begin{pmatrix}
-\theta_1(\mathbf{u}_1^{(1, 1)})  &amp; \theta_2(\mathbf{u}_1^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(1, 1)}) \\
-\theta_1(\mathbf{u}_2^{(1, 1)})  &amp; \theta_2(\mathbf{u}_2^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(1, 1)}) \\
-\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-\theta_1(\mathbf{u}_n^{(1, 1)})  &amp; \theta_2(\mathbf{u}_n^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(1, 1)}) \\
-\theta_1(\mathbf{u}_1^{(2, 1)})  &amp; \theta_2(\mathbf{u}_1^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(2, 1)}) \\
-\theta_1(\mathbf{u}_2^{(2, 1)})  &amp; \theta_2(\mathbf{u}_2^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(2, 1)}) \\
-\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-\theta_1(\mathbf{u}_n^{(2, 1)})  &amp; \theta_2(\mathbf{u}_n^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(2, 1)}) \\
-\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-\theta_1(\mathbf{u}_1^{(g, e)})  &amp; \theta_2(\mathbf{u}_1^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(g, e)}) \\
-\theta_1(\mathbf{u}_2^{(g, e)})  &amp; \theta_2(\mathbf{u}_2^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(g, e)}) \\
-\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-\theta_1(\mathbf{u}_n^{(g, e)})  &amp; \theta_2(\mathbf{u}_n^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(g, e)})
+\approx
+\begin{pmatrix}
+\theta_1(\mathbf{u}_1^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(1, 1)}) \\
+\vdots &amp; \ddots &amp; \vdots \\
+\theta_1(\mathbf{u}_n^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(1, 1)}) \\
+\vdots &amp; \ddots &amp; \vdots \\
+\theta_1(\mathbf{u}_n^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(g, e)})
 \end{pmatrix}
+\begin{pmatrix}
+\xi_1 \\ \vdots \\ \xi_K
+\end{pmatrix}
+}
 \]</span></p>
-<p>with coefficients</p>
-<p><span class="math display">\[
-\boldsymbol{\xi} = \begin{pmatrix}
-\xi_1 \\
-\xi_2 \\
-\vdots \\
-\xi_K
-\end{pmatrix}.
-\]</span></p>
-<p>The coefficients enter linearly (recall the equation <span class="math inline">\(\frac{dy}{dt} = \mathbf{X}\boldsymbol{\xi}\)</span>), so we just need to solve a linear regression problem to estimate them, for example by least squares:</p>
+<p>The coefficients enter linearly (recall <span class="math inline">\(\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}\)</span>), so we just need to solve a linear regression problem to estimate them, for example by least squares:</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
 \]</span></p>
@@ -528,7 +502,7 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_solution.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>Season 1998 of one genotype, predicted by a model fitted to the other seasons. The predicted daily growth (a) is accumulated from the initial value <span class="math inline">\(y_0\)</span> (b) and compared with the APSIM trajectory.</figcaption>
+<figcaption>Season 1998 of one genotype, predicted by a model fitted to the other seasons. The predicted daily growth (a) is integrated from the initial value <span class="math inline">\(y_0\)</span> (b) and compared with the APSIM trajectory.</figcaption>
 </figure>
 </div>
 </section>

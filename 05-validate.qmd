@@ -36,13 +36,49 @@ tr = make_trajectories(traj, drv)
 
 ## Solution
 
-With a library that depends on the drivers only, the fitted equation is solved numerically, here by accumulating the predicted daily growth (the simplest ODE solver, a forward step of one day):
+The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. The daily values of the drivers are placed in the middle of each day and interpolated linearly, so the solver sees a continuous right-hand side. All seasons are integrated in one call, each with its own coefficients, which keeps the cross-validation fast (a few seconds per method for 199 genotypes in Python).
 
 ```{r}
 #| echo: false
 #| results: asis
 show_fun("simulate")
 ```
+
+The library does not have to be a function of the drivers only. If `terms(y, u)` is given, it is evaluated along the solution, with the current state `y` and the drivers `u`. As a check, a logistic equation $\frac{dy}{dt} = 0.2\,y - 0.02\,y^2$ is integrated with the library $(y, y^2)$ and compared with its exact solution:
+
+::: {.panel-tabset group="language"}
+
+## R
+
+```{r}
+#| label: 05-0
+#| ref.label: 05-0-run
+#| eval: false
+```
+
+## Python
+
+```python
+U = np.zeros((1, 50, 1))                         # no drivers
+y = simulate(np.array([[0, 0.2, -0.02]]), U, np.array([0.5]),
+             terms=lambda y, u: np.column_stack([y, y**2]))
+exact = 10 / (1 + 19 * np.exp(-0.2 * np.arange(50)))
+print(abs(y[0] - exact).max())
+```
+
+:::
+
+```{r}
+#| label: 05-0-run
+#| echo: false
+U <- array(0, c(1, 50, 1))                       # no drivers
+y <- simulate(rbind(c(0, 0.2, -0.02)), U, 0.5,
+              terms = function(y, u) cbind(y, y^2))
+exact <- 10 / (1 + 19 * exp(-0.2 * 0:49))
+max(abs(y - exact))
+```
+
+The maximum error is of order $10^{-5}$ or smaller, set by the solver tolerance.
 
 ## Leave-one-season-out cross-validation
 
