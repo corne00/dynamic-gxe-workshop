@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-9088ff574c0dff7a49483a0e1a1bc527.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -272,9 +272,8 @@ window.Quarto = {
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
   <li><a href="#model" id="toc-model" class="nav-link" data-scroll-target="#model">Model</a></li>
   <li><a href="#regression" id="toc-regression" class="nav-link" data-scroll-target="#regression">Regression</a></li>
-  <li><a href="#sparsity" id="toc-sparsity" class="nav-link" data-scroll-target="#sparsity">Sparsity</a></li>
-  <li><a href="#solution" id="toc-solution" class="nav-link" data-scroll-target="#solution">Solution</a></li>
-  <li><a href="#genotypes" id="toc-genotypes" class="nav-link" data-scroll-target="#genotypes">Genotypes</a></li>
+  <li><a href="#making-predictions" id="toc-making-predictions" class="nav-link" data-scroll-target="#making-predictions">Making predictions</a></li>
+  <li><a href="#dealing-with-multiple-genotypes" id="toc-dealing-with-multiple-genotypes" class="nav-link" data-scroll-target="#dealing-with-multiple-genotypes">Dealing with multiple genotypes</a></li>
   <li><a href="#validation" id="toc-validation" class="nav-link" data-scroll-target="#validation">Validation</a></li>
   <li><a href="#steps" id="toc-steps" class="nav-link" data-scroll-target="#steps">Steps</a></li>
   </ul>
@@ -307,22 +306,22 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/method_overview.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>Schematic. Environmental drivers <span class="math inline">\(U\)</span> and the response <span class="math inline">\(Y\)</span> are measured over time. The growth rate of <span class="math inline">\(Y\)</span> is regressed on a library <span class="math inline">\(\Theta(Y, U)\)</span> of candidate functions; a sparse coefficient matrix <span class="math inline">\(\Xi\)</span> selects the terms of the equation.</figcaption>
+<figcaption>Schematic visualization of the methodology. Environmental drivers <span class="math inline">\(U\)</span> and the crop state <span class="math inline">\(Y\)</span> are measured over time. The estimated growth rate of <span class="math inline">\(Y\)</span> is regressed on a library <span class="math inline">\(\Theta(Y, U)\)</span> of candidate functions; a sparse coefficient matrix <span class="math inline">\(\Xi\)</span> selects the terms of the equation.</figcaption>
 </figure>
 </div>
 </section>
 <section id="model" class="level2">
 <h2 class="anchored" data-anchor-id="model">Model</h2>
-<p>Let <span class="math inline">\(\mathbf{y}(t)\)</span> denote the state of the crop (for example biomass or leaf area index) and <span class="math inline">\(\mathbf{u}(t) = (u_1(t), \dots, u_m(t))\)</span> the environmental drivers. The dynamics are written as a system of ordinary differential equations</p>
+<p>Let <span class="math inline">\(\mathbf{y}(t)\)</span> denote the state of the crop (for example biomass or leaf area index) and <span class="math inline">\(\mathbf{u}(t) = (u_1(t), \dots, u_m(t))\)</span> the environmental drivers. The growth of the crop can be described using a system of ordinary differential equations:</p>
 <p><span class="math display">\[
-\dot{\mathbf{y}} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
+\frac{d\mathbf{y}}{dt} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
 \]</span></p>
-<p>Each component <span class="math inline">\(\dot{y}\)</span> of the right-hand side is expressed as a combination of candidate functions <span class="math inline">\(\theta_1, \dots, \theta_K\)</span> (the library),</p>
+<p>Each component <span class="math inline">\(\frac{dy}{dt}\)</span> of the right-hand side is expressed as a combination of candidate functions <span class="math inline">\(\theta_1, \dots, \theta_K\)</span> (the library),</p>
 <p><span class="math display">\[
-\dot{y} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
+\frac{dy}{dt} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 \]</span></p>
-<p>where most coefficients <span class="math inline">\(\xi_j\)</span> are expected to be zero. The library contains, for example, a constant, powers of the drivers and of the states, and products of them.</p>
-<p>The three panels show how the environment drives growth. Temperature (a) enters a response function (b); the resulting growth rate is accumulated over the season to give biomass (c). Press play, or move the day slider, to follow one day through the panels. The optimum and the upper limit change the shape of the response, and the dashed curves show the default response for comparison.</p>
+<p>where most coefficients <span class="math inline">\(\xi_j\)</span> are expected to be zero. The library contains a number of candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients <span class="math inline">\(\boldsymbol{\xi}\)</span> are estimated from the data by regression.</p>
+<p>Below, a simple visualization describes how (a) observed temperature drives drives growth, how (b) the response function then determines the growth rate, and how (c) the growth rate is accumulated to give biomass. Changing the response function (by changing the optimum and upper limit) shows how the growth rate and biomass change as function of the response.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb1" data-startfrom="29" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 28;"><span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
@@ -450,39 +449,82 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>Temperature is the observed daily mean at Narrabri (3-day average). The response is an asymmetric function of temperature with base temperature 2 °C, and the growth rate is 0.17 t/ha/day times the response times a canopy factor that rises with leaf area and falls at senescence. The figure is a toy: the growth rate depends on temperature only.</p>
-<p>In this workshop the state is a single quantity, biomass <span class="math inline">\(y\)</span>, and the library contains functions of the drivers only, so that the growth rate depends on the environment but not on the current biomass. Libraries that contain the state are treated in step 9.</p>
+<p>In this workshop, we study the dynamics of biomass <span class="math inline">\(y\)</span> and we restrict ourselves to the following approximation:</p>
+<p><span class="math display">\[
+\frac{dy}{dt} = r(\mathbf{u}) \approx \boldsymbol{\theta}(\mathbf{u})^\top \boldsymbol{\xi}
+\]</span></p>
+<p>where <span class="math inline">\(\boldsymbol{\theta}(\mathbf{u})\)</span> is a vector of functions of the drivers <span class="math inline">\(\mathbf{u}\)</span>, and <span class="math inline">\(\boldsymbol{\xi}\)</span> is a vector of coefficients. This is a simple linear model in which the growth rate is a linear combination of the driver functions.</p>
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on consecutive days. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\dot{y}(t_i)\)</span> for a time step of one day.</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on days <span class="math inline">\(t_i\)</span>. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\dot{y}(t_i)\)</span> for a time step of one day.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_increments.png" class="img-fluid figure-img" style="width:100.0%"></p>
 <figcaption>Observed biomass of one genotype in one season (a), and its daily increments (b). The regression is performed on the increments.</figcaption>
 </figure>
 </div>
-<p>Collecting the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
+<p>Collecting all the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
 <p><span class="math display">\[
 \Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 \]</span></p>
-<p>The coefficients enter linearly, so they can be estimated by regression, for example by least squares</p>
+<p>If we have collected data in several environments, and for several genotypes, the increments and library values are stacked in <span class="math inline">\(\Delta\mathbf{y}\)</span> and <span class="math inline">\(\mathbf{X}\)</span>, respectively. Hence, the matrix and vector look like this, with <span class="math inline">\(y_i^{(g, e)}\)</span> the observation of genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(t_i\)</span>:</p>
+<p><span class="math display">\[
+\Delta\mathbf{y} = \begin{pmatrix}
+\Delta y_1^{(1, 1)} \\
+\Delta y_2^{(1, 1)} \\
+\vdots \\
+\Delta y_n^{(1, 1)} \\
+\Delta y_1^{(2, 1)} \\
+\Delta y_2^{(2, 1)} \\
+\vdots \\
+\Delta y_n^{(2, 1)} \\
+\vdots \\
+\Delta y_1^{(g, e)} \\
+\Delta y_2^{(g, e)} \\
+\vdots \\
+\Delta y_n^{(g, e)}
+\end{pmatrix}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\mathbf{X} = \begin{pmatrix}
+\theta_1(\mathbf{u}_1^{(1, 1)})  &amp; \theta_2(\mathbf{u}_1^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(1, 1)}) \\
+\theta_1(\mathbf{u}_2^{(1, 1)})  &amp; \theta_2(\mathbf{u}_2^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(1, 1)}) \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\theta_1(\mathbf{u}_n^{(1, 1)})  &amp; \theta_2(\mathbf{u}_n^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(1, 1)} \\
+\theta_1(\mathbf{u}_1^{(2, 1)})  &amp; \theta_2(\mathbf{u}_1^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(2, 1)}) \\
+\theta_1(\mathbf{u}_2^{(2, 1)})  &amp; \theta_2(\mathbf{u}_2^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(2, 1)}) \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\theta_1(\mathbf{u}_n^{(2, 1)})  &amp; \theta_2(\mathbf{u}_n^{(2, 1)} &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(2, 1)} \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\theta_1(\mathbf{u}_1^{(g, e)})  &amp; \theta_2(\mathbf{u}_1^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(g, e)}) \\
+\theta_1(\mathbf{u}_2^{(g, e)})  &amp; \theta_2(\mathbf{u}_2^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(g, e)}) \\
+\vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
+\theta_1(\mathbf{u}_n^{(g, e)})  &amp; \theta_2(\mathbf{u}_n^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(g, e)})
+\end{pmatrix}
+\]</span></p>
+<p>with coefficients</p>
+<p><span class="math display">\[
+\boldsymbol{\xi} = \begin{pmatrix}
+\xi_1 \\
+\xi_2 \\
+\vdots \\
+\xi_K
+\end{pmatrix}.
+\]</span></p>
+<p>The coefficients enter linearly (recall the equation <span class="math inline">\(\frac{dy}{dt} = \mathbf{X}\boldsymbol{\xi}\)</span>), so we just need to solve a linear regression problem to estimate them, for example by least squares:</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
 \]</span></p>
-<p>Any regression method can be used. Step 4 compares several.</p>
+<p>However, any regression method can be used. We will compare several methods in the workshop.</p>
 </section>
-<section id="sparsity" class="level2">
-<h2 class="anchored" data-anchor-id="sparsity">Sparsity</h2>
-<p>A short equation is easier to interpret and less prone to overfitting than one with many terms. Sparsity is obtained by regression methods that set coefficients to zero: thresholding of small coefficients (sequential thresholded least squares, the original SINDy algorithm), an <span class="math inline">\(\ell_1\)</span> penalty (lasso), or subset selection. The number of retained terms balances accuracy and complexity and is chosen by validation.</p>
-</section>
-<section id="solution" class="level2">
-<h2 class="anchored" data-anchor-id="solution">Solution</h2>
-<p>Given <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span> and the drivers, the equation is solved forward in time from an initial value <span class="math inline">\(y_0\)</span> with the same one-day step,</p>
+<section id="making-predictions" class="level2">
+<h2 class="anchored" data-anchor-id="making-predictions">Making predictions</h2>
+<p>Given a fitted vector of coefficients <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span> and a set of weather drivers <span class="math inline">\(\mathbf{u}_i\)</span>, we can now predict the future values of the state variable, by simulating the ODE with the estimated coefficients, using an ODE solver of our choice:</p>
 <p><span class="math display">\[
-y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\boldsymbol{\xi}} .
+\frac{dy}{dt} = \boldsymbol{\theta}(\mathbf{u})^\top \hat{\boldsymbol{\xi}} \rightarrow y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymbol{\xi}} \, ds.
 \]</span></p>
-<p>If the library depends on the drivers only, this is a cumulative sum, <span class="math inline">\(y_i = y_0 + \sum_{s&lt;i} \boldsymbol{\theta}(\mathbf{u}_s)^\top \hat{\boldsymbol{\xi}}\)</span>, and no ODE solver is needed.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_solution.png" class="img-fluid figure-img" style="width:100.0%"></p>
@@ -490,13 +532,13 @@ y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\bolds
 </figure>
 </div>
 </section>
-<section id="genotypes" class="level2">
-<h2 class="anchored" data-anchor-id="genotypes">Genotypes</h2>
-<p>Each genotype <span class="math inline">\(g\)</span> has its own coefficient vector <span class="math inline">\(\boldsymbol{\xi}_g\)</span>, estimated from the trajectories of that genotype in all available seasons.</p>
+<section id="dealing-with-multiple-genotypes" class="level2">
+<h2 class="anchored" data-anchor-id="dealing-with-multiple-genotypes">Dealing with multiple genotypes</h2>
+<p>Differences between genotypes can be captured by finding a separate set of coefficients <span class="math inline">\(\boldsymbol{\xi}^{(g)}\)</span> for each genotype <span class="math inline">\(g\)</span>. Then, we can compare the coefficients of different genotypes to see how they differ in their response to the drivers.</p>
 </section>
 <section id="validation" class="level2">
 <h2 class="anchored" data-anchor-id="validation">Validation</h2>
-<p>The independent units are seasons, since the weather of neighbouring days is strongly correlated. The model of a genotype is validated by leave-one-season-out cross-validation: each season is predicted from a model fitted to the other seasons and compared with the observed trajectory.</p>
+<p>To test the predictive ability of the model, we can use leave-one-environment-out cross-validation. We calibrate the model on all but one environment, and then predict the left-out environment. This is repeated for each environment, and the predictions are compared with the observed values.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_validation.png" class="img-fluid figure-img" style="width:85.0%"></p>

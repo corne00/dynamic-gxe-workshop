@@ -4,25 +4,25 @@ title: "1 · Method"
 
 ## Overview
 
-![Schematic. Environmental drivers $U$ and the response $Y$ are measured over time. The growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation.](images/method_overview.png){width=100%}
+![Schematic visualization of the methodology. Environmental drivers $U$ and the crop state $Y$ are measured over time. The estimated growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation.](images/method_overview.png){width=100%}
 
 ## Model
 
-Let $\mathbf{y}(t)$ denote the state of the crop (for example biomass or leaf area index) and $\mathbf{u}(t) = (u_1(t), \dots, u_m(t))$ the environmental drivers. The dynamics are written as a system of ordinary differential equations
+Let $\mathbf{y}(t)$ denote the state of the crop  (for example biomass or leaf area index) and $\mathbf{u}(t) = (u_1(t), \dots, u_m(t))$ the environmental drivers. The growth of the crop can be described using a system of ordinary differential equations:
 
 $$
-\dot{\mathbf{y}} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
+\frac{d\mathbf{y}}{dt} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
 $$
 
-Each component $\dot{y}$ of the right-hand side is expressed as a combination of candidate functions $\theta_1, \dots, \theta_K$ (the library),
+Each component $\frac{dy}{dt}$ of the right-hand side is expressed as a combination of candidate functions $\theta_1, \dots, \theta_K$ (the library),
 
 $$
-\dot{y} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
+\frac{dy}{dt} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 $$
 
-where most coefficients $\xi_j$ are expected to be zero. The library contains, for example, a constant, powers of the drivers and of the states, and products of them.
+where most coefficients $\xi_j$ are expected to be zero. The library contains a number of candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients $\boldsymbol{\xi}$ are estimated from the data by regression.
 
-The three panels show how the environment drives growth. Temperature (a) enters a response function (b); the resulting growth rate is accumulated over the season to give biomass (c). Press play, or move the day slider, to follow one day through the panels. The optimum and the upper limit change the shape of the response, and the dashed curves show the default response for comparison.
+Below, a simple visualization describes how (a) observed temperature drives drives growth, how (b) the response function then determines the growth rate, and how (c) the growth rate is accumulated to give biomass. Changing the response function (by changing the optimum and upper limit) shows how the growth rate and biomass change as function of the response.
 
 ```{ojs}
 //| echo: false
@@ -98,54 +98,105 @@ toy = {
 }
 ```
 
-Temperature is the observed daily mean at Narrabri (3-day average). The response is an asymmetric function of temperature with base temperature 2 °C, and the growth rate is 0.17 t/ha/day times the response times a canopy factor that rises with leaf area and falls at senescence. The figure is a toy: the growth rate depends on temperature only.
+In this workshop, we study the dynamics of biomass $y$ and we restrict ourselves to the following approximation:
 
+$$
+\frac{dy}{dt} = r(\mathbf{u}) \approx \boldsymbol{\theta}(\mathbf{u})^\top \boldsymbol{\xi}
+$$
 
-In this workshop the state is a single quantity, biomass $y$, and the library contains functions of the drivers only, so that the growth rate depends on the environment but not on the current biomass. Libraries that contain the state are treated in step 9.
+ where $\boldsymbol{\theta}(\mathbf{u})$ is a vector of functions of the drivers $\mathbf{u}$, and $\boldsymbol{\xi}$ is a vector of coefficients. This is a simple linear model in which the growth rate is a linear combination of the driver functions.
+
 
 ## Regression
 
-Let $y_i = y(t_i)$ be observations on consecutive days. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\dot{y}(t_i)$ for a time step of one day.
+Let $y_i = y(t_i)$ be observations on days $t_i$. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\dot{y}(t_i)$ for a time step of one day.
 
 ![Observed biomass of one genotype in one season (a), and its daily increments (b). The regression is performed on the increments.](images/concept_increments.png){width=100%}
 
- Collecting the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
+ Collecting all the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
 
 $$
 \Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 $$
 
-The coefficients enter linearly, so they can be estimated by regression, for example by least squares
+If we have collected data in several environments, and for several genotypes, the increments and library values are stacked in $\Delta\mathbf{y}$ and $\mathbf{X}$, respectively. Hence, the matrix and vector look like this, with $y_i^{(g, e)}$ the observation of genotype $g$ in environment $e$ on day $t_i$:
+
+$$
+\Delta\mathbf{y} = \begin{pmatrix}
+\Delta y_1^{(1, 1)} \\
+\Delta y_2^{(1, 1)} \\
+\vdots \\
+\Delta y_n^{(1, 1)} \\
+\Delta y_1^{(2, 1)} \\
+\Delta y_2^{(2, 1)} \\
+\vdots \\
+\Delta y_n^{(2, 1)} \\
+\vdots \\
+\Delta y_1^{(g, e)} \\
+\Delta y_2^{(g, e)} \\
+\vdots \\
+\Delta y_n^{(g, e)}
+\end{pmatrix}
+$$
+
+and
+
+$$
+\mathbf{X} = \begin{pmatrix}
+\theta_1(\mathbf{u}_1^{(1, 1)})  & \theta_2(\mathbf{u}_1^{(1, 1)}) & \dots & \theta_K(\mathbf{u}_1^{(1, 1)}) \\
+\theta_1(\mathbf{u}_2^{(1, 1)})  & \theta_2(\mathbf{u}_2^{(1, 1)}) & \dots & \theta_K(\mathbf{u}_2^{(1, 1)}) \\
+\vdots & \vdots & \ddots & \vdots \\
+\theta_1(\mathbf{u}_n^{(1, 1)})  & \theta_2(\mathbf{u}_n^{(1, 1)}) & \dots & \theta_K(\mathbf{u}_n^{(1, 1)} \\
+\theta_1(\mathbf{u}_1^{(2, 1)})  & \theta_2(\mathbf{u}_1^{(2, 1)}) & \dots & \theta_K(\mathbf{u}_1^{(2, 1)}) \\
+\theta_1(\mathbf{u}_2^{(2, 1)})  & \theta_2(\mathbf{u}_2^{(2, 1)}) & \dots & \theta_K(\mathbf{u}_2^{(2, 1)}) \\
+\vdots & \vdots & \ddots & \vdots \\
+\theta_1(\mathbf{u}_n^{(2, 1)})  & \theta_2(\mathbf{u}_n^{(2, 1)} & \dots & \theta_K(\mathbf{u}_n^{(2, 1)} \\
+\vdots & \vdots & \ddots & \vdots \\
+\theta_1(\mathbf{u}_1^{(g, e)})  & \theta_2(\mathbf{u}_1^{(g, e)}) & \dots & \theta_K(\mathbf{u}_1^{(g, e)}) \\
+\theta_1(\mathbf{u}_2^{(g, e)})  & \theta_2(\mathbf{u}_2^{(g, e)}) & \dots & \theta_K(\mathbf{u}_2^{(g, e)}) \\
+\vdots & \vdots & \ddots & \vdots \\
+\theta_1(\mathbf{u}_n^{(g, e)})  & \theta_2(\mathbf{u}_n^{(g, e)}) & \dots & \theta_K(\mathbf{u}_n^{(g, e)})
+\end{pmatrix}
+$$
+
+with coefficients 
+
+$$
+\boldsymbol{\xi} = \begin{pmatrix}
+\xi_1 \\
+\xi_2 \\
+\vdots \\
+\xi_K
+\end{pmatrix}.
+$$
+
+The coefficients enter linearly (recall the equation $\frac{dy}{dt} = \mathbf{X}\boldsymbol{\xi}$), so we just need to solve a linear regression problem to estimate them, for example by least squares:
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
 $$
 
-Any regression method can be used. Step 4 compares several.
+However, any regression method can be used. We will compare several methods in the workshop.
 
-## Sparsity
+## Making predictions
 
-A short equation is easier to interpret and less prone to overfitting than one with many terms. Sparsity is obtained by regression methods that set coefficients to zero: thresholding of small coefficients (sequential thresholded least squares, the original SINDy algorithm), an $\ell_1$ penalty (lasso), or subset selection. The number of retained terms balances accuracy and complexity and is chosen by validation.
-
-## Solution
-
-Given $\hat{\boldsymbol{\xi}}$ and the drivers, the equation is solved forward in time from an initial value $y_0$ with the same one-day step,
+Given a fitted vector of coefficients $\hat{\boldsymbol{\xi}}$ and a set of weather drivers $\mathbf{u}_i$, we can now predict the future values of the state variable, by simulating the ODE with the estimated coefficients, using an ODE solver of our choice:
 
 $$
-y_{i+1} = y_i + \boldsymbol{\theta}(\mathbf{y}_i, \mathbf{u}_i)^\top \hat{\boldsymbol{\xi}} .
+\frac{dy}{dt} = \boldsymbol{\theta}(\mathbf{u})^\top \hat{\boldsymbol{\xi}} \rightarrow y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymbol{\xi}} \, ds.
 $$
 
-If the library depends on the drivers only, this is a cumulative sum, $y_i = y_0 + \sum_{s<i} \boldsymbol{\theta}(\mathbf{u}_s)^\top \hat{\boldsymbol{\xi}}$, and no ODE solver is needed.
+
 
 ![Season 1998 of one genotype, predicted by a model fitted to the other seasons. The predicted daily growth (a) is accumulated from the initial value $y_0$ (b) and compared with the APSIM trajectory.](images/concept_solution.png){width=100%}
 
-## Genotypes
+## Dealing with multiple genotypes
 
-Each genotype $g$ has its own coefficient vector $\boldsymbol{\xi}_g$, estimated from the trajectories of that genotype in all available seasons.
+Differences between genotypes can be captured by finding a separate set of coefficients $\boldsymbol{\xi}^{(g)}$ for each genotype $g$. Then, we can compare the coefficients of different genotypes to see how they differ in their response to the drivers. 
 
 ## Validation
 
-The independent units are seasons, since the weather of neighbouring days is strongly correlated. The model of a genotype is validated by leave-one-season-out cross-validation: each season is predicted from a model fitted to the other seasons and compared with the observed trajectory.
+To test the predictive ability of the model, we can use leave-one-environment-out cross-validation. We calibrate the model on all but one environment, and then predict the left-out environment. This is repeated for each environment, and the predictions are compared with the observed values.
 
 ![Leave-one-season-out cross-validation. Each row is one fit; the season in red is left out and predicted.](images/concept_validation.png){width=85%}
 
