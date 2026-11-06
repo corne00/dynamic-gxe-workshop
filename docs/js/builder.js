@@ -168,61 +168,94 @@ const Builder = (() => {
     },
 
     // Backward elimination to k terms; the inverse is downdated at each removal.
-    backward: (st, k) => {
-      const {K} = st;
-      let keep = Array.from({length: K}, (_, j) => j);
-      let inv = invertSPD(st.Sxx, K);
-      while (keep.length > k) {
-        const m = keep.length;
-        const coef = new Float64Array(m);
-        for (let i = 0; i < m; i++) for (let j = 0; j < m; j++) coef[i] += inv[i * m + j] * st.Sxy[keep[j]];
-        let worst = 0, least = Infinity;
-        for (let i = 0; i < m; i++) {
-          const increase = (coef[i] * coef[i]) / inv[i * m + i];
-          if (increase < least) { least = increase; worst = i; }
-        }
-        const next = new Float64Array((m - 1) * (m - 1));
-        for (let i = 0, a = 0; i < m; i++) {
-          if (i === worst) continue;
-          for (let j = 0, bq = 0; j < m; j++) {
-            if (j === worst) continue;
-            next[a * (m - 1) + bq] = inv[i * m + j] - (inv[i * m + worst] * inv[worst * m + j]) / inv[worst * m + worst];
-            bq++;
-          }
-          a++;
-        }
-        inv = next;
-        keep = keep.filter((_, i) => i !== worst);
-      }
-      const coef = solveSPD(submatrix(st.Sxx, K, keep), keep.map((j) => st.Sxy[j]), keep.length);
-      const b = new Float64Array(K);
-      keep.forEach((j, i) => (b[j] = coef[i]));
-      return withIntercept(st, b);
-    },
+    backward: (st, k) => finish(st, backwardSet(st, k)),
 
-    // Best subset with k terms (all subsets; limited to small searches).
+    // Best subset with k terms: exact branch and bound over removals from the
+    // full model. Removing term j lowers the explained sum of squares by
+    // b_j^2 / inv_jj, so a branch is cut when it cannot beat the incumbent.
     subset: (st, k) => {
       const {K} = st;
-      let best = -Infinity, bestSet = null;
-      const idx = [];
-      const visit = (start) => {
-        if (idx.length === k) {
-          const c = idx.map((j) => st.Sxy[j]);
-          const x = solveSPD(submatrix(st.Sxx, K, idx), c, k);
-          let gain = 0;
-          for (let i = 0; i < k; i++) gain += x[i] * c[i];
-          if (gain > best) { best = gain; bestSet = idx.slice(); }
-          return;
-        }
-        for (let j = start; j <= K - (k - idx.length); j++) { idx.push(j); visit(j + 1); idx.pop(); }
+      const first = backwardSet(st, k);
+      const full = invertSPD(st.Sxx, K);
+      const all = Array.from({length: K}, (_, j) => j);
+      const explained = (keep, inv) => {
+        const m = keep.length;
+        let g = 0;
+        for (let i = 0; i < m; i++) for (let j = 0; j < m; j++) g += st.Sxy[keep[i]] * inv[i * m + j] * st.Sxy[keep[j]];
+        return g;
       };
-      visit(0);
-      const coef = solveSPD(submatrix(st.Sxx, K, bestSet), bestSet.map((j) => st.Sxy[j]), k);
-      const b = new Float64Array(K);
-      bestSet.forEach((j, i) => (b[j] = coef[i]));
-      return withIntercept(st, b);
+      const seed = first.length === K ? full : invertSPD(submatrix(st.Sxx, K, first), first.length);
+      let best = explained(first, seed), bestSet = first;
+      const search = (keep, inv, gain, start) => {
+        const m = keep.length;
+        if (m === k) return;
+        const coef = new Float64Array(m);
+        for (let i = 0; i < m; i++) {
+          let c = 0;
+          for (let j = 0; j < m; j++) c += inv[i * m + j] * st.Sxy[keep[j]];
+          coef[i] = c;
+        }
+        const children = [];
+        for (let p = start; p <= k; p++) {
+          const child = gain - (coef[p] * coef[p]) / inv[p * m + p];
+          if (child > best + 1e-10 * Math.abs(best)) children.push([child, p]);
+        }
+        children.sort((x, y) => y[0] - x[0]);
+        for (const [child, p] of children) {
+          if (child <= best + 1e-10 * Math.abs(best)) continue;
+          const rest = keep.filter((_, i) => i !== p);
+          if (rest.length === k) { best = child; bestSet = rest; continue; }
+          search(rest, downdate(inv, m, p), child, p);
+        }
+      };
+      search(all, full, explained(all, full), 0);
+      return finish(st, bestSet);
     }
   };
+
+  // Inverse of a symmetric matrix after deleting row and column p.
+  function downdate(inv, m, p) {
+    const next = new Float64Array((m - 1) * (m - 1));
+    const d = inv[p * m + p];
+    for (let i = 0, a = 0; i < m; i++) {
+      if (i === p) continue;
+      const f = inv[i * m + p] / d;
+      for (let j = 0, c = 0; j < m; j++) {
+        if (j === p) continue;
+        next[a * (m - 1) + c] = inv[i * m + j] - f * inv[p * m + j];
+        c++;
+      }
+      a++;
+    }
+    return next;
+  }
+
+  function backwardSet(st, k) {
+    const {K} = st;
+    let keep = Array.from({length: K}, (_, j) => j);
+    let inv = invertSPD(st.Sxx, K);
+    while (keep.length > k) {
+      const m = keep.length;
+      let worst = 0, least = Infinity;
+      for (let i = 0; i < m; i++) {
+        let c = 0;
+        for (let j = 0; j < m; j++) c += inv[i * m + j] * st.Sxy[keep[j]];
+        const increase = (c * c) / inv[i * m + i];
+        if (increase < least) { least = increase; worst = i; }
+      }
+      inv = downdate(inv, m, worst);
+      keep = keep.filter((_, i) => i !== worst);
+    }
+    return keep;
+  }
+
+  function finish(st, keep) {
+    const {K} = st;
+    const coef = solveSPD(submatrix(st.Sxx, K, keep), keep.map((j) => st.Sxy[j]), keep.length);
+    const b = new Float64Array(K);
+    keep.forEach((j, i) => (b[j] = coef[i]));
+    return withIntercept(st, b);
+  }
 
   function choose(n, k) {
     let r = 1;

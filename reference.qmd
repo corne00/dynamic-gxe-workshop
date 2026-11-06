@@ -42,7 +42,7 @@ APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes,
 
 ## Sources
 
-- Preprint: *Physiology-Informed Sparse Identification of Dynamic Crop Models*. [arXiv:2610.18920](https://arxiv.org/pdf/2610.18920v1).
+- Preprint: Verburg, C., Heinlein, A., van Eeuwijk, F. and Budko, N. (2026). *Physiology-Informed Sparse Identification of Dynamic Crop Models*. [arXiv:2610.18920](https://arxiv.org/pdf/2610.18920v1).
 - Bustos-Korts, D. et al. (2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. *Frontiers in Plant Science* 10, 1540. doi:10.3389/fpls.2019.01540. Data: [figshare](https://figshare.com/articles/dataset/24843705).
 - Brunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. *PNAS* 113(15), 3932–3937.
 - Friedman, J., Hastie, T. and Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. *Journal of Statistical Software* 33(1), 1–22 (`glmnet`).

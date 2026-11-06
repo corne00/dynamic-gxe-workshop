@@ -101,7 +101,7 @@ $$
 
 where most coefficients $\xi_j$ are expected to be zero. The library contains candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients $\boldsymbol{\xi}$ are estimated from the data by regression.
 
-![Schematic visualization of the methodology. Environmental drivers $U$ and the crop state $Y$ are measured over time. The estimated growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation. Figure from our preprint, [Physiology-Informed Sparse Identification of Dynamic Crop Models](https://arxiv.org/pdf/2610.18920v1).](images/method_overview.png){width=100%}
+![Schematic visualization of the methodology. Environmental drivers $U$ and the crop state $Y$ are measured over time. The estimated growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation. Figure from our preprint (Verburg, Heinlein, van Eeuwijk and Budko, 2026), [Physiology-Informed Sparse Identification of Dynamic Crop Models](https://arxiv.org/pdf/2610.18920v1).](images/method_overview.png){width=100%}
 
 ## Regression
 
