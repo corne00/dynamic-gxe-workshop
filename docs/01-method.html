@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-9088ff574c0dff7a49483a0e1a1bc527.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -321,7 +321,7 @@ window.Quarto = {
 \frac{dy}{dt} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 \]</span></p>
 <p>where most coefficients <span class="math inline">\(\xi_j\)</span> are expected to be zero. The library contains a number of candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients <span class="math inline">\(\boldsymbol{\xi}\)</span> are estimated from the data by regression.</p>
-<p>Below, a simple visualization describes how (a) observed temperature drives drives growth, how (b) the response function then determines the growth rate, and how (c) the growth rate is accumulated to give biomass. Changing the response function (by changing the optimum and upper limit) shows how the growth rate and biomass change as function of the response.</p>
+<p>Below, a simple visualization describes how (a) observed temperature drives growth, how (b) the response function then determines the growth rate, and how (c) the growth rate is accumulated to give biomass. Changing the response function (by changing the optimum and upper limit) shows how the growth rate and biomass change as function of the response.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb1" data-startfrom="29" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 28;"><span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
@@ -457,7 +457,7 @@ window.Quarto = {
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on days <span class="math inline">\(t_i\)</span>. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\dot{y}(t_i)\)</span> for a time step of one day.</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on days <span class="math inline">\(t_i\)</span>. The increments <span class="math inline">\(\Delta y_i = y_{i+1} - y_i\)</span> approximate <span class="math inline">\(\frac{dy}{dt}(t_i)\)</span> for a time step of one day.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_increments.png" class="img-fluid figure-img" style="width:100.0%"></p>
@@ -492,11 +492,11 @@ window.Quarto = {
 \theta_1(\mathbf{u}_1^{(1, 1)})  &amp; \theta_2(\mathbf{u}_1^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(1, 1)}) \\
 \theta_1(\mathbf{u}_2^{(1, 1)})  &amp; \theta_2(\mathbf{u}_2^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(1, 1)}) \\
 \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-\theta_1(\mathbf{u}_n^{(1, 1)})  &amp; \theta_2(\mathbf{u}_n^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(1, 1)} \\
+\theta_1(\mathbf{u}_n^{(1, 1)})  &amp; \theta_2(\mathbf{u}_n^{(1, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(1, 1)}) \\
 \theta_1(\mathbf{u}_1^{(2, 1)})  &amp; \theta_2(\mathbf{u}_1^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(2, 1)}) \\
 \theta_1(\mathbf{u}_2^{(2, 1)})  &amp; \theta_2(\mathbf{u}_2^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(2, 1)}) \\
 \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
-\theta_1(\mathbf{u}_n^{(2, 1)})  &amp; \theta_2(\mathbf{u}_n^{(2, 1)} &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(2, 1)} \\
+\theta_1(\mathbf{u}_n^{(2, 1)})  &amp; \theta_2(\mathbf{u}_n^{(2, 1)}) &amp; \dots &amp; \theta_K(\mathbf{u}_n^{(2, 1)}) \\
 \vdots &amp; \vdots &amp; \ddots &amp; \vdots \\
 \theta_1(\mathbf{u}_1^{(g, e)})  &amp; \theta_2(\mathbf{u}_1^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_1^{(g, e)}) \\
 \theta_1(\mathbf{u}_2^{(g, e)})  &amp; \theta_2(\mathbf{u}_2^{(g, e)}) &amp; \dots &amp; \theta_K(\mathbf{u}_2^{(g, e)}) \\

@@ -265,7 +265,7 @@ window.Quarto = {
 <p>The numbers and figures on this page come from the research code (Python), not from the R functions of the previous steps, and are not reproduced in R.</p>
 <section id="coupled-states" class="level2">
 <h2 class="anchored" data-anchor-id="coupled-states">Coupled states</h2>
-<p>In steps 4 to 8 the library depends on the drivers only, so the solution is a cumulative sum. In a crop, a larger leaf area intercepts more light and increases biomass growth. Including the state in the library gives a coupled system in the leaf area index <span class="math inline">\(L\)</span> and the biomass <span class="math inline">\(B\)</span>, with <span class="math inline">\(\mathbf{y} = (L, B)\)</span>:</p>
+<p>In steps 4 to 8 the library depends on the drivers only, so the fitted ODE can be solved by accumulating the daily growth. In a crop, a larger leaf area intercepts more light and increases biomass growth. Including the state in the library gives a coupled system in the leaf area index <span class="math inline">\(L\)</span> and the biomass <span class="math inline">\(B\)</span>, with <span class="math inline">\(\mathbf{y} = (L, B)\)</span>:</p>
 <p><span class="math display">\[
 \dot{L} = \boldsymbol{\theta}_L(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi}_L, \qquad
 \dot{B} = \boldsymbol{\theta}_B(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi}_B .

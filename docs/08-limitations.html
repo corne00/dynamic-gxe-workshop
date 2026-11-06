@@ -446,7 +446,7 @@ even -0.025 -0.033 0.006 -0.055</code></pre>
 </section>
 <section id="accumulation-of-error" class="level2">
 <h2 class="anchored" data-anchor-id="accumulation-of-error">Accumulation of error</h2>
-<p>The regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.</p>
+<p>The regression is performed on daily increments, whereas the prediction is obtained by integrating the fitted equation over the season, which accumulates the daily increments. A small bias in the daily increment therefore accumulates.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">

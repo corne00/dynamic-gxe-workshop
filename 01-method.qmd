@@ -22,7 +22,7 @@ $$
 
 where most coefficients $\xi_j$ are expected to be zero. The library contains a number of candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients $\boldsymbol{\xi}$ are estimated from the data by regression.
 
-Below, a simple visualization describes how (a) observed temperature drives drives growth, how (b) the response function then determines the growth rate, and how (c) the growth rate is accumulated to give biomass. Changing the response function (by changing the optimum and upper limit) shows how the growth rate and biomass change as function of the response.
+Below, a simple visualization describes how (a) observed temperature drives growth, how (b) the response function then determines the growth rate, and how (c) the growth rate is accumulated to give biomass. Changing the response function (by changing the optimum and upper limit) shows how the growth rate and biomass change as function of the response.
 
 ```{ojs}
 //| echo: false
@@ -109,7 +109,7 @@ $$
 
 ## Regression
 
-Let $y_i = y(t_i)$ be observations on days $t_i$. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\dot{y}(t_i)$ for a time step of one day.
+Let $y_i = y(t_i)$ be observations on days $t_i$. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\frac{dy}{dt}(t_i)$ for a time step of one day.
 
 ![Observed biomass of one genotype in one season (a), and its daily increments (b). The regression is performed on the increments.](images/concept_increments.png){width=100%}
 
@@ -146,11 +146,11 @@ $$
 \theta_1(\mathbf{u}_1^{(1, 1)})  & \theta_2(\mathbf{u}_1^{(1, 1)}) & \dots & \theta_K(\mathbf{u}_1^{(1, 1)}) \\
 \theta_1(\mathbf{u}_2^{(1, 1)})  & \theta_2(\mathbf{u}_2^{(1, 1)}) & \dots & \theta_K(\mathbf{u}_2^{(1, 1)}) \\
 \vdots & \vdots & \ddots & \vdots \\
-\theta_1(\mathbf{u}_n^{(1, 1)})  & \theta_2(\mathbf{u}_n^{(1, 1)}) & \dots & \theta_K(\mathbf{u}_n^{(1, 1)} \\
+\theta_1(\mathbf{u}_n^{(1, 1)})  & \theta_2(\mathbf{u}_n^{(1, 1)}) & \dots & \theta_K(\mathbf{u}_n^{(1, 1)}) \\
 \theta_1(\mathbf{u}_1^{(2, 1)})  & \theta_2(\mathbf{u}_1^{(2, 1)}) & \dots & \theta_K(\mathbf{u}_1^{(2, 1)}) \\
 \theta_1(\mathbf{u}_2^{(2, 1)})  & \theta_2(\mathbf{u}_2^{(2, 1)}) & \dots & \theta_K(\mathbf{u}_2^{(2, 1)}) \\
 \vdots & \vdots & \ddots & \vdots \\
-\theta_1(\mathbf{u}_n^{(2, 1)})  & \theta_2(\mathbf{u}_n^{(2, 1)} & \dots & \theta_K(\mathbf{u}_n^{(2, 1)} \\
+\theta_1(\mathbf{u}_n^{(2, 1)})  & \theta_2(\mathbf{u}_n^{(2, 1)}) & \dots & \theta_K(\mathbf{u}_n^{(2, 1)}) \\
 \vdots & \vdots & \ddots & \vdots \\
 \theta_1(\mathbf{u}_1^{(g, e)})  & \theta_2(\mathbf{u}_1^{(g, e)}) & \dots & \theta_K(\mathbf{u}_1^{(g, e)}) \\
 \theta_1(\mathbf{u}_2^{(g, e)})  & \theta_2(\mathbf{u}_2^{(g, e)}) & \dots & \theta_K(\mathbf{u}_2^{(g, e)}) \\

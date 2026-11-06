@@ -36,7 +36,7 @@ tr = make_trajectories(traj, drv)
 
 ## Solution
 
-With a library that depends on the drivers only, the solution of the fitted equation is a cumulative sum of the predicted daily growth:
+With a library that depends on the drivers only, the fitted equation is solved numerically, here by accumulating the predicted daily growth (the simplest ODE solver, a forward step of one day):
 
 ```{r}
 #| echo: false

@@ -215,7 +215,7 @@ The data determine the combined effect of correlated drivers better than each co
 
 ## Accumulation of error
 
-The regression is performed on daily increments, whereas the prediction is their cumulative sum. A small bias in the daily increment therefore accumulates.
+The regression is performed on daily increments, whereas the prediction is obtained by integrating the fitted equation over the season, which accumulates the daily increments. A small bias in the daily increment therefore accumulates.
 
 ::: {.panel-tabset group="language"}
 
