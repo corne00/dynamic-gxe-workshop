@@ -9,6 +9,8 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
+This page continues from steps 2 and 3. One line loads the data and builds the library:
+
 ::: {.panel-tabset group="language"}
 
 ## R
@@ -20,16 +22,7 @@ source("R/pipeline.R")
 ## Python
 
 ```python
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from dgxe import *
-
-wx = pd.read_csv("data/narrabri_weather.csv")
-traj = pd.read_csv("data/narrabri_biomass.csv.gz")
-drv = make_drivers(wx)
-Theta = make_library(drv)
-tr = make_trajectories(traj, drv)
+from pipeline import *
 ```
 
 :::

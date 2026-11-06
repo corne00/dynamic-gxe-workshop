@@ -167,3 +167,34 @@ window.addEventListener("load", () => {
     if (!box.closest(".tab-pane") && !(pre && pre.offsetHeight)) box.remove();
   }
 });
+
+// One on/off button per option; the value of the control is the list of the
+// options that are on, in the original order.
+function toggles(label, options, colours, start = options) {
+  const box = document.createElement("div");
+  box.className = "dgxe-control";
+  const text = document.createElement("label");
+  text.textContent = label;
+  const group = document.createElement("div");
+  group.className = "dgxe-buttons";
+  const on = new Set(start);
+  const read = () => options.filter((o) => on.has(o));
+  options.forEach((o, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = o;
+    b.style.setProperty("--colour", colours[i]);
+    b.classList.toggle("active", on.has(o));
+    b.addEventListener("click", () => {
+      if (on.has(o) && on.size === 1) return;       // keep at least one
+      on.has(o) ? on.delete(o) : on.add(o);
+      b.classList.toggle("active", on.has(o));
+      box.value = read();
+      box.dispatchEvent(new Event("input", {bubbles: true}));
+    });
+    group.append(b);
+  });
+  box.append(text, group);
+  box.value = read();
+  return box;
+}

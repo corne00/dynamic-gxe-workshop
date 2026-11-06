@@ -114,7 +114,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261106d"></script>
+<script src="js/controls.js?v=20261106e"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -316,7 +316,7 @@ window.Quarto = {
 </div>
 <section id="drivers" class="level2">
 <h2 class="anchored" data-anchor-id="drivers">Drivers</h2>
-<p>The drivers <span class="math inline">\(u_1, \dots, u_4\)</span> (<code>TT</code>, <code>DL</code>, <code>RAW</code>, <code>RAD</code>) are standardised to mean 0 and standard deviation 1. The response does not enter this step.</p>
+<p>The library is built from a selection of the eight variables of step 2. We use four drivers <span class="math inline">\(u_1, \dots, u_4\)</span>: thermal time (<code>TT</code>), day length (<code>DL</code>), relative available water (<code>RAW</code>) and radiation (<code>RAD</code>), one for each of development, photoperiod, water and light. Other selections are possible with the argument <code>drivers</code> of <code>make_drivers</code>. The drivers are standardised to mean 0 and standard deviation 1. The response does not enter this step.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
@@ -537,7 +537,7 @@ window.Quarto = {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_design.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>The regression problem for genotype <code>g114</code> as a table: three mid-season days from each of the seasons 1, 2 and 31. The highlighted row is one equation, <span class="math inline">\(\Delta y_i = \sum_j X_{ij}\xi_j\)</span>. The columns of <span class="math inline">\(\mathbf{X}\)</span> are standardised; the coefficients <span class="math inline">\(\boldsymbol{\xi}\)</span> (from STLSQ, step 4) are zero for removed terms.</figcaption>
+<figcaption>The regression problem for genotype <code>g114</code> as a table: three mid-season days from each of the seasons 1, 2 and 31. The highlighted row is one equation, <span class="math inline">\(\Delta y_i = \sum_j X_{ij}\xi_j\)</span>. The columns of <span class="math inline">\(\mathbf{X}\)</span> are standardised; the coefficients <span class="math inline">\(\boldsymbol{\xi}\)</span> are unknown and are estimated in step 4.</figcaption>
 </figure>
 </div>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
@@ -602,31 +602,6 @@ window.Quarto = {
 <pre><code>[1] 0.0026 0.0038 0.0045 0.0053 0.0056 0.0063</code></pre>
 </div>
 </div>
-<p>The regression of the increments on the library is a linear model:</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">Python</a></li></ul>
-<div class="tab-content" data-group="language">
-<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">coef</span>(<span class="fu">lm</span>(d<span class="sc">$</span>dy <span class="sc">~</span> d<span class="sc">$</span>X)), <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(pd.Series(fit_ols(d.X, d.dy), index<span class="op">=</span>[<span class="st">"1"</span>] <span class="op">+</span> d.terms).<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="cell-output cell-output-stdout">
-<pre><code>(Intercept)       d$XTT     d$XTT^2     d$XTT^3       d$XDL     d$XDL^2 
-      0.163      -0.046      -0.034       0.015       0.020      -0.055 
-    d$XDL^3      d$XRAW    d$XRAW^2    d$XRAW^3      d$XRAD    d$XRAD^2 
-      0.019       0.019      -0.015      -0.002       0.006      -0.003 
-   d$XRAD^3 
-      0.000 </code></pre>
-</div>
-</div>
-<p>Step 4 replaces <code>lm</code> by other methods.</p>
 
 
 </section>

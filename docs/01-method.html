@@ -116,7 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261106d"></script>
+<script src="js/controls.js?v=20261106e"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -434,9 +434,9 @@ window.Quarto = {
 <p><span class="math display">\[
 \frac{d\mathbf{y}}{dt} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
 \]</span></p>
-<p>Each component <span class="math inline">\(\frac{dy}{dt}\)</span> of the right-hand side is expressed as a combination of candidate functions <span class="math inline">\(\theta_1, \dots, \theta_K\)</span> (the library),</p>
+<p>The growth rate <span class="math inline">\(r\)</span> of one state variable <span class="math inline">\(y\)</span> (a component of <span class="math inline">\(\mathbf{y}\)</span>, for example biomass) is expressed as a combination of candidate functions <span class="math inline">\(\theta_1, \dots, \theta_K\)</span> (the library),</p>
 <p><span class="math display">\[
-\frac{dy}{dt} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
+\frac{dy}{dt} = r(\mathbf{y}, \mathbf{u}) \approx \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 \]</span></p>
 <p>where most coefficients <span class="math inline">\(\xi_j\)</span> are expected to be zero. The library contains candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients <span class="math inline">\(\boldsymbol{\xi}\)</span> are estimated from the data by regression.</p>
 <div class="quarto-figure quarto-figure-center">
@@ -445,11 +445,6 @@ window.Quarto = {
 <figcaption>Schematic visualization of the methodology. Environmental drivers <span class="math inline">\(U\)</span> and the crop state <span class="math inline">\(Y\)</span> are measured over time. The estimated growth rate of <span class="math inline">\(Y\)</span> is regressed on a library <span class="math inline">\(\Theta(Y, U)\)</span> of candidate functions; a sparse coefficient matrix <span class="math inline">\(\Xi\)</span> selects the terms of the equation.</figcaption>
 </figure>
 </div>
-<p>In the first steps of this workshop, we study the dynamics of biomass <span class="math inline">\(y\)</span> with a library that depends on the drivers only,</p>
-<p><span class="math display">\[
-\frac{dy}{dt} = r(\mathbf{u}) \approx \boldsymbol{\theta}(\mathbf{u})^\top \boldsymbol{\xi},
-\]</span></p>
-<p>so that the growth rate is a linear combination of functions of the drivers. Libraries that also depend on the state are treated in <a href="09-further.html">step 9</a>; the formulation below allows for both.</p>
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
@@ -460,11 +455,11 @@ window.Quarto = {
 <figcaption>Observed biomass of one genotype in one season (a). The box is enlarged in (b): the increment <span class="math inline">\(\Delta y_i\)</span> is the difference between two consecutive observations. The increments of the whole season are shown in (c); the regression is performed on these.</figcaption>
 </figure>
 </div>
-<p>Collecting all the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(y_i, \mathbf{u}_i)\)</span> gives</p>
+<p>Collecting all the increments in a vector <span class="math inline">\(\Delta\mathbf{y}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
 <p><span class="math display">\[
 \Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 \]</span></p>
-<p>The state <span class="math inline">\(y_i\)</span> in the library is the observed state on day <span class="math inline">\(t_i\)</span>. If data are collected in several environments and for several genotypes, the increments and library values are stacked. With <span class="math inline">\(\theta_{i,j}^{(g, e)} = \theta_j(y_i^{(g, e)}, \mathbf{u}_i^{(g, e)})\)</span> for genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(i\)</span>:</p>
+<p>The state <span class="math inline">\(\mathbf{y}_i\)</span> in the library is the observed state on day <span class="math inline">\(t_i\)</span>. If data are collected in several environments and for several genotypes, the increments and library values are stacked. With <span class="math inline">\(\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})\)</span> for genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(i\)</span>:</p>
 <p><span class="math display">\[
 {\small
 \begin{pmatrix}
@@ -491,24 +486,25 @@ window.Quarto = {
 </section>
 <section id="making-predictions" class="level2">
 <h2 class="anchored" data-anchor-id="making-predictions">Making predictions</h2>
-<p>Given a fitted vector of coefficients <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span>, the drivers <span class="math inline">\(\mathbf{u}(t)\)</span> of a season and an initial state <span class="math inline">\(y_0\)</span>, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice:</p>
+<p>Given a fitted vector of coefficients <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span>, the drivers <span class="math inline">\(\mathbf{u}(t)\)</span> of a season and an initial state <span class="math inline">\(\mathbf{y}_0\)</span>, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice:</p>
 <p><span class="math display">\[
-\frac{dy}{dt} = \boldsymbol{\theta}(y, \mathbf{u})^\top \hat{\boldsymbol{\xi}}, \qquad y(t_0) = y_0.
+\frac{dy}{dt} = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \hat{\boldsymbol{\xi}}, \qquad \mathbf{y}(t_0) = \mathbf{y}_0.
 \]</span></p>
-<p>For a library that depends on the drivers only, the solution is the integral of the predicted growth rate,</p>
-<p><span class="math display">\[
-y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymbol{\xi}} \, ds.
-\]</span></p>
+<p>If the library depends on the drivers only, the solution is the integral of the predicted growth rate, <span class="math inline">\(y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymbol{\xi}} \, ds\)</span>, as in the figure.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_solution.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>Season 1998 of one genotype, predicted by a model fitted to the other seasons. The predicted growth rate (a) is integrated from the initial value <span class="math inline">\(y_0\)</span>; the shaded area up to day <span class="math inline">\(t\)</span> equals the predicted increase in biomass, <span class="math inline">\(y(t) - y_0\)</span> (b), which is compared with the APSIM trajectory.</figcaption>
+<figcaption>Season 1998 of one genotype, predicted by a model fitted to the other seasons. With a library that depends on the drivers only, the predicted growth rate (a) is integrated from the initial value <span class="math inline">\(y_0\)</span>: the shaded area up to day <span class="math inline">\(t\)</span> is the predicted increase in biomass, <span class="math inline">\(y(t) - y_0\)</span> (b), which is compared with the APSIM trajectory.</figcaption>
 </figure>
 </div>
 </section>
 <section id="dealing-with-multiple-genotypes" class="level2">
 <h2 class="anchored" data-anchor-id="dealing-with-multiple-genotypes">Dealing with multiple genotypes</h2>
-<p>Differences between genotypes can be captured by finding a separate set of coefficients <span class="math inline">\(\boldsymbol{\xi}^{(g)}\)</span> for each genotype <span class="math inline">\(g\)</span>. Then, we can compare the coefficients of different genotypes to see how they differ in their response to the drivers.</p>
+<p>Differences between genotypes are captured by a separate regression for each genotype <span class="math inline">\(g = 1, \dots, G\)</span>, on its own increments and library values (stacked over the environments),</p>
+<p><span class="math display">\[
+\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y}^{(g)} - \mathbf{X}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
+\]</span></p>
+<p>The environments and the library are shared, so the columns of <span class="math inline">\(\hat{\boldsymbol{\Xi}} = \bigl(\hat{\boldsymbol{\xi}}^{(1)}, \dots, \hat{\boldsymbol{\xi}}^{(G)}\bigr)\)</span> are directly comparable: each column is the growth equation of one genotype, and the differences between columns describe how genotypes differ in their response to the drivers.</p>
 </section>
 <section id="validation" class="level2">
 <h2 class="anchored" data-anchor-id="validation">Validation</h2>
@@ -516,7 +512,7 @@ y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymb
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_validation.png" class="img-fluid figure-img" style="width:85.0%"></p>
-<figcaption>Leave-one-season-out cross-validation. Each row is one fit; the season in red is left out and predicted.</figcaption>
+<figcaption>Leave-one-season-out cross-validation. Each row is one fit: the model is fitted to the seasons in blue and used to predict the left-out season in red.</figcaption>
 </figure>
 </div>
 </section>

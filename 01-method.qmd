@@ -93,23 +93,15 @@ $$
 \frac{d\mathbf{y}}{dt} = \mathbf{f}(\mathbf{y}, \mathbf{u}).
 $$
 
-Each component $\frac{dy}{dt}$ of the right-hand side is expressed as a combination of candidate functions $\theta_1, \dots, \theta_K$ (the library),
+The growth rate $r$ of one state variable $y$ (a component of $\mathbf{y}$, for example biomass) is expressed as a combination of candidate functions $\theta_1, \dots, \theta_K$ (the library),
 
 $$
-\frac{dy}{dt} = \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
+\frac{dy}{dt} = r(\mathbf{y}, \mathbf{u}) \approx \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 $$
 
 where most coefficients $\xi_j$ are expected to be zero. The library contains candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients $\boldsymbol{\xi}$ are estimated from the data by regression.
 
 ![Schematic visualization of the methodology. Environmental drivers $U$ and the crop state $Y$ are measured over time. The estimated growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation.](images/method_overview.png){width=100%}
-
-In the first steps of this workshop, we study the dynamics of biomass $y$ with a library that depends on the drivers only,
-
-$$
-\frac{dy}{dt} = r(\mathbf{u}) \approx \boldsymbol{\theta}(\mathbf{u})^\top \boldsymbol{\xi},
-$$
-
-so that the growth rate is a linear combination of functions of the drivers. Libraries that also depend on the state are treated in [step 9](09-further.html); the formulation below allows for both.
 
 ## Regression
 
@@ -117,13 +109,13 @@ Let $y_i = y(t_i)$ be observations on days $t_i$. The increments $\Delta y_i = y
 
 ![Observed biomass of one genotype in one season (a). The box is enlarged in (b): the increment $\Delta y_i$ is the difference between two consecutive observations. The increments of the whole season are shown in (c); the regression is performed on these.](images/concept_increments.png){width=100%}
 
-Collecting all the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(y_i, \mathbf{u}_i)$ gives
+Collecting all the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
 
 $$
 \Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
 $$
 
-The state $y_i$ in the library is the observed state on day $t_i$. If data are collected in several environments and for several genotypes, the increments and library values are stacked. With $\theta_{i,j}^{(g, e)} = \theta_j(y_i^{(g, e)}, \mathbf{u}_i^{(g, e)})$ for genotype $g$ in environment $e$ on day $i$:
+The state $\mathbf{y}_i$ in the library is the observed state on day $t_i$. If data are collected in several environments and for several genotypes, the increments and library values are stacked. With $\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})$ for genotype $g$ in environment $e$ on day $i$:
 
 $$
 {\small
@@ -154,29 +146,31 @@ However, any regression method can be used. We will compare several methods in t
 
 ## Making predictions
 
-Given a fitted vector of coefficients $\hat{\boldsymbol{\xi}}$, the drivers $\mathbf{u}(t)$ of a season and an initial state $y_0$, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice:
+Given a fitted vector of coefficients $\hat{\boldsymbol{\xi}}$, the drivers $\mathbf{u}(t)$ of a season and an initial state $\mathbf{y}_0$, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice:
 
 $$
-\frac{dy}{dt} = \boldsymbol{\theta}(y, \mathbf{u})^\top \hat{\boldsymbol{\xi}}, \qquad y(t_0) = y_0.
+\frac{dy}{dt} = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \hat{\boldsymbol{\xi}}, \qquad \mathbf{y}(t_0) = \mathbf{y}_0.
 $$
 
-For a library that depends on the drivers only, the solution is the integral of the predicted growth rate,
+If the library depends on the drivers only, the solution is the integral of the predicted growth rate, $y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymbol{\xi}} \, ds$, as in the figure.
 
-$$
-y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymbol{\xi}} \, ds.
-$$
-
-![Season 1998 of one genotype, predicted by a model fitted to the other seasons. The predicted growth rate (a) is integrated from the initial value $y_0$; the shaded area up to day $t$ equals the predicted increase in biomass, $y(t) - y_0$ (b), which is compared with the APSIM trajectory.](images/concept_solution.png){width=100%}
+![Season 1998 of one genotype, predicted by a model fitted to the other seasons. With a library that depends on the drivers only, the predicted growth rate (a) is integrated from the initial value $y_0$: the shaded area up to day $t$ is the predicted increase in biomass, $y(t) - y_0$ (b), which is compared with the APSIM trajectory.](images/concept_solution.png){width=100%}
 
 ## Dealing with multiple genotypes
 
-Differences between genotypes can be captured by finding a separate set of coefficients $\boldsymbol{\xi}^{(g)}$ for each genotype $g$. Then, we can compare the coefficients of different genotypes to see how they differ in their response to the drivers. 
+Differences between genotypes are captured by a separate regression for each genotype $g = 1, \dots, G$, on its own increments and library values (stacked over the environments),
+
+$$
+\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y}^{(g)} - \mathbf{X}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
+$$
+
+The environments and the library are shared, so the columns of $\hat{\boldsymbol{\Xi}} = \bigl(\hat{\boldsymbol{\xi}}^{(1)}, \dots, \hat{\boldsymbol{\xi}}^{(G)}\bigr)$ are directly comparable: each column is the growth equation of one genotype, and the differences between columns describe how genotypes differ in their response to the drivers.
 
 ## Validation
 
 To test the predictive ability of the model, we can use leave-one-environment-out cross-validation. We calibrate the model on all but one environment, and then predict the left-out environment. This is repeated for each environment, and the predictions are compared with the observed values.
 
-![Leave-one-season-out cross-validation. Each row is one fit; the season in red is left out and predicted.](images/concept_validation.png){width=85%}
+![Leave-one-season-out cross-validation. Each row is one fit: the model is fitted to the seasons in blue and used to predict the left-out season in red.](images/concept_validation.png){width=85%}
 
 ## Steps
 

@@ -44,3 +44,20 @@ figure img, .cell-output-display img { max-width: 100%; }
 .flow .num { color: #8B1E3F; font-weight: 600; }
 .flow .title { font-weight: 600; }
 .flow .io { color: #6B7280; font-size: .8rem; }
+
+/* diagram of constructed variables */
+.covmap { position: relative; height: 300px; margin: 1rem 0; font-size: .85rem; }
+.covmap-head { position: absolute; top: 0; color: #6B7280; }
+.covmap-raw { position: absolute; left: 0; width: 4.5rem; height: 34px;
+  line-height: 34px; text-align: center; background: #E8EEF4;
+  color: #1F2937; }
+.covmap-lines { position: absolute; left: 4.7rem; right: min(20rem, 64%);
+  width: auto; top: 0; }
+.covmap-new { position: absolute; right: 0; width: min(20rem, 64%);
+  box-sizing: border-box; padding: .4rem .6rem; border: 1px solid #014E81;
+  background: white; line-height: 1.5; overflow-x: auto; }
+.covmap-new b { color: #014E81; margin-right: .3rem; }
+.dgxe-buttons button[style*="--colour"] { border-color: var(--colour);
+  color: var(--colour); }
+.dgxe-buttons button[style*="--colour"].active { background: var(--colour);
+  color: white; }

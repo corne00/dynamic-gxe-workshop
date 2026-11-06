@@ -8,6 +8,8 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
+This page continues from steps 2 and 3. One line loads the data and builds the library:
+
 ::: {.panel-tabset group="language"}
 
 ## R
@@ -19,22 +21,19 @@ source("R/pipeline.R")
 ## Python
 
 ```python
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-from dgxe import *
-
-wx = pd.read_csv("data/narrabri_weather.csv")
-traj = pd.read_csv("data/narrabri_biomass.csv.gz")
-drv = make_drivers(wx)
-Theta = make_library(drv)
-tr = make_trajectories(traj, drv)
+from pipeline import *
 ```
 
 :::
 
 
-Every method maps the design matrix $\mathbf{X}$ and the increments $\Delta\mathbf{y}$ of one genotype to a coefficient vector, with the intercept first. A method is therefore a function `fit(X, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
+For one genotype, the data are the increments $\Delta\mathbf{y}$ and the library values $\mathbf{X}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
+
+$$
+\Delta\mathbf{y} \approx \mathbf{X}\boldsymbol{\xi}.
+$$
+
+Every method maps $(\mathbf{X}, \Delta\mathbf{y})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(X, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
 
 ::: {.panel-tabset group="language"}
 
@@ -62,13 +61,17 @@ d <- make_design(Theta, tr, "g001")
 
 ## Methods
 
-Each tab describes one method and shows its code.
-
 ::: {.panel-tabset}
 
 ## Least squares
 
-Ordinary least squares minimises the residual sum of squares, $\hat{\boldsymbol{\xi}} = \arg\min \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2$. It has no hyperparameter and no term is removed. R: `lm.fit`; Python: `numpy.linalg.lstsq`.
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+$$
+
+Hyperparameters: none.
+
+R: `lm.fit`. Python: `numpy.linalg.lstsq`.
 
 ```{r}
 #| echo: false
@@ -78,7 +81,15 @@ show_fun("fit_ols", level = 3)
 
 ## Ridge
 
-Ridge regression adds a squared penalty, $\lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2 + \lambda \lVert\boldsymbol{\xi}\rVert_2^2$, which shrinks the coefficients of correlated terms but removes none. The hyperparameter is $\lambda$. R: `glmnet`; Python: closed form, with the penalty scaled as in `glmnet`.
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+$$
+
+Hyperparameters:
+
+- $\lambda$: strength of the penalty; shrinks the coefficients of correlated terms, but removes none.
+
+R: `glmnet`. Python: closed form, with the penalty scaled as in `glmnet`.
 
 ```{r}
 #| echo: false
@@ -88,7 +99,15 @@ show_fun("fit_glmnet", "fit_ridge", level = 3)
 
 ## Lasso
 
-The lasso penalises the absolute values, $\lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2 + \lambda \lVert\boldsymbol{\xi}\rVert_1$, and sets coefficients to zero: it selects terms. The hyperparameter is $\lambda$. R: `glmnet`; Python: scikit-learn `ElasticNet` with the penalty scaled as in `glmnet`.
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+$$
+
+Hyperparameters:
+
+- $\lambda$: strength of the penalty; larger values set more coefficients to zero.
+
+R: `glmnet`. Python: scikit-learn `ElasticNet`, with the penalty scaled as in `glmnet`.
 
 ```{r}
 #| echo: false
@@ -98,7 +117,16 @@ show_fun("fit_glmnet", "fit_lasso", level = 3)
 
 ## Elastic net
 
-The elastic net mixes both penalties (here in equal parts) and keeps groups of correlated terms together more readily than the lasso. The hyperparameter is $\lambda$. Implementation as for the lasso.
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+$$
+
+Hyperparameters:
+
+- $\lambda$: strength of the penalty.
+- $\alpha$: mix of the two penalties (here 0.5); keeps groups of correlated terms together more readily than the lasso.
+
+Implementation as for the lasso.
 
 ```{r}
 #| echo: false
@@ -108,7 +136,15 @@ show_fun("fit_glmnet", "fit_enet", level = 3)
 
 ## Best subset
 
-Best-subset selection finds the $k$ terms with the smallest residual sum of squares, $\min \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi}\rVert_2^2$ subject to at most $k$ non-zero coefficients. With $K = 12$ terms all subsets can be searched (R: `leaps`; Python: residual sums of squares from the Gram matrix). The hyperparameter is $k$.
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+$$
+
+Hyperparameters:
+
+- $k$: number of terms that are kept.
+
+With $K = 12$ terms all subsets can be searched. R: `leaps`. Python: the residual sums of squares are computed from the Gram matrix.
 
 ```{r}
 #| echo: false
@@ -118,11 +154,33 @@ show_fun("fit_subset", level = 3)
 
 ## Backward elimination
 
-Backward elimination starts from all terms and repeatedly removes the term whose removal increases the residual sum of squares least, until $k$ terms remain. It is the same function as best subset with `method = "backward"`, and is much cheaper for large libraries. The hyperparameter is $k$.
+$$
+S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \bigr]
+$$
+
+Hyperparameters:
+
+- $k$: number of terms that are kept; terms are removed one at a time, starting from all $K$ terms, until $k$ remain.
+
+The same function as best subset, called with `method = "backward"`; the cost grows only polynomially with the number of terms.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_subset", level = 3)
+```
 
 ## STLSQ
 
-Sequential thresholded least squares is the algorithm of the original SINDy method: fit by least squares, remove the terms whose scaled coefficient (coefficient times the standard deviation of the term, relative to that of the increments) is below a threshold, and refit on the remaining terms until no term is removed. The hyperparameter is the threshold.
+$$
+\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \Delta\mathbf{y} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\Delta\mathbf{y})}
+$$
+
+Hyperparameters:
+
+- $\tau$: threshold on the scaled coefficient; the fit is repeated on the remaining terms until no term is removed (the algorithm of the original SINDy method).
+
+Least squares on the active set $S$, so there is no shrinkage.
 
 ```{r}
 #| echo: false
@@ -164,7 +222,7 @@ fits <- sapply(fit_methods, function(fit) fit(d$X, d$dy))
 round(fits, 3)
 ```
 
-Scaled to a common size (coefficient times the standard deviation of the term, relative to that of the increments), the sparsity pattern of each method is visible; empty cells are terms that were removed.
+Each bar is a coefficient, scaled to a common size (coefficient times the standard deviation of the term, relative to that of the increments). Terms that a method removed have no bar.
 
 ::: {.panel-tabset group="language"}
 
@@ -179,19 +237,18 @@ Scaled to a common size (coefficient times the standard deviation of the term, r
 ## Python
 
 ```python
-from matplotlib.colors import LinearSegmentedColormap, TwoSlopeNorm
-
 size = d.X.std(axis=0, ddof=1) / d.dy.std(ddof=1)
 effect = fits.iloc[1:].mul(size, axis=0)
-colours = LinearSegmentedColormap.from_list("dgxe", [BURGUNDY, "white", BLUE])
-colours.set_bad("#F3F4F6")                       # removed terms
 
-fig, ax = plt.subplots(figsize=(6, 3.6))
-image = ax.imshow(effect.where(effect != 0), cmap=colours,
-                  norm=TwoSlopeNorm(0), aspect="auto")
-ax.set_xticks(range(effect.shape[1]), effect.columns, rotation=30, ha="right")
-ax.set_yticks(range(effect.shape[0]), effect.index)
-fig.colorbar(image, label="scaled coefficient")
+fig, axes = plt.subplots(1, effect.shape[1], sharey=True, sharex=True,
+                         figsize=(9, 3.4))
+for ax, (name, column) in zip(axes, effect.items()):
+    ax.barh(column.index, column,
+            color=np.where(column > 0, BLUE, BURGUNDY))
+    ax.axvline(0, color="black", lw=0.8)
+    ax.set_title(name, fontsize=8)
+axes[0].invert_yaxis()
+fig.supxlabel("scaled coefficient")
 fig.tight_layout()
 ```
 
@@ -200,39 +257,48 @@ fig.tight_layout()
 ```{r}
 #| label: 04-3-run
 #| echo: false
-#| fig-height: 3.6
+#| fig-height: 3.4
+#| fig-width: 9
 size <- apply(d$X, 2, sd) / sd(d$dy)
 effect <- fits[-1, ] * size
 long <- data.frame(term = factor(rownames(effect), rev(rownames(effect))),
                    method = factor(rep(colnames(effect), each = nrow(effect)),
                                    colnames(effect)),
                    effect = as.vector(effect))
+long <- long[long$effect != 0, ]
 
-ggplot(long, aes(method, term, fill = ifelse(effect == 0, NA, effect))) +
-  geom_tile(colour = "white", linewidth = 0.6) +
-  scale_fill_gradient2(low = dgxe[["burgundy"]], mid = "white",
-                       high = dgxe[["blue"]], na.value = "#F3F4F6") +
-  labs(x = NULL, y = NULL, fill = "scaled\ncoefficient") +
+ggplot(long, aes(effect, term, fill = effect > 0)) +
+  geom_col(width = 0.7) +
+  geom_vline(xintercept = 0, linewidth = 0.3) +
+  scale_fill_manual(values = c(`TRUE` = dgxe[["blue"]],
+                               `FALSE` = dgxe[["burgundy"]]),
+                    guide = "none") +
+  scale_y_discrete(drop = FALSE) +
+  scale_x_continuous(breaks = c(-0.5, 0, 0.5)) +
+  facet_grid(. ~ method, labeller = label_wrap_gen(8)) +
+  labs(x = "scaled coefficient", y = NULL) +
   theme_dgxe() +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1),
-        axis.line = element_blank(), axis.ticks = element_blank(),
-        legend.position = "right")
+  theme(strip.text = element_text(size = 8, lineheight = 0.9),
+        axis.text.x = element_text(size = 7),
+        panel.spacing.x = unit(0.6, "lines"))
 ```
 
 The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen seasons in step 5.
 
 ## Exploring a method
 
-Each method has one hyperparameter: the threshold of STLSQ, the penalty $\lambda$ of ridge, lasso and elastic net, or the number of terms $k$ of subset selection. The left panel shows the scaled coefficients of the selected genotype for the chosen setting. The right panel shows the held-out trajectory error for all settings of the method, as the mean over the same 20 genotypes. The terms that are retained differ between genotypes, so a change of setting can leave the coefficients of one genotype unchanged and still change the error: select other genotypes to see this.
+Each method has one hyperparameter. Switch genotypes on and off to compare their coefficients (top); the lower panel shows the held-out error for all settings, as the mean over 20 genotypes.
 
 ```{ojs}
 //| echo: false
 d3 = window.d3          // local copies, see js/
 Plot = window.Plot
 hyper = FileAttachment("data/interactive/hyper.json").json()
+contrast = ["g181", "g171", "g021", "g141", "g151"]
+shades = ["#8B1E3F", "#014E81", "#00A6D6", "#6D8B1E", "#6B7280"]
 viewof method = select("Method", Object.keys(hyper.methods), "STLSQ")
 spec = hyper.methods[method]
-viewof genotype = select("Genotype", hyper.genotypes, "g001")
+viewof shown = toggles("Genotypes", contrast, shades)
 viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2), v => (+v).toPrecision(2))
 ```
 
@@ -242,28 +308,30 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
   const all = Object.values(hyper.methods);
   const reach = d3.max(all.flatMap(m => m.effect.flat(2).map(Math.abs)));
   const rmse = [d3.min(all.flatMap(m => m.rmse)), 0.8];   // cap: very large penalties are off scale
-  const g = hyper.genotypes.indexOf(genotype);
-  const rows = hyper.terms.map((term, i) => ({term, effect: spec.effect[step][g][i]}));
+  const rows = shown.flatMap(name => {
+    const g = hyper.genotypes.indexOf(name);
+    return hyper.terms.map((term, i) => ({name, term, effect: spec.effect[step][g][i]}));
+  });
   const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
   const scale = spec.param === "terms" ? "linear" : "log";
   const coefficients = Plot.plot({
-    width: 340, height: 300, marginLeft: 50,
-    x: {domain: [-reach, reach], label: "scaled coefficient"},
+    width: 520, height: 300, marginLeft: 50, marginTop: 22,
+    x: {domain: [-reach, reach], label: "scaled coefficient", ticks: 3},
     y: {domain: hyper.terms, label: null},
-    marks: [Plot.barX(rows, {x: "effect", y: "term",
-              fill: d => d.effect > 0 ? "#014E81" : "#8B1E3F"}),
+    fx: {label: null, domain: shown},
+    color: {domain: contrast, range: shades},
+    marks: [Plot.barX(rows, {x: "effect", y: "term", fx: "name", fill: "name"}),
             Plot.ruleX([0])]
   });
   const error = Plot.plot({
-    width: 340, height: 300,
+    width: 520, height: 220,
     x: {type: scale, label: spec.param, tickFormat: ".2~g"},
-    y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE, mean of 20 genotypes (t/ha)"},
+    y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE (t/ha)"},
     marks: [Plot.line(curve, {x: "value", y: "rmse", stroke: "#9CA3AF", clip: true}),
             Plot.dot(curve, {x: "value", y: "rmse", fill: "#9CA3AF", r: 3, clip: true}),
             Plot.dot([curve[step]], {x: "value", y: "rmse", fill: "#8B1E3F", r: 6, clip: true})]
   });
-  return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${coefficients}${error}</div>
-    <p class="interactive-note">${genotype}: ${spec.nterms[step][g]} of ${hyper.terms.length} terms retained; mean over the ${hyper.genotypes.length} genotypes: ${d3.mean(spec.nterms[step]).toFixed(1)}.</p>`;
+  return html`<div>${coefficients}${error}</div>`;
 }
 ```
 
