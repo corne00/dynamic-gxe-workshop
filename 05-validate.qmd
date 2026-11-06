@@ -29,7 +29,7 @@ from pipeline import *
 
 ## Solution
 
-The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. All years are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times, so the value of day $j$ is placed at the middle of the day, $t = j + \tfrac{1}{2}$, and values in between are interpolated linearly.
+The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. All years are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times. Biomass is recorded at the end of a day, so the weather of day $j$ drives the interval between observations $j-1$ and $j$. With $t$ counted from the first observation, the value of day $j$ is placed in the middle of that interval, $t = j - \tfrac{3}{2}$, and values in between are interpolated linearly.
 
 ```{r}
 #| echo: false

@@ -488,14 +488,14 @@ const Builder = (() => {
     };
     for (let y = 0; y < S; y++) {
       const nend = data.nend[g][y], Y = data.Y[g][y];
-      const rows = Array.from({length: nend + 1}, (_, d) => lib(y, d));
+      const rows = Array.from({length: Math.min(nend + 2, data.U[y].length)}, (_, d) => lib(y, d));
       const raw = {n: 0, sx: new Float64Array(K), sy: 0, sxx: new Float64Array(K * K),
                    sxy: new Float64Array(K), syy: 0};
       raw.n = nend - 1;
       const x = new Float64Array(K);
       for (let d = 1; d < nend; d++) {
         const dy = (Y[d + 1] - Y[d - 1]) / 2;
-        for (let j = 0; j < K; j++) x[j] = (rows[d - 1][j] + rows[d][j]) / 2;
+        for (let j = 0; j < K; j++) x[j] = (rows[d][j] + rows[d + 1][j]) / 2;
         raw.sy += dy; raw.syy += dy * dy;
         for (let j = 0; j < K; j++) {
           const xj = x[j];
@@ -519,25 +519,26 @@ const Builder = (() => {
   }
 
   // ---- Prediction: the equation integrated over a year -------------------------
-  // The drivers are placed at the middle of each day and interpolated linearly, so
-  // for a library of the drivers only the solution is an exact integral of the
-  // piecewise linear growth rate.
+  // Biomass is recorded at the end of a day, so day d (counted from 0) drives the
+  // interval ending at record d. Its value is placed at time d - 1/2 (time 0 is the
+  // first record) and interpolated linearly; for a library of the drivers only the
+  // solution is the exact integral of this piecewise linear growth rate.
   function integrate(rate, y0, nend) {
+    const r = (k) => rate[Math.min(k, rate.length - 1)];
     const y = new Float64Array(nend + 1);
     y[0] = y0;
-    let acc = 0.5 * rate[0];                      // from t = 0 to t = 1/2
+    let acc = 0.5 * 0.5 * (0.5 * (r(0) + r(1)) + r(1));      // from t = 0 to t = 1/2
     for (let k = 1; k <= nend; k++) {
-      const mid = 0.5 * (rate[k - 1] + rate[k]);  // rate at t = k
-      const piece = 0.5 * 0.5 * (rate[k - 1] + mid);   // from k - 1/2 to k
-      y[k] = y0 + acc + piece;
-      acc += 0.5 * (rate[k - 1] + rate[k]);        // up to t = k + 1/2
+      const mid = 0.5 * (r(k) + r(k + 1));                    // rate at t = k
+      y[k] = y0 + acc + 0.5 * 0.5 * (r(k) + mid);              // plus k - 1/2 to k
+      acc += 0.5 * (r(k) + r(k + 1));                          // up to t = k + 1/2
     }
     return y;
   }
 
   function growthRate(rows, coef, nend) {
-    const K = coef.b.length, r = new Float64Array(nend + 1);
-    for (let d = 0; d <= nend; d++) {
+    const K = coef.b.length, r = new Float64Array(rows.length);
+    for (let d = 0; d < rows.length; d++) {
       let s = coef.b0;
       const x = rows[d];
       for (let j = 0; j < K; j++) s += x[j] * coef.b[j];

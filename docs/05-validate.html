@@ -309,7 +309,7 @@ window.Quarto = {
 </div>
 <section id="solution" class="level2">
 <h2 class="anchored" data-anchor-id="solution">Solution</h2>
-<p>The fitted equation is solved with a standard ODE solver: <code>deSolve::ode</code> (LSODA) in R and <code>scipy.integrate.solve_ivp</code> (LSODA) in Python. All years are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times, so the value of day <span class="math inline">\(j\)</span> is placed at the middle of the day, <span class="math inline">\(t = j + \tfrac{1}{2}\)</span>, and values in between are interpolated linearly.</p>
+<p>The fitted equation is solved with a standard ODE solver: <code>deSolve::ode</code> (LSODA) in R and <code>scipy.integrate.solve_ivp</code> (LSODA) in Python. All years are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times. Biomass is recorded at the end of a day, so the weather of day <span class="math inline">\(j\)</span> drives the interval between observations <span class="math inline">\(j-1\)</span> and <span class="math inline">\(j\)</span>. With <span class="math inline">\(t\)</span> counted from the first observation, the value of day <span class="math inline">\(j\)</span> is placed in the middle of that interval, <span class="math inline">\(t = j - \tfrac{3}{2}\)</span>, and values in between are interpolated linearly.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
@@ -321,7 +321,7 @@ window.Quarto = {
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  days <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="fu">seq_len</span>(D), <span class="cf">function</span>(j) <span class="fu">matrix</span>(U[, j, ], S))</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  b0 <span class="ot">&lt;-</span> coef[, <span class="dv">1</span>]; B <span class="ot">&lt;-</span> coef[, <span class="sc">-</span><span class="dv">1</span>, drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
 <span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  rhs <span class="ot">&lt;-</span> <span class="cf">function</span>(t, y, parms) {</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    pos <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">max</span>(t <span class="sc">-</span> <span class="fl">0.5</span>, <span class="dv">0</span>), D <span class="sc">-</span> <span class="dv">1</span>)      <span class="co"># day j is placed at time j + 0.5</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    pos <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">max</span>(t <span class="sc">+</span> <span class="fl">0.5</span>, <span class="dv">0</span>), D <span class="sc">-</span> <span class="dv">1</span>)      <span class="co"># day j is placed at time j - 3/2</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    j <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">floor</span>(pos), D <span class="sc">-</span> <span class="dv">2</span>)</span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    w <span class="ot">&lt;-</span> pos <span class="sc">-</span> j                            <span class="co"># linear interpolation between days</span></span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    u <span class="ot">&lt;-</span> (<span class="dv">1</span> <span class="sc">-</span> w) <span class="sc">*</span> days[[j <span class="sc">+</span> <span class="dv">1</span>]] <span class="sc">+</span> w <span class="sc">*</span> days[[j <span class="sc">+</span> <span class="dv">2</span>]]</span>
@@ -338,7 +338,7 @@ window.Quarto = {
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    D <span class="op">=</span> U.shape[<span class="dv">1</span>]</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> rhs(t, y):</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        pos <span class="op">=</span> <span class="bu">min</span>(<span class="bu">max</span>(t <span class="op">-</span> <span class="fl">0.5</span>, <span class="fl">0.0</span>), D <span class="op">-</span> <span class="fl">1.0</span>)   <span class="co"># day j is placed at time j + 0.5</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        pos <span class="op">=</span> <span class="bu">min</span>(<span class="bu">max</span>(t <span class="op">+</span> <span class="fl">0.5</span>, <span class="fl">0.0</span>), D <span class="op">-</span> <span class="fl">1.0</span>)   <span class="co"># day j is placed at time j - 3/2</span></span>
 <span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        j <span class="op">=</span> <span class="bu">min</span>(<span class="bu">int</span>(pos), D <span class="op">-</span> <span class="dv">2</span>)</span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        w <span class="op">=</span> pos <span class="op">-</span> j                             <span class="co"># linear interpolation</span></span>
 <span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        u <span class="op">=</span> (<span class="dv">1</span> <span class="op">-</span> w) <span class="op">*</span> U[:, j] <span class="op">+</span> w <span class="op">*</span> U[:, j <span class="op">+</span> <span class="dv">1</span>]</span>
@@ -449,7 +449,7 @@ window.Quarto = {
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>trajectory_rmse  fixed_day_rmse   maturity_rmse 
-          0.462           0.601           0.685 </code></pre>
+          0.449           0.565           0.688 </code></pre>
 </div>
 </div>
 </section>
@@ -621,13 +621,13 @@ window.Quarto = {
 <div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code>                    trajectory_rmse fixed_day_rmse maturity_rmse
-OLS                           0.462          0.602         0.678
-ridge                         0.463          0.613         0.667
-lasso                         0.471          0.628         0.674
-elastic net                   0.471          0.627         0.673
-best subset (k = 8)           0.499          0.670         0.717
-backward (k = 8)              0.505          0.678         0.724
-STLSQ                         0.462          0.601         0.685</code></pre>
+OLS                           0.449          0.563         0.692
+ridge                         0.451          0.578         0.679
+lasso                         0.456          0.589         0.680
+elastic net                   0.455          0.588         0.679
+best subset (k = 8)           0.466          0.613         0.685
+backward (k = 8)              0.467          0.610         0.698
+STLSQ                         0.449          0.565         0.688</code></pre>
 </div>
 </div>
 <p>The methods are close to each other. The sparse models use fewer terms for a similar error.</p>

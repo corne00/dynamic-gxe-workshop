@@ -19,18 +19,21 @@ Python: `PYTHONPATH=python`, then `from dgxe import *`. `scripts/parity_check.R`
 Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet`, `leaps`, `deSolve`, `pracma` and `iml`.
 
 ```sh
-quarto render      # writes docs/ ; computed outputs are cached in _freeze/ and precomputed/
+scripts/rebuild.sh   # everything from scratch: precomputed results, figures, one render
+quarto render        # after text changes only; writes docs/, outputs cached in _freeze/ and precomputed/
 ```
+
+`scripts/precompute.R` computes the cross-validation and ALE results behind the pages and the data of the interactive figures in one pass (genotypes spread over all cores, hyperparameter paths fitted in one call; `R/fast.R`). Delete `_freeze/` after changing code in `R/` or `python/`.
 
 Publish with GitHub Pages: Settings → Pages → Deploy from a branch → `main`, folder `/docs`.
 
 ## Interactive figures
 
-Pages 1 and 4–8 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute_interactive.R` (a few minutes) and `scripts/precompute_weather.R`; both write `data/interactive/*.json`. Page 8 fits models in the browser, with optional extra terms typed as expressions (also available as `extra_terms` in R and Python) (`js/builder.js`, data from `scripts/export_builder.R`); `scripts/builder_check.js` compares it with the R functions (`scripts/builder_reference.R`). Page 1 has a toy of the chain environment, response and biomass, driven by the observed temperature of a Narrabri year.
+Pages 1 and 4–8 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute.R` (which runs `scripts/precompute_interactive.R`) and `scripts/precompute_weather.R`; both write `data/interactive/*.json`. Page 8 fits models in the browser, with optional extra terms typed as expressions (also available as `extra_terms` in R and Python) (`js/builder.js`, data from `scripts/export_builder.R`); `scripts/builder_check.js` compares it with the R functions (`scripts/builder_reference.R`). Page 1 has a toy of the chain environment, response and biomass, driven by the observed temperature of a Narrabri year.
 
 ## Layout
 
-- `*.qmd`: the pages · `R/functions.R` and `python/dgxe.py`: all workshop functions · `R/pipeline.R`: steps 2–3 in one script
+- `*.qmd`: the pages · `R/functions.R` and `python/dgxe.py`: all workshop functions · `R/pipeline.R`: steps 2–3 in one script · `R/fast.R`: parallel and path versions for the precomputation
 - `data/`: Narrabri weather and APSIM biomass/LAI trajectories · `scripts/`: data export and parity check
 - `images/`: static figures
 

@@ -118,13 +118,15 @@ make_trajectories <- function(traj, drv, var = "biomass") {
 
 ## ---- Regression problem for one genotype ------------------------------------
 ## Rows: observations 2, ..., n of every year. dy: centered difference of the
-## biomass. X: library at the observation, the mean of the two adjacent days.
+## biomass. Biomass is recorded at the end of a day, so day i drives the change
+## from observation i - 1 to i. X: library at observation i, the mean of the
+## library of days i and i + 1.
 make_design <- function(Theta, tr, genotype) {
   g <- match(genotype, tr$genotypes)
   n <- tr$nend[g, ]
   years <- seq_along(tr$years)
   X <- lapply(years, function(y)
-    (Theta[y, 1:(n[y] - 1), ] + Theta[y, 2:n[y], ]) / 2)
+    (Theta[y, 2:n[y], ] + Theta[y, 3:(n[y] + 1), ]) / 2)
   dy <- lapply(years, function(y)
     pracma::gradient(tr$Y[g, y, 1:(n[y] + 1)])[2:n[y]])
   X <- do.call(rbind, X)
@@ -209,7 +211,7 @@ simulate <- function(coef, U, y0, terms = function(y, u) u, method = "lsoda") {
   days <- lapply(seq_len(D), function(j) matrix(U[, j, ], S))
   b0 <- coef[, 1]; B <- coef[, -1, drop = FALSE]
   rhs <- function(t, y, parms) {
-    pos <- min(max(t - 0.5, 0), D - 1)      # day j is placed at time j + 0.5
+    pos <- min(max(t + 0.5, 0), D - 1)      # day j is placed at time j - 3/2
     j <- min(floor(pos), D - 2)
     w <- pos - j                            # linear interpolation between days
     u <- (1 - w) * days[[j + 1]] + w * days[[j + 2]]

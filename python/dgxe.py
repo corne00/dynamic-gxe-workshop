@@ -121,13 +121,15 @@ def make_trajectories(traj, drv, var="biomass"):
 
 # ---- Regression problem for one genotype -----------------------------------
 # Rows: observations 2, ..., n of every year. dy: centered difference of the
-# biomass. X: library at the observation, the mean of the two adjacent days.
+# biomass. Biomass is recorded at the end of a day, so day i drives the change
+# from observation i - 1 to i. X: library at observation i, the mean of the
+# library of days i and i + 1.
 def make_design(Theta, tr, genotype):
     g = list(tr.genotypes).index(genotype)
     n = tr.nend[g]
     years = range(len(tr.years))
     A = Theta.array
-    X = np.vstack([(A[s, :n[s] - 1, :] + A[s, 1:n[s], :]) / 2 for s in years])
+    X = np.vstack([(A[s, 1:n[s], :] + A[s, 2:n[s] + 1, :]) / 2 for s in years])
     dy = np.concatenate([np.gradient(tr.Y[g, s, :n[s] + 1])[1:n[s]]
                          for s in years])
     year = np.repeat(np.arange(len(tr.years)), n - 1)
@@ -222,7 +224,7 @@ def simulate(coef, U, y0, terms=lambda y, u: u, method="LSODA"):
     D = U.shape[1]
 
     def rhs(t, y):
-        pos = min(max(t - 0.5, 0.0), D - 1.0)   # day j is placed at time j + 0.5
+        pos = min(max(t + 0.5, 0.0), D - 1.0)   # day j is placed at time j - 3/2
         j = min(int(pos), D - 2)
         w = pos - j                             # linear interpolation
         u = (1 - w) * U[:, j] + w * U[:, j + 1]
