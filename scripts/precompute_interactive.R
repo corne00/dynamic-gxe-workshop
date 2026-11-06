@@ -53,19 +53,18 @@ methods <- lapply(grid, function(m) {
 out(list(terms = colnames(designs[[1]]$X), genotypes = cv_genotypes,
          methods = methods), "hyper.json", 5)
 
-## 2. Held-out trajectories of the sparse model and of the baseline -----------
+## 2. Held-out trajectories of the sparse model -------------------------------
 P <- readRDS("precomputed/cv_stlsq.rds")
-base <- lookup_trajectory(tr)
-pick <- match(some, tr$genotypes)
+contrast <- spread_genotypes(tr, 5)
+pick <- match(contrast, tr$genotypes)
 pack <- function(A) {
   lapply(seq_along(pick), function(i) lapply(seq_along(tr$years), function(s) {
     n <- tr$nend[pick[i], s] + 1
     rounded(A[pick[i], s, 1:n])
   }))
 }
-out(list(genotypes = some, years = tr$years, das0 = tr$das0,
-         three = three, observed = pack(tr$Y), model = pack(P),
-         baseline = pack(base)), "trajectories.json")
+out(list(genotypes = contrast, years = tr$years, das0 = tr$das0,
+         observed = pack(tr$Y), model = pack(P)), "trajectories.json")
 
 ## 3. ALE curves of all genotypes ---------------------------------------------
 ale <- readRDS("precomputed/ale_genotypes.rds")
@@ -101,5 +100,4 @@ pack_day <- function(A) {
   }))
 }
 out(list(days = days, years = tr$years, genotypes = tr$genotypes,
-         observed = pack_day(tr$Y), model = pack_day(P),
-         baseline = pack_day(base)), "ranking.json")
+         observed = pack_day(tr$Y), model = pack_day(P)), "ranking.json")

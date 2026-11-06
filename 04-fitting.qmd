@@ -291,7 +291,7 @@ Each method has one hyperparameter. Switch genotypes on and off to compare their
 
 ```{ojs}
 //| echo: false
-d3 = window.d3          // local copies, see js/
+d3 = window.d3
 Plot = window.Plot
 hyper = FileAttachment("data/interactive/hyper.json").json()
 contrast = ["g181", "g171", "g021", "g141", "g151"]
@@ -335,4 +335,3 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
 }
 ```
 
-The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).

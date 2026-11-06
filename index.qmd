@@ -3,7 +3,7 @@ title: "Sparse identification of crop growth dynamics"
 subtitle: "Workshop, AAGI 2026 Symposium"
 ---
 
-This workshop fits a daily growth equation for wheat biomass to simulated field-trial data, in R and Python. The growth rate is written as a sparse combination of candidate functions of the environment (SINDy), the coefficients are obtained by regression, and the equation is validated on seasons that were not used for fitting.
+This workshop accompanies our preprint, [Physiology-Informed Sparse Identification of Dynamic Crop Models](https://arxiv.org/pdf/2610.18920v1). It fits a daily growth equation for wheat biomass to simulated field-trial data, in R and Python. The growth rate is written as a sparse combination of candidate functions of the environment (SINDy), the coefficients are obtained by regression, and the equation is validated on seasons that were not used for fitting.
 
 The data are APSIM simulations for one site (Narrabri): 199 genotypes, 31 seasons (1983 to 2013), daily resolution. Each step below has a defined input and output, so that any step, in particular the regression method, can be replaced independently of the others.
 
@@ -17,10 +17,6 @@ The data are APSIM simulations for one site (Narrabri): 199 genotypes, 31 season
 | [5 · Validation](05-validate.html) | Simulation and leave-one-season-out cross-validation |
 | [6 · Interpretation](06-reading.html) | Response curves |
 | [7 · Genotypes](07-genotypes.html) | Genotype-specific equations; ranking |
-| [8 · Limitations](08-limitations.html) | Library choice, collinearity, error accumulation |
-| [9 · Extensions](09-further.html) | Coupled states and further directions |
 | [Reference](reference.html) | Symbols, functions, data, sources |
-
-All functions are in `R/functions.R` and `python/dgxe.py`.
 
 Data: [APSIM simulation dataset](https://figshare.com/articles/dataset/24843705) of wheat (Bustos-Korts et al., 2019).

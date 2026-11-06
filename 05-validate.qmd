@@ -29,7 +29,7 @@ from pipeline import *
 
 ## Solution
 
-The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. The daily values of the drivers are placed in the middle of each day and interpolated linearly, so the solver sees a continuous right-hand side. All seasons are integrated in one call, each with its own coefficients, which keeps the cross-validation fast (a few seconds per method for 199 genotypes in Python).
+The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. All seasons are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times, so the value of day $j$ is placed at the middle of the day, $t = j + \tfrac{1}{2}$, and values in between are interpolated linearly.
 
 ```{r}
 #| echo: false
@@ -37,45 +37,22 @@ The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA)
 show_fun("simulate")
 ```
 
-The library does not have to be a function of the drivers only. If `terms(y, u)` is given, it is evaluated along the solution, with the current state `y` and the drivers `u`. As a check, a logistic equation $\frac{dy}{dt} = 0.2\,y - 0.02\,y^2$ is integrated with the library $(y, y^2)$ and compared with its exact solution:
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```{r}
-#| label: 05-0
-#| ref.label: 05-0-run
-#| eval: false
-```
-
-## Python
-
-```python
-U = np.zeros((1, 50, 1))                         # no drivers
-y = simulate(np.array([[0, 0.2, -0.02]]), U, np.array([0.5]),
-             terms=lambda y, u: np.column_stack([y, y**2]))
-exact = 10 / (1 + 19 * np.exp(-0.2 * np.arange(50)))
-print(abs(y[0] - exact).max())
-```
-
-:::
-
-```{r}
-#| label: 05-0-run
-#| echo: false
-U <- array(0, c(1, 50, 1))                       # no drivers
-y <- simulate(rbind(c(0, 0.2, -0.02)), U, 0.5,
-              terms = function(y, u) cbind(y, y^2))
-exact <- 10 / (1 + 19 * exp(-0.2 * 0:49))
-max(abs(y - exact))
-```
-
-The maximum error is of order $10^{-5}$ or smaller, set by the solver tolerance.
+If a library depends on the state, `terms(y, u)` is evaluated along the solution; by default the library depends on the drivers only.
 
 ## Leave-one-season-out cross-validation
 
-For every genotype and every season, the model is fitted to the other 30 seasons of that genotype and used to predict the left-out season from its drivers, starting from the mean initial biomass of the training seasons.
+Each genotype has trajectories in the seasons $E$. A season $e$ is predicted by a model that has not seen it:
+
+$$
+\begin{array}{ll}
+\textbf{for each genotype } g, \textbf{ for each season } e \in E: & \\[2pt]
+\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\mathbf{X}^{(-e)},\, \Delta\mathbf{y}^{(-e)}\bigr) & \text{fit on the other seasons} \\[2pt]
+\quad \bar{y}_0^{(-e)} \leftarrow \tfrac{1}{|E|-1} \textstyle\sum_{e' \ne e} y_0^{(e')} & \text{mean initial biomass} \\[2pt]
+\quad \dfrac{d\hat y}{dt} = \boldsymbol{\theta}\bigl(\mathbf{u}^{(e)}(t)\bigr)^\top \hat{\boldsymbol{\xi}}^{(-e)}, \quad \hat y(t_0) = \bar{y}_0^{(-e)} & \text{predict season } e \text{ from its drivers}
+\end{array}
+$$
+
+Only the drivers of the left-out season enter the prediction. The error is the root-mean-square error (RMSE, t/ha) over whole trajectories, on a fixed day, and at maturity.
 
 ```{r}
 #| echo: false
@@ -83,7 +60,7 @@ For every genotype and every season, the model is fitted to the other 30 seasons
 show_fun("cross_validate", "evaluate")
 ```
 
-The sparse model (STLSQ) for all 199 genotypes, with the root-mean-square error (RMSE, t/ha) over whole trajectories, on day 113 after sowing, and at maturity:
+The sparse model (STLSQ) for all 199 genotypes:
 
 ::: {.panel-tabset group="language"}
 
@@ -113,66 +90,47 @@ round(evaluate(P, tr), 3)
 
 ## Predicted trajectories
 
-Season 1998, predicted by models that were fitted without it. All genotypes are shown in grey; the genotypes with the lowest, median and highest final biomass are in colour.
+Held-out predictions of the sparse model, for genotypes spread over the ranking of final biomass and for selected seasons. Thick lines: APSIM; thin lines: model. Switch genotypes and seasons on and off. The right panel shows the daily growth rate, the increment of biomass per day, of the same curves.
 
-::: {.panel-tabset group="language"}
-
-## R
-
-```{r}
-#| label: 05-2
-#| ref.label: 05-2-run
-#| eval: false
+```{ojs}
+//| echo: false
+d3 = window.d3
+Plot = window.Plot
+traj = FileAttachment("data/interactive/trajectories.json").json()
+shades = ["#8B1E3F", "#00A6D6", "#014E81", "#6D8B1E", "#6B7280"]
+viewof genos = toggles("Genotypes", traj.genotypes, shades, [traj.genotypes[0], traj.genotypes[2], traj.genotypes[4]])
+viewof seasons = toggles("Seasons", [1983, 1989, 1998, 2008], ["#374151", "#374151", "#374151", "#374151"], [1989, 1998, 2008])
 ```
 
-## Python
-
-```python
-s = list(tr.years).index(1998)
-three = spread_genotypes(tr)
-days = np.arange(tr.Y.shape[2]) + tr.das0
-alive = ~np.isnan(tr.Y[:, s])                    # days before maturity
-
-fig, axes = plt.subplots(1, 2, sharey=True, figsize=(8, 3))
-for ax, title, Y in zip(axes, ["APSIM", "Model"], [tr.Y, P]):
-    Ys = np.where(alive, Y[:, s], np.nan)
-    ax.plot(days, Ys.T, color=GREY, lw=0.2)
-    for g, colour in zip(three, [BURGUNDY, CYAN, BLUE]):
-        ax.plot(days, Ys[np.searchsorted(tr.genotypes, g)], color=colour,
-                lw=0.9, label=g)
-    ax.set_title(title, loc="left")
-axes[0].legend(frameon=False)
-axes[0].set_ylabel("biomass (t/ha)")
-fig.supxlabel("days after sowing")
-fig.tight_layout()
+```{ojs}
+//| echo: false
+{
+  const rows = genos.flatMap(name => seasons.flatMap(year => {
+    const g = traj.genotypes.indexOf(name), s = traj.years.indexOf(year);
+    return ["observed", "model"].flatMap(source => traj[source][g][s].map((y, i, a) => ({
+      name, year, source, das: traj.das0 + i, y, rate: i ? y - a[i - 1] : null})));
+  }));
+  const panel = (key, label, domain) => Plot.plot({
+    width: 262, height: 70 + 120 * seasons.length, marginLeft: 42, marginRight: 8,
+    style: {fontSize: "10px"},
+    x: {label: "days after sowing"},
+    y: {label, domain},
+    fy: {label: null, domain: seasons, tickFormat: d => d},
+    color: {domain: traj.genotypes, range: shades},
+    marks: [
+      Plot.line(rows.filter(d => d.source === "observed" && d[key] !== null),
+        {x: "das", y: key, fy: "year", z: "name", stroke: "name", strokeWidth: 4, strokeOpacity: 0.3}),
+      Plot.line(rows.filter(d => d.source === "model" && d[key] !== null),
+        {x: "das", y: key, fy: "year", z: "name", stroke: "name", strokeWidth: 1.4})
+    ]
+  });
+  return html`<div style="display:flex;flex-wrap:wrap;gap:0.5rem">${panel("y", "biomass (t/ha)", [0, 18])}${panel("rate", "growth rate (t/ha/day)", [0, 0.4])}</div>`;
+}
 ```
 
-:::
+## Predicted against APSIM biomass at maturity
 
-```{r}
-#| label: 05-2-run
-#| echo: false
-#| fig-height: 3
-v <- match(1998, tr$years)
-three <- spread_genotypes(tr)
-cells <- which(!is.na(tr$Y[, v, ]), arr.ind = TRUE)      # genotype, day
-long <- data.frame(genotype = tr$genotypes[cells[, 1]],
-                   das = cells[, 2] + tr$das0 - 1)
-d <- rbind(cbind(long, source = "APSIM", biomass = tr$Y[, v, ][cells]),
-           cbind(long, source = "Model", biomass = P[, v, ][cells]))
-
-ggplot(d, aes(das, biomass, group = genotype)) +
-  geom_line(colour = "#D1D5DB", linewidth = 0.2) +
-  geom_line(data = d[d$genotype %in% three, ], aes(colour = genotype),
-            linewidth = 0.7) +
-  facet_wrap(~source) +
-  scale_colour_dgxe("burgundy", "cyan", "blue") +
-  labs(x = "days after sowing", y = "biomass (t/ha)") +
-  theme_dgxe() +
-  legend_top()
-```
-
-Predicted against APSIM biomass on day 113, all genotype-season pairs:
+Final biomass of all genotype-season pairs, coloured by season:
 
 ::: {.panel-tabset group="language"}
 
@@ -187,17 +145,23 @@ Predicted against APSIM biomass on day 113, all genotype-season pairs:
 ## Python
 
 ```python
-obs = tr.Y[:, :, 113 - tr.das0].ravel()
-pred = P[:, :, 113 - tr.das0].ravel()
+from matplotlib.colors import LinearSegmentedColormap
+
+g, s = np.indices(tr.nend.shape)
+obs, pred = tr.Y[g, s, tr.nend].ravel(), P[g, s, tr.nend].ravel()
+year = np.tile(tr.years, len(tr.genotypes))
 rmse = np.sqrt(np.mean((obs - pred) ** 2))
 
-fig, ax = plt.subplots(figsize=(4, 4))
+colours = LinearSegmentedColormap.from_list("dgxe", [BLUE, CYAN, BURGUNDY])
+fig, ax = plt.subplots(figsize=(4.6, 4))
 ax.plot([obs.min(), obs.max()], [obs.min(), obs.max()], color="#9CA3AF", lw=0.8)
-ax.scatter(obs, pred, s=2, alpha=0.2, color=BLUE)
-ax.text(obs.min(), pred.max(), f"RMSE {rmse:.2f} t/ha", va="top")
+points = ax.scatter(obs, pred, c=year, s=4, alpha=0.5, cmap=colours,
+                    linewidths=0)
+ax.text(0.04, 0.95, f"RMSE {rmse:.2f} t/ha", transform=ax.transAxes, va="top")
 ax.set_aspect("equal")
-ax.set_xlabel("APSIM biomass (t/ha)")
+ax.set_xlabel("APSIM biomass at maturity (t/ha)")
 ax.set_ylabel("predicted biomass (t/ha)")
+fig.colorbar(points, label="season", shrink=0.8)
 fig.tight_layout()
 ```
 
@@ -206,140 +170,28 @@ fig.tight_layout()
 ```{r}
 #| label: 05-3-run
 #| echo: false
-#| fig-height: 3.6
-#| fig-width: 4.2
-d <- data.frame(obs = as.vector(tr$Y[, , 99]), pred = as.vector(P[, , 99]))
+#| fig-height: 4
+#| fig-width: 5
+last <- cbind(as.vector(row(tr$nend)), as.vector(col(tr$nend)),
+              as.vector(tr$nend) + 1)
+d <- data.frame(obs = tr$Y[last], pred = P[last],
+                year = tr$years[as.vector(col(tr$nend))])
 rmse <- sqrt(mean((d$obs - d$pred)^2))
 
-ggplot(d, aes(obs, pred)) +
+ggplot(d, aes(obs, pred, colour = year)) +
   geom_abline(colour = dgxe[["grey"]], linewidth = 0.4) +
-  geom_point(colour = dgxe[["blue"]], size = 0.5, alpha = 0.2) +
+  geom_point(size = 0.7, alpha = 0.5) +
   annotate("text", x = min(d$obs), y = max(d$pred), hjust = 0, vjust = 1,
            size = 3.4, label = sprintf("RMSE %.2f t/ha", rmse)) +
+  scale_colour_gradientn(colours = c(dgxe[["blue"]], dgxe[["cyan"]],
+                                     dgxe[["burgundy"]]),
+                         name = "season") +
   coord_equal() +
-  labs(x = "APSIM biomass (t/ha)", y = "predicted biomass (t/ha)") +
-  theme_dgxe()
+  labs(x = "APSIM biomass at maturity (t/ha)",
+       y = "predicted biomass (t/ha)") +
+  theme_dgxe() +
+  theme(legend.position = "right")
 ```
-
-## Baseline without weather
-
-As a reference, each trajectory is predicted by the mean curve of the same genotype in the other seasons. This prediction does not use the weather.
-
-```{r}
-#| echo: false
-#| results: asis
-show_fun("lookup_trajectory")
-```
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```{r}
-#| label: 05-4
-#| ref.label: 05-4-run
-#| eval: false
-```
-
-## Python
-
-```python
-base = lookup_trajectory(tr)
-print({k: round(float(v), 3) for k, v in evaluate(base, tr).items()})
-```
-
-:::
-
-```{r}
-#| label: 05-4-run
-#| echo: false
-base <- lookup_trajectory(tr)
-round(evaluate(base, tr), 3)
-```
-
-The error as a function of time:
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```{r}
-#| label: 05-5
-#| ref.label: 05-5-run
-#| eval: false
-```
-
-## Python
-
-```python
-days = np.arange(1, tr.Y.shape[2]) + tr.das0
-fig, ax = plt.subplots(figsize=(7, 3))
-ax.plot(days, rmse_by_day(P, tr), color=BLUE, label="model")
-ax.plot(days, rmse_by_day(base, tr), color=BURGUNDY, label="baseline")
-ax.set_xlim(right=155)
-ax.set_xlabel("days after sowing")
-ax.set_ylabel("held-out RMSE (t/ha)")
-ax.legend(frameon=False)
-fig.tight_layout()
-```
-
-:::
-
-```{r}
-#| label: 05-5-run
-#| echo: false
-#| fig-height: 3
-days <- 2:dim(tr$Y)[3] + tr$das0 - 1
-d <- rbind(data.frame(das = days, rmse = rmse_by_day(P, tr), model = "model"),
-           data.frame(das = days, rmse = rmse_by_day(base, tr),
-                      model = "baseline"))
-
-ggplot(d[d$das <= 155, ], aes(das, rmse, colour = model)) +
-  geom_line(linewidth = 0.8) +
-  scale_colour_dgxe("burgundy", "blue") +
-  annotate("text", x = 40, y = 0.5, label = "model",
-           colour = dgxe[["blue"]], size = 3.4, hjust = 0) +
-  annotate("text", x = 40, y = 0.2, label = "baseline",
-           colour = dgxe[["burgundy"]], size = 3.4, hjust = 0) +
-  labs(x = "days after sowing", y = "held-out RMSE (t/ha)") +
-  theme_dgxe()
-```
-
-## Individual trajectories
-
-Held-out prediction of the sparse model (STLSQ, fitted to the other seasons) and of the baseline for one genotype and season. Forty genotypes are available.
-
-```{ojs}
-//| echo: false
-d3 = window.d3          // local copies, see js/
-Plot = window.Plot
-traj = FileAttachment("data/interactive/trajectories.json").json()
-viewof genotype = select("Genotype", traj.genotypes, "g114")
-viewof season = slider("Season", traj.years, traj.years.indexOf(1998))
-```
-
-```{ojs}
-//| echo: false
-{
-  const g = traj.genotypes.indexOf(genotype);
-  const line = key => traj[key][g][season].map((y, i) => ({das: traj.das0 + i, y}));
-  const [observed, model, baseline] = ["observed", "model", "baseline"].map(line);
-  const rmse = a => Math.sqrt(d3.mean(a.slice(1), (d, i) => (d.y - observed[i + 1].y) ** 2));
-  const plot = Plot.plot({
-    width: 640, height: 320, marginLeft: 50,
-    x: {label: "days after sowing"},
-    y: {domain: [0, 18], label: "biomass (t/ha)"},
-    marks: [
-      Plot.line(observed, {x: "das", y: "y", stroke: "#9CA3AF", strokeWidth: 4}),
-      Plot.line(baseline, {x: "das", y: "y", stroke: "#8B1E3F", strokeDasharray: "4 3"}),
-      Plot.line(model, {x: "das", y: "y", stroke: "#014E81", strokeWidth: 2})
-    ]
-  });
-  return html`${plot}<p class="interactive-note">Grey: APSIM. Blue: model (RMSE ${rmse(model).toFixed(2)} t/ha). Dashed: baseline (RMSE ${rmse(baseline).toFixed(2)} t/ha).</p>`;
-}
-```
-
-The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).
 
 ## Comparison of fitting methods
 
@@ -360,7 +212,6 @@ All methods of step 4 are evaluated in the same way:
 ```python
 scores = pd.DataFrame({name: evaluate(cross_validate(Theta, tr, fit), tr)
                        for name, fit in fit_methods.items()}).T
-scores.loc["baseline"] = evaluate(base, tr)
 print(scores.round(3))
 ```
 
@@ -372,10 +223,10 @@ print(scores.round(3))
 scores <- cached("cv_methods.rds", t(sapply(fit_methods, function(fit) {
   evaluate(cross_validate(Theta, tr, fit), tr)
 })))
-round(rbind(scores, baseline = evaluate(base, tr)), 3)
+round(scores, 3)
 ```
 
-The methods are close to each other. The sparse models use fewer terms for a similar error, and all of them improve on the baseline, mainly late in the season.
+The methods are close to each other. The sparse models use fewer terms for a similar error.
 
 ## Number of terms
 

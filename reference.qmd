@@ -18,7 +18,7 @@ subtitle: "Symbols, functions, data, and sources"
 
 ## Functions
 
-All functions are in `R/functions.R`.
+All functions are in `R/functions.R` (R) and `python/dgxe.py` (Python), with the same names and arguments.
 
 | Function | Purpose |
 |---|---|
@@ -31,7 +31,9 @@ All functions are in `R/functions.R`.
 | `cross_validate(Theta, tr, fit)` | leave-one-season-out predictions |
 | `evaluate(P, tr)` | trajectory, fixed-day and maturity RMSE |
 | `ale_curve(rate, Z, j)` | accumulated local effect of driver `j` |
-| `rank_scores(Pd, Yd)`, `lookup_trajectory(tr)` | ranking metrics and the baseline |
+| `rank_scores(Pd, Yd)` | ranking metrics |
+
+The R and Python versions differ only in conventions: R uses `TRUE`/`FALSE` and `1:n` indexing, Python uses `True`/`False`, zero-based indexing and the attribute syntax `tr.Y` instead of `tr$Y`.
 
 ## Data
 
@@ -39,6 +41,7 @@ APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes,
 
 ## Sources
 
+- Preprint: *Physiology-Informed Sparse Identification of Dynamic Crop Models*. [arXiv:2610.18920](https://arxiv.org/pdf/2610.18920v1).
 - Bustos-Korts, D. et al. (2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. *Frontiers in Plant Science* 10, 1540. doi:10.3389/fpls.2019.01540. Data: [figshare](https://figshare.com/articles/dataset/24843705).
 - Brunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. *PNAS* 113(15), 3932–3937.
 - Friedman, J., Hastie, T. and Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. *Journal of Statistical Software* 33(1), 1–22 (`glmnet`).

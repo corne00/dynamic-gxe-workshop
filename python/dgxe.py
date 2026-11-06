@@ -96,9 +96,7 @@ def fit_ols(X, dy):
                            rcond=None)[0]
 
 
-# Lasso (alpha = 1) and elastic net with the penalty of glmnet,
-# lam * ((1 - alpha) / 2 * b'b / sd(dy) + alpha * |b|_1), on terms scaled to
-# unit variance (glmnet scales the squared penalty by sd(dy)).
+# Lasso and elastic net, with the penalty scaling of glmnet.
 def fit_glmnet(X, dy, alpha, lam):
     sx = X.std(axis=0)
     l1, l2 = lam * alpha, lam * (1 - alpha) / dy.std()
@@ -109,7 +107,7 @@ def fit_glmnet(X, dy, alpha, lam):
     return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
 
 
-# Ridge (alpha = 0) has a closed form, with the same scaling as above.
+# Ridge: closed form, same scaling.
 def fit_ridge(X, dy, lam=1e-3):
     sx = X.std(axis=0)
     Z = (X - X.mean(axis=0)) / sx
@@ -126,10 +124,7 @@ def fit_enet(X, dy, lam=6e-4):
     return fit_glmnet(X, dy, 0.5, lam)
 
 
-# Best subset (exhaustive) or backward elimination with k terms. Everything is
-# computed from the centred Gram matrix G and c = X'dy: a subset S has
-# residual sum of squares dy'dy - c_S' G_SS^-1 c_S, and removing term j from S
-# increases it by b_j^2 / (G_SS^-1)_jj.
+# Best subset or backward elimination with k terms, from the Gram matrix.
 def fit_subset(X, dy, k=8, method="exhaustive"):
     Xc, yc = X - X.mean(axis=0), dy - dy.mean()
     G, c = Xc.T @ Xc, Xc.T @ yc
@@ -149,11 +144,9 @@ def fit_subset(X, dy, k=8, method="exhaustive"):
     return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
 
 
-# Sequential thresholded least squares (the original SINDy algorithm): refit
-# on the active terms and remove those whose scaled coefficient is below the
-# threshold, until no term is removed.
+# Sequential thresholded least squares: refit, drop terms below the threshold.
 def fit_stlsq(X, dy, threshold=0.05):
-    size = X.std(axis=0, ddof=1) / dy.std(ddof=1)    # common scale
+    size = X.std(axis=0, ddof=1) / dy.std(ddof=1)
     active = np.arange(X.shape[1])
     while True:
         b = fit_ols(X[:, active], dy)
@@ -178,30 +171,29 @@ fit_methods = {
 }
 
 
-# ---- Simulation: solve dy/dt = (1, theta(y, u)) coef with a standard solver
-# coef: seasons x (1 + terms), one fitted equation per season. U: season x day
-# x variable, daily values placed in the middle of each day and interpolated
-# linearly. terms(y, u) gives the library for states y and drivers u; by
-# default U already holds the library (drivers only). Returns season x day.
+# ---- Simulation -------------------------------------------------------------
+# Solves dy/dt = (1, theta(y, u)) coef. coef: season x (1 + terms), U: season
+# x day x variable. terms(y, u) is the library; by default U is the library.
 def simulate(coef, U, y0, terms=lambda y, u: u, method="LSODA"):
     D = U.shape[1]
 
     def rhs(t, y):
-        x = min(max(t - 0.5, 0.0), D - 1.5)      # constant outside the data
-        j = int(x)
-        u = (1 - (x - j)) * U[:, j] + (x - j) * U[:, j + 1]
+        pos = min(max(t - 0.5, 0.0), D - 1.0)   # day j is placed at time j + 0.5
+        j = min(int(pos), D - 2)
+        w = pos - j                             # linear interpolation
+        u = (1 - w) * U[:, j] + w * U[:, j + 1]
         return coef[:, 0] + np.einsum("sk,sk->s", terms(y, u), coef[:, 1:])
 
     return solve_ivp(rhs, (0, D - 1), y0, method=method, t_eval=np.arange(D),
                      rtol=1e-6, atol=1e-6).y
 
 
-# Genotypes with the lowest, median and highest mean final biomass.
-def spread_genotypes(tr):
+# n genotypes spread evenly over the ranking of mean final biomass.
+def spread_genotypes(tr, n=3):
     g, s = np.indices(tr.nend.shape)
     final = tr.Y[g, s, tr.nend].mean(axis=1)
     ranked = tr.genotypes[np.argsort(final)]
-    return ranked[[0, int(np.ceil(len(ranked) / 2)) - 1, -1]]
+    return ranked[np.round(np.linspace(0, len(ranked) - 1, n)).astype(int)]
 
 
 # ---- Validation: leave-one-season-out --------------------------------------
@@ -236,26 +228,6 @@ def evaluate(P, tr, fixed_day=113):
             "maturity_rmse": rmse(err[g, s, tr.nend])}
 
 
-# RMSE on each day, over all genotype-season pairs still growing on that day.
-def rmse_by_day(P, tr):
-    return np.sqrt(np.nanmean((P - tr.Y) ** 2, axis=(0, 1)))[1:]
-
-
-# Baseline without weather: each trajectory is the mean curve of the same
-# genotype in the other seasons (held at its last value once all other
-# seasons have ended), with the true initial value.
-def lookup_trajectory(tr):
-    seen = ~np.isnan(tr.Y)
-    total, count = np.nansum(tr.Y, axis=1), seen.sum(axis=1)  # genotype x day
-    n = count[:, None, :] - seen                              # other seasons
-    with np.errstate(invalid="ignore", divide="ignore"):
-        P = (total[:, None, :] - np.nan_to_num(tr.Y)) / n
-    last = (n > 0).sum(axis=2, keepdims=True) - 1             # last day seen
-    P = np.where(n > 0, P, np.take_along_axis(P, last, axis=2))
-    P[:, :, 0] = tr.Y[:, :, 0]
-    return P
-
-
 # ---- Genotype ranking -------------------------------------------------------
 # Pd, Yd: genotype x season matrices of predicted and APSIM biomass on one
 # day. For each season: Spearman correlation of the two rankings and overlap
@@ -269,12 +241,6 @@ def rank_scores(Pd, Yd, top=0.1):
         best = set(np.argsort(-Pd[:, s])[:k]) & set(np.argsort(-Yd[:, s])[:k])
         overlap.append(len(best) / k)
     return np.array(rho), np.array(overlap)
-
-
-# Baseline without weather: the genotype's mean on that day in the other
-# seasons.
-def lookup_baseline(Yd):
-    return (Yd.sum(axis=1, keepdims=True) - Yd) / (Yd.shape[1] - 1)
 
 
 # ---- Interpretation --------------------------------------------------------

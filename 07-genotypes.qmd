@@ -78,7 +78,7 @@ coefs <- sapply(tr$genotypes, fit_genotype)
 
 ```python
 three = spread_genotypes(tr)
-mean_path = Theta.array.mean(axis=0)               # library, mean weather
+mean_path = Theta.array.mean(axis=0)
 b = coefs.to_numpy()
 rate = pd.DataFrame(b[0] + mean_path @ b[1:], columns=coefs.columns)
 rate["das"] = np.arange(len(rate)) + tr.das0
@@ -101,7 +101,7 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 2.8
 three <- spread_genotypes(tr)
-mean_path <- cbind(1, apply(Theta, c(2, 3), mean))       # library, mean weather
+mean_path <- cbind(1, apply(Theta, c(2, 3), mean))
 das <- 1:nrow(mean_path) + tr$das0 - 1
 d <- data.frame(das = rep(das, ncol(coefs)),
                 genotype = rep(colnames(coefs), each = length(das)),
@@ -120,7 +120,7 @@ ggplot(d, aes(das, rate, group = genotype)) +
 
 ## Ranking genotypes
 
-For each season, the predicted and APSIM biomass of the 199 genotypes on a fixed day are compared by the Spearman correlation and by the overlap of the top 10%. The reference is again the mean of the genotype in the other seasons.
+For each season, the predicted and APSIM biomass of the 199 genotypes on a fixed day are compared by the Spearman correlation and by the overlap of the top 10%.
 
 ```{r}
 #| echo: false
@@ -142,19 +142,15 @@ show_fun("rank_scores")
 
 ```python
 P = cross_validate(Theta, tr, fit_stlsq)
-base = lookup_trajectory(tr)
 days = [49, 64, 77, 98, 113]                       # days after sowing
 
 def scores(day):
     i = day - tr.das0
-    rows = []
-    for method, Q in [("model", P), ("baseline", base)]:
-        rho, top = rank_scores(Q[:, :, i], tr.Y[:, :, i])
-        rows.append((day, method, rho.mean().round(3), top.mean().round(3)))
-    return rows
+    rho, top = rank_scores(P[:, :, i], tr.Y[:, :, i])
+    return day, rho.mean().round(3), top.mean().round(3)
 
-out = pd.DataFrame([r for day in days for r in scores(day)],
-                   columns=["das", "method", "rho", "top10"])
+out = pd.DataFrame([scores(day) for day in days],
+                   columns=["das", "rho", "top10"])
 print(out)
 ```
 
@@ -164,15 +160,11 @@ print(out)
 #| label: 07-3-run
 #| echo: false
 P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
-base <- lookup_trajectory(tr)
-days <- c(35, 50, 63, 84, 99)       # day index (das = index + 14)
+days <- c(35, 50, 63, 84, 99)       # array index; day after sowing = index + 14
 
 scores <- function(d) {
-  model <- rank_scores(P[, , d], tr$Y[, , d])
-  baseline <- rank_scores(base[, , d], tr$Y[, , d])
-  data.frame(das = d + tr$das0 - 1, method = c("model", "baseline"),
-             rho = c(mean(model$rho), mean(baseline$rho)),
-             top10 = c(mean(model$top), mean(baseline$top)))
+  s <- rank_scores(P[, , d], tr$Y[, , d])
+  data.frame(das = d + tr$das0 - 1, rho = mean(s$rho), top10 = mean(s$top))
 }
 out <- do.call(rbind, lapply(days, scores))
 out[, c("rho", "top10")] <- round(out[, c("rho", "top10")], 3)
@@ -195,11 +187,8 @@ out
 fig, axes = plt.subplots(1, 2, figsize=(8, 2.8))
 for ax, column, title in zip(axes, ["rho", "top10"],
                              ["Spearman correlation", "top-10% overlap"]):
-    for method, colour in [("model", BLUE), ("baseline", BURGUNDY)]:
-        o = out[out["method"] == method]
-        ax.plot(o["das"], o[column], "o-", color=colour, label=method)
+    ax.plot(out["das"], out[column], "o-", color=BLUE)
     ax.set_title(title, loc="left")
-axes[0].legend(frameon=False)
 fig.supxlabel("days after sowing")
 fig.tight_layout()
 ```
@@ -211,30 +200,26 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 2.8
 long <- rbind(
-  data.frame(out[c("das", "method")], metric = "Spearman correlation",
-             score = out$rho),
-  data.frame(out[c("das", "method")], metric = "top-10% overlap",
-             score = out$top10))
+  data.frame(das = out$das, metric = "Spearman correlation", score = out$rho),
+  data.frame(das = out$das, metric = "top-10% overlap", score = out$top10))
 
-ggplot(long, aes(das, score, colour = method)) +
-  geom_line(linewidth = 0.8) +
-  geom_point(size = 1.8) +
+ggplot(long, aes(das, score)) +
+  geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
+  geom_point(colour = dgxe[["blue"]], size = 1.8) +
   facet_wrap(~metric, scales = "free_y") +
-  scale_colour_dgxe("burgundy", "blue") +
   labs(x = "days after sowing", y = NULL) +
-  theme_dgxe() +
-  legend_top()
+  theme_dgxe()
 ```
 
-Early in the season the baseline ranks genotypes better, since the order is determined mainly by genotype and not yet by weather. Around day 98 (after sowing) the two are similar, and on day 113 the model is better on both measures. These results are for genotypes whose trajectories in other seasons are available for fitting.
+The ranking improves as the season progresses, when the weather has had more effect on the order of the genotypes. These results are for genotypes whose trajectories in other seasons are available for fitting.
 
 ## Exploring the ranking
 
-Predicted against APSIM biomass of the 199 genotypes in one season on one day, for the sparse model and for the baseline. Red points are the true top 10%.
+Predicted against APSIM biomass of the 199 genotypes in one season on one day, for the sparse model. Red points are the true top 10%.
 
 ```{ojs}
 //| echo: false
-d3 = window.d3          // local copies, see js/
+d3 = window.d3
 Plot = window.Plot
 rank = FileAttachment("data/interactive/ranking.json").json()
 viewof season3 = slider("Season", rank.years, rank.years.indexOf(1998))
@@ -270,10 +255,9 @@ viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
               Plot.dot(rows, {x: "obs", y: "pred", r: 2.5, fillOpacity: 0.7,
                 fill: d => d.best ? "#8B1E3F" : "#014E81"})]
     });
-    return html`<div>${plot}<p class="interactive-note">${key}: Spearman ρ = ${spearman(obs, pred).toFixed(2)}, top-10% overlap ${overlap.toFixed(2)}</p></div>`;
+    return html`<div>${plot}<p class="interactive-note">Spearman ρ = ${spearman(obs, pred).toFixed(2)}, top-10% overlap ${overlap.toFixed(2)}</p></div>`;
   };
-  return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${panel("model")}${panel("baseline")}</div>`;
+  return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${panel("model")}</div>`;
 }
 ```
 
-The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).

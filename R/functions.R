@@ -20,7 +20,7 @@ make_drivers <- function(wx, drivers = c("TT", "DL", "RAW", "RAD")) {
     i <- cbind(match(wx$year, years), wx$das - das0 + 1, j)
     U[i] <- wx[[drivers[j]]]
   }
-  # seasons end on different days: pad with the last value (never fitted)
+  # pad seasons that end early with their last value
   for (y in seq_along(years)) {
     for (j in seq_along(drivers)) {
       u <- U[y, , j]
@@ -107,7 +107,7 @@ fit_ridge <- function(X, dy, lambda = 1e-3) fit_glmnet(X, dy, 0, lambda)
 fit_lasso <- function(X, dy, lambda = 3e-4) fit_glmnet(X, dy, 1, lambda)
 fit_enet <- function(X, dy, lambda = 6e-4) fit_glmnet(X, dy, 0.5, lambda)
 
-## Best subset (exhaustive) or backward elimination with k terms, by leaps.
+## Best subset or backward elimination with k terms.
 fit_subset <- function(X, dy, k = 8, method = "exhaustive") {
   b <- coef(leaps::regsubsets(X, dy, nvmax = k, method = method), k)
   full <- setNames(numeric(ncol(X) + 1), c("1", colnames(X)))
@@ -115,11 +115,9 @@ fit_subset <- function(X, dy, k = 8, method = "exhaustive") {
   full
 }
 
-## Sequential thresholded least squares (the original SINDy algorithm): refit
-## on the active terms and remove those whose scaled coefficient is below the
-## threshold, until no term is removed.
+## Sequential thresholded least squares: refit, drop terms below the threshold.
 fit_stlsq <- function(X, dy, threshold = 0.05) {
-  size <- apply(X, 2, sd) / sd(dy)         # puts all coefficients on one scale
+  size <- apply(X, 2, sd) / sd(dy)
   active <- colnames(X)
   repeat {
     b <- lm.fit(cbind(`1` = 1, X[, active, drop = FALSE]), dy)$coefficients
@@ -142,30 +140,29 @@ fit_methods <- list(
   `backward (k = 8)` = function(X, dy) fit_subset(X, dy, 8, "backward"),
   STLSQ = fit_stlsq)
 
-## ---- Simulation: solve dy/dt = (1, theta(y, u)) coef with a standard solver
-## coef: seasons x (1 + terms), one fitted equation per season. U: season x day
-## x variable, daily values placed in the middle of each day and interpolated
-## linearly. terms(y, u) gives the library for states y and drivers u; by
-## default U already holds the library (drivers only). Returns day x season.
+## ---- Simulation -------------------------------------------------------------
+## Solves dy/dt = (1, theta(y, u)) coef. coef: season x (1 + terms), U: season
+## x day x variable. terms(y, u) is the library; by default U is the library.
 simulate <- function(coef, U, y0, terms = function(y, u) u, method = "lsoda") {
   S <- dim(U)[1]; D <- dim(U)[2]
   day <- function(j) matrix(U[, j, ], S)
   rhs <- function(t, y, parms) {
-    x <- min(max(t - 0.5, 0), D - 1.5)           # constant outside the data
-    j <- floor(x)
-    u <- (1 - (x - j)) * day(j + 1) + (x - j) * day(j + 2)
+    pos <- min(max(t - 0.5, 0), D - 1)      # day j is placed at time j + 0.5
+    j <- min(floor(pos), D - 2)
+    w <- pos - j                            # linear interpolation between days
+    u <- (1 - w) * day(j + 1) + w * day(j + 2)
     list(coef[, 1] + rowSums(terms(y, u) * coef[, -1]))
   }
   deSolve::ode(y0, 0:(D - 1), rhs, NULL, method = method)[, -1, drop = FALSE]
 }
 
-## Genotypes with the lowest, median and highest mean final biomass.
-spread_genotypes <- function(tr) {
+## n genotypes spread evenly over the ranking of mean final biomass.
+spread_genotypes <- function(tr, n = 3) {
   last <- cbind(as.vector(row(tr$nend)), as.vector(col(tr$nend)),
                 as.vector(tr$nend) + 1)
   final <- matrix(tr$Y[last], nrow(tr$nend), dimnames = dimnames(tr$nend))
   ranked <- names(sort(rowMeans(final)))
-  ranked[c(1, ceiling(length(ranked) / 2), length(ranked))]
+  ranked[round(seq(1, length(ranked), length.out = n))]
 }
 
 ## ---- Validation: leave-one-season-out ---------------------------------------
@@ -199,25 +196,6 @@ evaluate <- function(P, tr, fixed_day = 99) {
     maturity_rmse = rmse(err[last]))
 }
 
-## RMSE on each day, over all genotype-season pairs still growing on that day.
-rmse_by_day <- function(P, tr) {
-  sqrt(apply((P - tr$Y)^2, 3, mean, na.rm = TRUE))[-1]
-}
-
-## Baseline without weather: each trajectory is the mean curve of the same
-## genotype in the other seasons (held at its last value once all other
-## seasons have ended), with the true initial value.
-lookup_trajectory <- function(tr) {
-  hold_last <- function(v) replace(v, is.nan(v), tail(v[!is.nan(v)], 1))
-  P <- array(NA_real_, dim(tr$Y))
-  for (y in seq_along(tr$years)) {
-    m <- apply(tr$Y[, -y, , drop = FALSE], c(1, 3), mean, na.rm = TRUE)
-    P[, y, ] <- t(apply(m, 1, hold_last))
-    P[, y, 1] <- tr$Y[, y, 1]
-  }
-  P
-}
-
 ## ---- Interpretation: accumulated local effects (ALE) ------------------------
 ## Standardised drivers on the days that occur in the data (season x day rows).
 observed_points <- function(drv, tr) {
@@ -242,6 +220,3 @@ rank_scores <- function(Pd, Yd, top = 0.1) {
   do.call(rbind, lapply(seq_len(ncol(Yd)), score))
 }
 
-## Baseline without weather: the genotype's mean on that day in the other
-## seasons.
-lookup_baseline <- function(Yd) (rowSums(Yd) - Yd) / (ncol(Yd) - 1)

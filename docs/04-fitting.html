@@ -116,7 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261106e"></script>
+<script src="js/controls.js?v=20261106f"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -237,18 +237,6 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="./07-genotypes.html" class="sidebar-item-text sidebar-link">
  <span class="menu-text">7 · Genotypes</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · Limitations</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Extensions</span></a>
   </div>
 </li>
       </ul>
@@ -376,26 +364,24 @@ window.Quarto = {
 <span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>fit_ridge <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">1e-3</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="dv">0</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso (alpha = 1) and elastic net with the penalty of glmnet,</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># lam * ((1 - alpha) / 2 * b'b / sd(dy) + alpha * |b|_1), on terms scaled to</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># unit variance (glmnet scales the squared penalty by sd(dy)).</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_glmnet(X, dy, alpha, lam):</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    l1, l2 <span class="op">=</span> lam <span class="op">*</span> alpha, lam <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> alpha) <span class="op">/</span> dy.std()</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ElasticNet(alpha<span class="op">=</span>l1 <span class="op">+</span> l2, l1_ratio<span class="op">=</span>l1 <span class="op">/</span> (l1 <span class="op">+</span> l2), tol<span class="op">=</span><span class="fl">1e-12</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                       max_iter<span class="op">=</span><span class="dv">100000</span>, precompute<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    model.fit((X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx, dy <span class="op">-</span> dy.mean())</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> model.coef_ <span class="op">/</span> sx</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Ridge (alpha = 0) has a closed form, with the same scaling as above.</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ridge(X, dy, lam<span class="op">=</span><span class="fl">1e-3</span>):</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> (X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    A <span class="op">=</span> Z.T <span class="op">@</span> Z <span class="op">/</span> <span class="bu">len</span>(dy) <span class="op">+</span> lam <span class="op">/</span> dy.std() <span class="op">*</span> np.eye(X.shape[<span class="dv">1</span>])</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.linalg.solve(A, Z.T <span class="op">@</span> (dy <span class="op">-</span> dy.mean()) <span class="op">/</span> <span class="bu">len</span>(dy)) <span class="op">/</span> sx</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso and elastic net, with the penalty scaling of glmnet.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_glmnet(X, dy, alpha, lam):</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    l1, l2 <span class="op">=</span> lam <span class="op">*</span> alpha, lam <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> alpha) <span class="op">/</span> dy.std()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ElasticNet(alpha<span class="op">=</span>l1 <span class="op">+</span> l2, l1_ratio<span class="op">=</span>l1 <span class="op">/</span> (l1 <span class="op">+</span> l2), tol<span class="op">=</span><span class="fl">1e-12</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                       max_iter<span class="op">=</span><span class="dv">100000</span>, precompute<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    model.fit((X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx, dy <span class="op">-</span> dy.mean())</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> model.coef_ <span class="op">/</span> sx</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Ridge: closed form, same scaling.</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ridge(X, dy, lam<span class="op">=</span><span class="fl">1e-3</span>):</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> (X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    A <span class="op">=</span> Z.T <span class="op">@</span> Z <span class="op">/</span> <span class="bu">len</span>(dy) <span class="op">+</span> lam <span class="op">/</span> dy.std() <span class="op">*</span> np.eye(X.shape[<span class="dv">1</span>])</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.linalg.solve(A, Z.T <span class="op">@</span> (dy <span class="op">-</span> dy.mean()) <span class="op">/</span> <span class="bu">len</span>(dy)) <span class="op">/</span> sx</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -422,21 +408,19 @@ window.Quarto = {
 <span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">3e-4</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="dv">1</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso (alpha = 1) and elastic net with the penalty of glmnet,</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># lam * ((1 - alpha) / 2 * b'b / sd(dy) + alpha * |b|_1), on terms scaled to</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># unit variance (glmnet scales the squared penalty by sd(dy)).</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_glmnet(X, dy, alpha, lam):</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    l1, l2 <span class="op">=</span> lam <span class="op">*</span> alpha, lam <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> alpha) <span class="op">/</span> dy.std()</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ElasticNet(alpha<span class="op">=</span>l1 <span class="op">+</span> l2, l1_ratio<span class="op">=</span>l1 <span class="op">/</span> (l1 <span class="op">+</span> l2), tol<span class="op">=</span><span class="fl">1e-12</span>,</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>                       max_iter<span class="op">=</span><span class="dv">100000</span>, precompute<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    model.fit((X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx, dy <span class="op">-</span> dy.mean())</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> model.coef_ <span class="op">/</span> sx</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_lasso(X, dy, lam<span class="op">=</span><span class="fl">3e-4</span>):</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_glmnet(X, dy, <span class="dv">1</span>, lam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso and elastic net, with the penalty scaling of glmnet.</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_glmnet(X, dy, alpha, lam):</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    l1, l2 <span class="op">=</span> lam <span class="op">*</span> alpha, lam <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> alpha) <span class="op">/</span> dy.std()</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ElasticNet(alpha<span class="op">=</span>l1 <span class="op">+</span> l2, l1_ratio<span class="op">=</span>l1 <span class="op">/</span> (l1 <span class="op">+</span> l2), tol<span class="op">=</span><span class="fl">1e-12</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                       max_iter<span class="op">=</span><span class="dv">100000</span>, precompute<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    model.fit((X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx, dy <span class="op">-</span> dy.mean())</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> model.coef_ <span class="op">/</span> sx</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_lasso(X, dy, lam<span class="op">=</span><span class="fl">3e-4</span>):</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_glmnet(X, dy, <span class="dv">1</span>, lam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -464,21 +448,19 @@ window.Quarto = {
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>fit_enet <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">6e-4</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="fl">0.5</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso (alpha = 1) and elastic net with the penalty of glmnet,</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># lam * ((1 - alpha) / 2 * b'b / sd(dy) + alpha * |b|_1), on terms scaled to</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># unit variance (glmnet scales the squared penalty by sd(dy)).</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_glmnet(X, dy, alpha, lam):</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    l1, l2 <span class="op">=</span> lam <span class="op">*</span> alpha, lam <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> alpha) <span class="op">/</span> dy.std()</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ElasticNet(alpha<span class="op">=</span>l1 <span class="op">+</span> l2, l1_ratio<span class="op">=</span>l1 <span class="op">/</span> (l1 <span class="op">+</span> l2), tol<span class="op">=</span><span class="fl">1e-12</span>,</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>                       max_iter<span class="op">=</span><span class="dv">100000</span>, precompute<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    model.fit((X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx, dy <span class="op">-</span> dy.mean())</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> model.coef_ <span class="op">/</span> sx</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_enet(X, dy, lam<span class="op">=</span><span class="fl">6e-4</span>):</span>
-<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_glmnet(X, dy, <span class="fl">0.5</span>, lam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso and elastic net, with the penalty scaling of glmnet.</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_glmnet(X, dy, alpha, lam):</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    l1, l2 <span class="op">=</span> lam <span class="op">*</span> alpha, lam <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> alpha) <span class="op">/</span> dy.std()</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ElasticNet(alpha<span class="op">=</span>l1 <span class="op">+</span> l2, l1_ratio<span class="op">=</span>l1 <span class="op">/</span> (l1 <span class="op">+</span> l2), tol<span class="op">=</span><span class="fl">1e-12</span>,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>                       max_iter<span class="op">=</span><span class="dv">100000</span>, precompute<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    model.fit((X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx, dy <span class="op">-</span> dy.mean())</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> model.coef_ <span class="op">/</span> sx</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_enet(X, dy, lam<span class="op">=</span><span class="fl">6e-4</span>):</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_glmnet(X, dy, <span class="fl">0.5</span>, lam)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -496,7 +478,7 @@ window.Quarto = {
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Best subset (exhaustive) or backward elimination with k terms, by leaps.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Best subset or backward elimination with k terms.</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>fit_subset <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">k =</span> <span class="dv">8</span>, <span class="at">method =</span> <span class="st">"exhaustive"</span>) {</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">coef</span>(leaps<span class="sc">::</span><span class="fu">regsubsets</span>(X, dy, <span class="at">nvmax =</span> k, <span class="at">method =</span> method), k)</span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  full <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">numeric</span>(<span class="fu">ncol</span>(X) <span class="sc">+</span> <span class="dv">1</span>), <span class="fu">c</span>(<span class="st">"1"</span>, <span class="fu">colnames</span>(X)))</span>
@@ -505,27 +487,24 @@ window.Quarto = {
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Best subset (exhaustive) or backward elimination with k terms. Everything is</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># computed from the centred Gram matrix G and c = X'dy: a subset S has</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># residual sum of squares dy'dy - c_S' G_SS^-1 c_S, and removing term j from S</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># increases it by b_j^2 / (G_SS^-1)_jj.</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_subset(X, dy, k<span class="op">=</span><span class="dv">8</span>, method<span class="op">=</span><span class="st">"exhaustive"</span>):</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    Xc, yc <span class="op">=</span> X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>), dy <span class="op">-</span> dy.mean()</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    G, c <span class="op">=</span> Xc.T <span class="op">@</span> Xc, Xc.T <span class="op">@</span> yc</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> method <span class="op">==</span> <span class="st">"exhaustive"</span>:</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        subsets <span class="op">=</span> np.array(<span class="bu">list</span>(combinations(<span class="bu">range</span>(X.shape[<span class="dv">1</span>]), k)))</span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>        blocks <span class="op">=</span> G[subsets[:, :, <span class="va">None</span>], subsets[:, <span class="va">None</span>, :]]</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        b <span class="op">=</span> np.linalg.solve(blocks, c[subsets][..., <span class="va">None</span>])[..., <span class="dv">0</span>]</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> subsets[np.argmax((b <span class="op">*</span> c[subsets]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>))]</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> np.arange(X.shape[<span class="dv">1</span>])</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="bu">len</span>(keep) <span class="op">&gt;</span> k:</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>            inv <span class="op">=</span> np.linalg.inv(G[np.ix_(keep, keep)])</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>            increase <span class="op">=</span> (inv <span class="op">@</span> c[keep]) <span class="op">**</span> <span class="dv">2</span> <span class="op">/</span> np.diag(inv)</span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>            keep <span class="op">=</span> np.delete(keep, np.argmin(increase))</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.zeros(X.shape[<span class="dv">1</span>])</span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    b[keep] <span class="op">=</span> np.linalg.solve(G[np.ix_(keep, keep)], c[keep])</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Best subset or backward elimination with k terms, from the Gram matrix.</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_subset(X, dy, k<span class="op">=</span><span class="dv">8</span>, method<span class="op">=</span><span class="st">"exhaustive"</span>):</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    Xc, yc <span class="op">=</span> X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>), dy <span class="op">-</span> dy.mean()</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    G, c <span class="op">=</span> Xc.T <span class="op">@</span> Xc, Xc.T <span class="op">@</span> yc</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> method <span class="op">==</span> <span class="st">"exhaustive"</span>:</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        subsets <span class="op">=</span> np.array(<span class="bu">list</span>(combinations(<span class="bu">range</span>(X.shape[<span class="dv">1</span>]), k)))</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        blocks <span class="op">=</span> G[subsets[:, :, <span class="va">None</span>], subsets[:, <span class="va">None</span>, :]]</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        b <span class="op">=</span> np.linalg.solve(blocks, c[subsets][..., <span class="va">None</span>])[..., <span class="dv">0</span>]</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> subsets[np.argmax((b <span class="op">*</span> c[subsets]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>))]</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> np.arange(X.shape[<span class="dv">1</span>])</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="bu">len</span>(keep) <span class="op">&gt;</span> k:</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>            inv <span class="op">=</span> np.linalg.inv(G[np.ix_(keep, keep)])</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>            increase <span class="op">=</span> (inv <span class="op">@</span> c[keep]) <span class="op">**</span> <span class="dv">2</span> <span class="op">/</span> np.diag(inv)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>            keep <span class="op">=</span> np.delete(keep, np.argmin(increase))</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.zeros(X.shape[<span class="dv">1</span>])</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    b[keep] <span class="op">=</span> np.linalg.solve(G[np.ix_(keep, keep)], c[keep])</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -543,7 +522,7 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Best subset (exhaustive) or backward elimination with k terms, by leaps.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Best subset or backward elimination with k terms.</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>fit_subset <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">k =</span> <span class="dv">8</span>, <span class="at">method =</span> <span class="st">"exhaustive"</span>) {</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">coef</span>(leaps<span class="sc">::</span><span class="fu">regsubsets</span>(X, dy, <span class="at">nvmax =</span> k, <span class="at">method =</span> method), k)</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  full <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">numeric</span>(<span class="fu">ncol</span>(X) <span class="sc">+</span> <span class="dv">1</span>), <span class="fu">c</span>(<span class="st">"1"</span>, <span class="fu">colnames</span>(X)))</span>
@@ -552,27 +531,24 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 <span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Best subset (exhaustive) or backward elimination with k terms. Everything is</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># computed from the centred Gram matrix G and c = X'dy: a subset S has</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># residual sum of squares dy'dy - c_S' G_SS^-1 c_S, and removing term j from S</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># increases it by b_j^2 / (G_SS^-1)_jj.</span></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_subset(X, dy, k<span class="op">=</span><span class="dv">8</span>, method<span class="op">=</span><span class="st">"exhaustive"</span>):</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    Xc, yc <span class="op">=</span> X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>), dy <span class="op">-</span> dy.mean()</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    G, c <span class="op">=</span> Xc.T <span class="op">@</span> Xc, Xc.T <span class="op">@</span> yc</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> method <span class="op">==</span> <span class="st">"exhaustive"</span>:</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        subsets <span class="op">=</span> np.array(<span class="bu">list</span>(combinations(<span class="bu">range</span>(X.shape[<span class="dv">1</span>]), k)))</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        blocks <span class="op">=</span> G[subsets[:, :, <span class="va">None</span>], subsets[:, <span class="va">None</span>, :]]</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        b <span class="op">=</span> np.linalg.solve(blocks, c[subsets][..., <span class="va">None</span>])[..., <span class="dv">0</span>]</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> subsets[np.argmax((b <span class="op">*</span> c[subsets]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>))]</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> np.arange(X.shape[<span class="dv">1</span>])</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="bu">len</span>(keep) <span class="op">&gt;</span> k:</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>            inv <span class="op">=</span> np.linalg.inv(G[np.ix_(keep, keep)])</span>
-<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>            increase <span class="op">=</span> (inv <span class="op">@</span> c[keep]) <span class="op">**</span> <span class="dv">2</span> <span class="op">/</span> np.diag(inv)</span>
-<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>            keep <span class="op">=</span> np.delete(keep, np.argmin(increase))</span>
-<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.zeros(X.shape[<span class="dv">1</span>])</span>
-<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    b[keep] <span class="op">=</span> np.linalg.solve(G[np.ix_(keep, keep)], c[keep])</span>
-<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Best subset or backward elimination with k terms, from the Gram matrix.</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_subset(X, dy, k<span class="op">=</span><span class="dv">8</span>, method<span class="op">=</span><span class="st">"exhaustive"</span>):</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    Xc, yc <span class="op">=</span> X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>), dy <span class="op">-</span> dy.mean()</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    G, c <span class="op">=</span> Xc.T <span class="op">@</span> Xc, Xc.T <span class="op">@</span> yc</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> method <span class="op">==</span> <span class="st">"exhaustive"</span>:</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        subsets <span class="op">=</span> np.array(<span class="bu">list</span>(combinations(<span class="bu">range</span>(X.shape[<span class="dv">1</span>]), k)))</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        blocks <span class="op">=</span> G[subsets[:, :, <span class="va">None</span>], subsets[:, <span class="va">None</span>, :]]</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        b <span class="op">=</span> np.linalg.solve(blocks, c[subsets][..., <span class="va">None</span>])[..., <span class="dv">0</span>]</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> subsets[np.argmax((b <span class="op">*</span> c[subsets]).<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>))]</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> np.arange(X.shape[<span class="dv">1</span>])</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">while</span> <span class="bu">len</span>(keep) <span class="op">&gt;</span> k:</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>            inv <span class="op">=</span> np.linalg.inv(G[np.ix_(keep, keep)])</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>            increase <span class="op">=</span> (inv <span class="op">@</span> c[keep]) <span class="op">**</span> <span class="dv">2</span> <span class="op">/</span> np.diag(inv)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>            keep <span class="op">=</span> np.delete(keep, np.argmin(increase))</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.zeros(X.shape[<span class="dv">1</span>])</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    b[keep] <span class="op">=</span> np.linalg.solve(G[np.ix_(keep, keep)], c[keep])</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -590,39 +566,35 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Sequential thresholded least squares (the original SINDy algorithm): refit</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="do">## on the active terms and remove those whose scaled coefficient is below the</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="do">## threshold, until no term is removed.</span></span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>fit_stlsq <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">threshold =</span> <span class="fl">0.05</span>) {</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  size <span class="ot">&lt;-</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, sd) <span class="sc">/</span> <span class="fu">sd</span>(dy)         <span class="co"># puts all coefficients on one scale</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  active <span class="ot">&lt;-</span> <span class="fu">colnames</span>(X)</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">&lt;-</span> <span class="fu">lm.fit</span>(<span class="fu">cbind</span>(<span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">1</span>, X[, active, <span class="at">drop =</span> <span class="cn">FALSE</span>]), dy)<span class="sc">$</span>coefficients</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    keep <span class="ot">&lt;-</span> <span class="fu">abs</span>(b[active]) <span class="sc">*</span> size[active] <span class="sc">&gt;=</span> threshold</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">all</span>(keep) <span class="sc">||</span> <span class="sc">!</span><span class="fu">any</span>(keep)) <span class="cf">break</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    active <span class="ot">&lt;-</span> active[keep]</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  full <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">numeric</span>(<span class="fu">ncol</span>(X) <span class="sc">+</span> <span class="dv">1</span>), <span class="fu">c</span>(<span class="st">"1"</span>, <span class="fu">colnames</span>(X)))</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  full[<span class="fu">names</span>(b)] <span class="ot">&lt;-</span> b</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  full</span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Sequential thresholded least squares: refit, drop terms below the threshold.</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>fit_stlsq <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">threshold =</span> <span class="fl">0.05</span>) {</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  size <span class="ot">&lt;-</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, sd) <span class="sc">/</span> <span class="fu">sd</span>(dy)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  active <span class="ot">&lt;-</span> <span class="fu">colnames</span>(X)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">&lt;-</span> <span class="fu">lm.fit</span>(<span class="fu">cbind</span>(<span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">1</span>, X[, active, <span class="at">drop =</span> <span class="cn">FALSE</span>]), dy)<span class="sc">$</span>coefficients</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    keep <span class="ot">&lt;-</span> <span class="fu">abs</span>(b[active]) <span class="sc">*</span> size[active] <span class="sc">&gt;=</span> threshold</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">all</span>(keep) <span class="sc">||</span> <span class="sc">!</span><span class="fu">any</span>(keep)) <span class="cf">break</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    active <span class="ot">&lt;-</span> active[keep]</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  full <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">numeric</span>(<span class="fu">ncol</span>(X) <span class="sc">+</span> <span class="dv">1</span>), <span class="fu">c</span>(<span class="st">"1"</span>, <span class="fu">colnames</span>(X)))</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  full[<span class="fu">names</span>(b)] <span class="ot">&lt;-</span> b</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  full</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sequential thresholded least squares (the original SINDy algorithm): refit</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co"># on the active terms and remove those whose scaled coefficient is below the</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># threshold, until no term is removed.</span></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_stlsq(X, dy, threshold<span class="op">=</span><span class="fl">0.05</span>):</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    size <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> dy.std(ddof<span class="op">=</span><span class="dv">1</span>)    <span class="co"># common scale</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    active <span class="op">=</span> np.arange(X.shape[<span class="dv">1</span>])</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        b <span class="op">=</span> fit_ols(X[:, active], dy)</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> np.<span class="bu">abs</span>(b[<span class="dv">1</span>:]) <span class="op">*</span> size[active] <span class="op">&gt;=</span> threshold</span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> keep.<span class="bu">all</span>() <span class="kw">or</span> <span class="kw">not</span> keep.<span class="bu">any</span>():</span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>        active <span class="op">=</span> active[keep]</span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    full <span class="op">=</span> np.zeros(X.shape[<span class="dv">1</span>] <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    full[<span class="dv">0</span>], full[<span class="dv">1</span> <span class="op">+</span> active] <span class="op">=</span> b[<span class="dv">0</span>], b[<span class="dv">1</span>:]</span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> full</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sequential thresholded least squares: refit, drop terms below the threshold.</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_stlsq(X, dy, threshold<span class="op">=</span><span class="fl">0.05</span>):</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    size <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> dy.std(ddof<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    active <span class="op">=</span> np.arange(X.shape[<span class="dv">1</span>])</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        b <span class="op">=</span> fit_ols(X[:, active], dy)</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        keep <span class="op">=</span> np.<span class="bu">abs</span>(b[<span class="dv">1</span>:]) <span class="op">*</span> size[active] <span class="op">&gt;=</span> threshold</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> keep.<span class="bu">all</span>() <span class="kw">or</span> <span class="kw">not</span> keep.<span class="bu">any</span>():</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>        active <span class="op">=</span> active[keep]</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    full <span class="op">=</span> np.zeros(X.shape[<span class="dv">1</span>] <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    full[<span class="dv">0</span>], full[<span class="dv">1</span> <span class="op">+</span> active] <span class="op">=</span> b[<span class="dv">0</span>], b[<span class="dv">1</span>:]</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> full</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -744,7 +716,7 @@ RAD^3  0.000</code></pre>
 <h2 class="anchored" data-anchor-id="exploring-a-method">Exploring a method</h2>
 <p>Each method has one hyperparameter. Switch genotypes on and off to compare their coefficients (top); the lower panel shows the held-out error for all settings, as the mean over 20 genotypes.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb24" data-startfrom="294" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 293;"><span id="cb24-294"><a href="#cb24-294" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span>          <span class="co">// local copies, see js/</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb24" data-startfrom="294" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 293;"><span id="cb24-294"><a href="#cb24-294" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
 <span id="cb24-295"><a href="#cb24-295" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
 <span id="cb24-296"><a href="#cb24-296" aria-hidden="true" tabindex="-1"></a>hyper <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/hyper.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
 <span id="cb24-297"><a href="#cb24-297" aria-hidden="true" tabindex="-1"></a>contrast <span class="op">=</span> [<span class="st">"g181"</span><span class="op">,</span> <span class="st">"g171"</span><span class="op">,</span> <span class="st">"g021"</span><span class="op">,</span> <span class="st">"g141"</span><span class="op">,</span> <span class="st">"g151"</span>]</span>
@@ -853,14 +825,13 @@ RAD^3  0.000</code></pre>
 </div>
 </div>
 </div>
-<p>The figure uses results computed beforehand (<a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R"><code>scripts/precompute_interactive.R</code></a>).</p>
 
 
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script type="ojs-module-contents">
-eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzICAgICAgICAgIC8vIGxvY2FsIGNvcGllcywgc2VlIGpzL1xuUGxvdCA9IHdpbmRvdy5QbG90XG5oeXBlciA9IEZpbGVBdHRhY2htZW50KFwiZGF0YS9pbnRlcmFjdGl2ZS9oeXBlci5qc29uXCIpLmpzb24oKVxuY29udHJhc3QgPSBbXCJnMTgxXCIsIFwiZzE3MVwiLCBcImcwMjFcIiwgXCJnMTQxXCIsIFwiZzE1MVwiXVxuc2hhZGVzID0gW1wiIzhCMUUzRlwiLCBcIiMwMTRFODFcIiwgXCIjMDBBNkQ2XCIsIFwiIzZEOEIxRVwiLCBcIiM2QjcyODBcIl1cbnZpZXdvZiBtZXRob2QgPSBzZWxlY3QoXCJNZXRob2RcIiwgT2JqZWN0LmtleXMoaHlwZXIubWV0aG9kcyksIFwiU1RMU1FcIilcbnNwZWMgPSBoeXBlci5tZXRob2RzW21ldGhvZF1cbnZpZXdvZiBzaG93biA9IHRvZ2dsZXMoXCJHZW5vdHlwZXNcIiwgY29udHJhc3QsIHNoYWRlcylcbnZpZXdvZiBzdGVwID0gc2xpZGVyKHNwZWMucGFyYW0sIHNwZWMudmFsdWVzLCBNYXRoLmZsb29yKHNwZWMudmFsdWVzLmxlbmd0aCAvIDIpLCB2ID0+ICgrdikudG9QcmVjaXNpb24oMikpXG4ifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXQiLCJjZWxsTmFtZSI6Im9qcy1jZWxsLTIiLCJpbmxpbmUiOmZhbHNlLCJzb3VyY2UiOiJ7XG4gIGNvbnN0IGFsbCA9IE9iamVjdC52YWx1ZXMoaHlwZXIubWV0aG9kcyk7XG4gIGNvbnN0IHJlYWNoID0gZDMubWF4KGFsbC5mbGF0TWFwKG0gPT4gbS5lZmZlY3QuZmxhdCgyKS5tYXAoTWF0aC5hYnMpKSk7XG4gIGNvbnN0IHJtc2UgPSBbZDMubWluKGFsbC5mbGF0TWFwKG0gPT4gbS5ybXNlKSksIDAuOF07ICAgLy8gY2FwOiB2ZXJ5IGxhcmdlIHBlbmFsdGllcyBhcmUgb2ZmIHNjYWxlXG4gIGNvbnN0IHJvd3MgPSBzaG93bi5mbGF0TWFwKG5hbWUgPT4ge1xuICAgIGNvbnN0IGcgPSBoeXBlci5nZW5vdHlwZXMuaW5kZXhPZihuYW1lKTtcbiAgICByZXR1cm4gaHlwZXIudGVybXMubWFwKCh0ZXJtLCBpKSA9PiAoe25hbWUsIHRlcm0sIGVmZmVjdDogc3BlYy5lZmZlY3Rbc3RlcF1bZ11baV19KSk7XG4gIH0pO1xuICBjb25zdCBjdXJ2ZSA9IHNwZWMudmFsdWVzLm1hcCgodmFsdWUsIGkpID0+ICh7dmFsdWUsIHJtc2U6IHNwZWMucm1zZVtpXX0pKTtcbiAgY29uc3Qgc2NhbGUgPSBzcGVjLnBhcmFtID09PSBcInRlcm1zXCIgPyBcImxpbmVhclwiIDogXCJsb2dcIjtcbiAgY29uc3QgY29lZmZpY2llbnRzID0gUGxvdC5wbG90KHtcbiAgICB3aWR0aDogNTIwLCBoZWlnaHQ6IDMwMCwgbWFyZ2luTGVmdDogNTAsIG1hcmdpblRvcDogMjIsXG4gICAgeDoge2RvbWFpbjogWy1yZWFjaCwgcmVhY2hdLCBsYWJlbDogXCJzY2FsZWQgY29lZmZpY2llbnRcIiwgdGlja3M6IDN9LFxuICAgIHk6IHtkb21haW46IGh5cGVyLnRlcm1zLCBsYWJlbDogbnVsbH0sXG4gICAgZng6IHtsYWJlbDogbnVsbCwgZG9tYWluOiBzaG93bn0sXG4gICAgY29sb3I6IHtkb21haW46IGNvbnRyYXN0LCByYW5nZTogc2hhZGVzfSxcbiAgICBtYXJrczogW1Bsb3QuYmFyWChyb3dzLCB7eDogXCJlZmZlY3RcIiwgeTogXCJ0ZXJtXCIsIGZ4OiBcIm5hbWVcIiwgZmlsbDogXCJuYW1lXCJ9KSxcbiAgICAgICAgICAgIFBsb3QucnVsZVgoWzBdKV1cbiAgfSk7XG4gIGNvbnN0IGVycm9yID0gUGxvdC5wbG90KHtcbiAgICB3aWR0aDogNTIwLCBoZWlnaHQ6IDIyMCxcbiAgICB4OiB7dHlwZTogc2NhbGUsIGxhYmVsOiBzcGVjLnBhcmFtLCB0aWNrRm9ybWF0OiBcIi4yfmdcIn0sXG4gICAgeToge2RvbWFpbjogW3Jtc2VbMF0gLSAwLjAxLCBybXNlWzFdICsgMC4wMV0sIGxhYmVsOiBcImhlbGQtb3V0IFJNU0UgKHQvaGEpXCJ9LFxuICAgIG1hcmtzOiBbUGxvdC5saW5lKGN1cnZlLCB7eDogXCJ2YWx1ZVwiLCB5OiBcInJtc2VcIiwgc3Ryb2tlOiBcIiM5Q0EzQUZcIiwgY2xpcDogdHJ1ZX0pLFxuICAgICAgICAgICAgUGxvdC5kb3QoY3VydmUsIHt4OiBcInZhbHVlXCIsIHk6IFwicm1zZVwiLCBmaWxsOiBcIiM5Q0EzQUZcIiwgcjogMywgY2xpcDogdHJ1ZX0pLFxuICAgICAgICAgICAgUGxvdC5kb3QoW2N1cnZlW3N0ZXBdXSwge3g6IFwidmFsdWVcIiwgeTogXCJybXNlXCIsIGZpbGw6IFwiIzhCMUUzRlwiLCByOiA2LCBjbGlwOiB0cnVlfSldXG4gIH0pO1xuICByZXR1cm4gaHRtbGA8ZGl2PiR7Y29lZmZpY2llbnRzfSR7ZXJyb3J9PC9kaXY+YDtcbn1cbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnbWV0aG9kJykifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXRRdWlldCIsInNvdXJjZSI6InNoaW55SW5wdXQoJ3Nob3duJykifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXRRdWlldCIsInNvdXJjZSI6InNoaW55SW5wdXQoJ3N0ZXAnKSJ9XX0=
+eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzXG5QbG90ID0gd2luZG93LlBsb3Rcbmh5cGVyID0gRmlsZUF0dGFjaG1lbnQoXCJkYXRhL2ludGVyYWN0aXZlL2h5cGVyLmpzb25cIikuanNvbigpXG5jb250cmFzdCA9IFtcImcxODFcIiwgXCJnMTcxXCIsIFwiZzAyMVwiLCBcImcxNDFcIiwgXCJnMTUxXCJdXG5zaGFkZXMgPSBbXCIjOEIxRTNGXCIsIFwiIzAxNEU4MVwiLCBcIiMwMEE2RDZcIiwgXCIjNkQ4QjFFXCIsIFwiIzZCNzI4MFwiXVxudmlld29mIG1ldGhvZCA9IHNlbGVjdChcIk1ldGhvZFwiLCBPYmplY3Qua2V5cyhoeXBlci5tZXRob2RzKSwgXCJTVExTUVwiKVxuc3BlYyA9IGh5cGVyLm1ldGhvZHNbbWV0aG9kXVxudmlld29mIHNob3duID0gdG9nZ2xlcyhcIkdlbm90eXBlc1wiLCBjb250cmFzdCwgc2hhZGVzKVxudmlld29mIHN0ZXAgPSBzbGlkZXIoc3BlYy5wYXJhbSwgc3BlYy52YWx1ZXMsIE1hdGguZmxvb3Ioc3BlYy52YWx1ZXMubGVuZ3RoIC8gMiksIHYgPT4gKCt2KS50b1ByZWNpc2lvbigyKSlcbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMiIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IntcbiAgY29uc3QgYWxsID0gT2JqZWN0LnZhbHVlcyhoeXBlci5tZXRob2RzKTtcbiAgY29uc3QgcmVhY2ggPSBkMy5tYXgoYWxsLmZsYXRNYXAobSA9PiBtLmVmZmVjdC5mbGF0KDIpLm1hcChNYXRoLmFicykpKTtcbiAgY29uc3Qgcm1zZSA9IFtkMy5taW4oYWxsLmZsYXRNYXAobSA9PiBtLnJtc2UpKSwgMC44XTsgICAvLyBjYXA6IHZlcnkgbGFyZ2UgcGVuYWx0aWVzIGFyZSBvZmYgc2NhbGVcbiAgY29uc3Qgcm93cyA9IHNob3duLmZsYXRNYXAobmFtZSA9PiB7XG4gICAgY29uc3QgZyA9IGh5cGVyLmdlbm90eXBlcy5pbmRleE9mKG5hbWUpO1xuICAgIHJldHVybiBoeXBlci50ZXJtcy5tYXAoKHRlcm0sIGkpID0+ICh7bmFtZSwgdGVybSwgZWZmZWN0OiBzcGVjLmVmZmVjdFtzdGVwXVtnXVtpXX0pKTtcbiAgfSk7XG4gIGNvbnN0IGN1cnZlID0gc3BlYy52YWx1ZXMubWFwKCh2YWx1ZSwgaSkgPT4gKHt2YWx1ZSwgcm1zZTogc3BlYy5ybXNlW2ldfSkpO1xuICBjb25zdCBzY2FsZSA9IHNwZWMucGFyYW0gPT09IFwidGVybXNcIiA/IFwibGluZWFyXCIgOiBcImxvZ1wiO1xuICBjb25zdCBjb2VmZmljaWVudHMgPSBQbG90LnBsb3Qoe1xuICAgIHdpZHRoOiA1MjAsIGhlaWdodDogMzAwLCBtYXJnaW5MZWZ0OiA1MCwgbWFyZ2luVG9wOiAyMixcbiAgICB4OiB7ZG9tYWluOiBbLXJlYWNoLCByZWFjaF0sIGxhYmVsOiBcInNjYWxlZCBjb2VmZmljaWVudFwiLCB0aWNrczogM30sXG4gICAgeToge2RvbWFpbjogaHlwZXIudGVybXMsIGxhYmVsOiBudWxsfSxcbiAgICBmeDoge2xhYmVsOiBudWxsLCBkb21haW46IHNob3dufSxcbiAgICBjb2xvcjoge2RvbWFpbjogY29udHJhc3QsIHJhbmdlOiBzaGFkZXN9LFxuICAgIG1hcmtzOiBbUGxvdC5iYXJYKHJvd3MsIHt4OiBcImVmZmVjdFwiLCB5OiBcInRlcm1cIiwgZng6IFwibmFtZVwiLCBmaWxsOiBcIm5hbWVcIn0pLFxuICAgICAgICAgICAgUGxvdC5ydWxlWChbMF0pXVxuICB9KTtcbiAgY29uc3QgZXJyb3IgPSBQbG90LnBsb3Qoe1xuICAgIHdpZHRoOiA1MjAsIGhlaWdodDogMjIwLFxuICAgIHg6IHt0eXBlOiBzY2FsZSwgbGFiZWw6IHNwZWMucGFyYW0sIHRpY2tGb3JtYXQ6IFwiLjJ+Z1wifSxcbiAgICB5OiB7ZG9tYWluOiBbcm1zZVswXSAtIDAuMDEsIHJtc2VbMV0gKyAwLjAxXSwgbGFiZWw6IFwiaGVsZC1vdXQgUk1TRSAodC9oYSlcIn0sXG4gICAgbWFya3M6IFtQbG90LmxpbmUoY3VydmUsIHt4OiBcInZhbHVlXCIsIHk6IFwicm1zZVwiLCBzdHJva2U6IFwiIzlDQTNBRlwiLCBjbGlwOiB0cnVlfSksXG4gICAgICAgICAgICBQbG90LmRvdChjdXJ2ZSwge3g6IFwidmFsdWVcIiwgeTogXCJybXNlXCIsIGZpbGw6IFwiIzlDQTNBRlwiLCByOiAzLCBjbGlwOiB0cnVlfSksXG4gICAgICAgICAgICBQbG90LmRvdChbY3VydmVbc3RlcF1dLCB7eDogXCJ2YWx1ZVwiLCB5OiBcInJtc2VcIiwgZmlsbDogXCIjOEIxRTNGXCIsIHI6IDYsIGNsaXA6IHRydWV9KV1cbiAgfSk7XG4gIHJldHVybiBodG1sYDxkaXY+JHtjb2VmZmljaWVudHN9JHtlcnJvcn08L2Rpdj5gO1xufVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdtZXRob2QnKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc2hvd24nKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc3RlcCcpIn1dfQ==
 </script>
 <script type="module">
 if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }

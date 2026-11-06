@@ -50,7 +50,7 @@ def fit_genotype(g):
     return fit_stlsq(d.X, d.dy)
 
 coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
-                     index=["1"] + Theta.terms)      # (1 + terms) x genotype
+                     index=["1"] + Theta.terms)
 print(coefs["g114"].round(4))
 ```
 
@@ -63,7 +63,7 @@ fit_genotype <- function(g) {
   d <- make_design(Theta, tr, g)
   fit_stlsq(d$X, d$dy)
 }
-coefs <- sapply(tr$genotypes, fit_genotype)       # (1 + terms) x genotype
+coefs <- sapply(tr$genotypes, fit_genotype)
 round(coefs[, "g114"], 4)
 ```
 
@@ -87,7 +87,7 @@ Predicted growth rate of genotype `g114` for the drivers of each season (grey) a
 
 ```python
 b = coefs["g114"].to_numpy()
-rate = b[0] + Theta.array @ b[1:]                 # season x day
+rate = b[0] + Theta.array @ b[1:]
 rate = rate[:, :tr.nend.max()]
 das = np.arange(rate.shape[1]) + tr.das0
 
@@ -194,7 +194,7 @@ The same decomposition for any genotype and season:
 
 ```{ojs}
 //| echo: false
-d3 = window.d3          // local copies, see js/
+d3 = window.d3
 Plot = window.Plot
 contrib = FileAttachment("data/interactive/contrib.json").json()
 viewof genotype2 = select("Genotype", contrib.genotypes, "g114")
@@ -229,7 +229,6 @@ viewof season2 = slider("Season", contrib.years, contrib.years.indexOf(1998))
 }
 ```
 
-The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).
 
 ## Effect of a single driver
 
@@ -248,7 +247,7 @@ The effect of one driver cannot be read by varying it alone while the others are
 ## Python
 
 ```python
-Z = observed_points(drv, tr)                       # standardised drivers
+Z = observed_points(drv, tr)
 print(Z.corr().round(2))
 ```
 
@@ -257,7 +256,7 @@ print(Z.corr().round(2))
 ```{r}
 #| label: 06-4-run
 #| echo: false
-Z <- as.data.frame(observed_points(drv, tr))       # standardised drivers
+Z <- as.data.frame(observed_points(drv, tr))
 round(cor(Z), 2)
 ```
 
@@ -282,7 +281,7 @@ from PyALE import ale
 
 logging.getLogger().setLevel(logging.WARNING)
 
-def natural(z, j):                                 # original units
+def natural(z, j):
     return z * drv.scale[j] + drv.center[j]
 
 def ale_genotype(g, j):
@@ -310,7 +309,7 @@ predictor <- function(coef, pairs = FALSE) {
   Predictor$new(coef, data = Z, predict.function = rate)
 }
 
-natural <- function(z, j) z * drv$scale[j] + drv$center[j]     # original units
+natural <- function(z, j) z * drv$scale[j] + drv$center[j]
 ale_genotype <- function(g, j) {
   effect <- FeatureEffect$new(predictor(coefs[, g]), drv$drivers[j],
                               method = "ale", grid.size = 24)$results
@@ -410,7 +409,6 @@ viewof highlight = select("Genotype", Object.keys(ale.curves.TT), "g114")
 }
 ```
 
-The figure uses results computed beforehand ([`scripts/precompute_interactive.R`](https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R)).
 
 ## Interactions and partial dependence
 

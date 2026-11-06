@@ -2,7 +2,7 @@
 
 Hands-on workshop (AAGI 2026 Symposium): learning growth equations from crop-model data with sparse regression, in R and Python.
 
-Site: step-by-step pages (method, data, design matrix, fitting, validation, interpretation, genotypes, limitations, extensions) with copyable code and pre-run output.
+Site: step-by-step pages (method, data, design matrix, fitting, validation, interpretation, genotypes) with copyable code and pre-run output.
 
 ## Run it yourself
 
@@ -32,7 +32,7 @@ Pages 1 and 4–7 contain sliders and menus (Observable JS, with `d3` and Observ
 
 - `*.qmd`: the pages · `R/functions.R` and `python/dgxe.py`: all workshop functions · `R/pipeline.R`: steps 2–3 in one script
 - `data/`: Narrabri weather and APSIM biomass/LAI trajectories · `scripts/`: data export and parity check
-- `images/`: static figures from the research code (page 9 only)
+- `images/`: static figures
 
 ## Data
 

@@ -57,7 +57,7 @@ show_fun("make_drivers")
 
 ```python
 drv = make_drivers(wx)
-print(drv.U.shape)           # season x day x driver
+print(drv.U.shape)
 ```
 
 :::
@@ -66,7 +66,7 @@ print(drv.U.shape)           # season x day x driver
 #| label: 03-1-run
 #| echo: false
 drv <- make_drivers(wx)
-dim(drv$U)            # season x day x driver
+dim(drv$U)
 ```
 
 ## Library
@@ -93,7 +93,7 @@ show_fun("library_matrix", "make_library")
 
 ```python
 Theta = make_library(drv)
-print(Theta.array.shape)     # season x day x term
+print(Theta.array.shape)
 print(Theta.terms)
 ```
 
@@ -103,7 +103,7 @@ print(Theta.terms)
 #| label: 03-2-run
 #| echo: false
 Theta <- make_library(drv)
-dim(Theta)            # season x day x term
+dim(Theta)
 dimnames(Theta)[[3]]
 ```
 

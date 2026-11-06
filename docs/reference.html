@@ -36,7 +36,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./09-further.html" rel="prev">
+<link href="./07-genotypes.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
 <script src="site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
@@ -78,7 +78,7 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261106e"></script>
+<script src="js/controls.js?v=20261106f"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -201,18 +201,6 @@ window.Quarto = {
  <span class="menu-text">7 · Genotypes</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · Limitations</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Extensions</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item">
@@ -312,7 +300,7 @@ window.Quarto = {
 </section>
 <section id="functions" class="level2">
 <h2 class="anchored" data-anchor-id="functions">Functions</h2>
-<p>All functions are in <code>R/functions.R</code>.</p>
+<p>All functions are in <code>R/functions.R</code> (R) and <code>python/dgxe.py</code> (Python), with the same names and arguments.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 50%">
@@ -362,11 +350,12 @@ window.Quarto = {
 <td>accumulated local effect of driver <code>j</code></td>
 </tr>
 <tr class="even">
-<td><code>rank_scores(Pd, Yd)</code>, <code>lookup_trajectory(tr)</code></td>
-<td>ranking metrics and the baseline</td>
+<td><code>rank_scores(Pd, Yd)</code></td>
+<td>ranking metrics</td>
 </tr>
 </tbody>
 </table>
+<p>The R and Python versions differ only in conventions: R uses <code>TRUE</code>/<code>FALSE</code> and <code>1:n</code> indexing, Python uses <code>True</code>/<code>False</code>, zero-based indexing and the attribute syntax <code>tr.Y</code> instead of <code>tr$Y</code>.</p>
 </section>
 <section id="data" class="level2">
 <h2 class="anchored" data-anchor-id="data">Data</h2>
@@ -375,6 +364,7 @@ window.Quarto = {
 <section id="sources" class="level2">
 <h2 class="anchored" data-anchor-id="sources">Sources</h2>
 <ul>
+<li>Preprint: <em>Physiology-Informed Sparse Identification of Dynamic Crop Models</em>. <a href="https://arxiv.org/pdf/2610.18920v1">arXiv:2610.18920</a>.</li>
 <li>Bustos-Korts, D. et al.&nbsp;(2019). From QTLs to adaptation landscapes: using genotype-to-phenotype models to characterize G×E over time. <em>Frontiers in Plant Science</em> 10, 1540. doi:10.3389/fpls.2019.01540. Data: <a href="https://figshare.com/articles/dataset/24843705">figshare</a>.</li>
 <li>Brunton, S. L., Proctor, J. L. and Kutz, J. N. (2016). Discovering governing equations from data by sparse identification of nonlinear dynamical systems. <em>PNAS</em> 113(15), 3932–3937.</li>
 <li>Friedman, J., Hastie, T. and Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. <em>Journal of Statistical Software</em> 33(1), 1–22 (<code>glmnet</code>).</li>
@@ -865,8 +855,8 @@ window.Quarto = {
   </script>
 <nav class="page-navigation" aria-label="Page">
   <div class="nav-page nav-page-previous">
-      <a href="./09-further.html" class="pagination-link" aria-label="9 · Extensions">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">9 · Extensions</span>
+      <a href="./07-genotypes.html" class="pagination-link" aria-label="7 · Genotypes">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">7 · Genotypes</span>
       </a>          
   </div>
   <div class="nav-page nav-page-next">

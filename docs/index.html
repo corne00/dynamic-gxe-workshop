@@ -78,7 +78,7 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261106e"></script>
+<script src="js/controls.js?v=20261106f"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -172,18 +172,6 @@ ul.task-list li input[type="checkbox"] {
  <span class="menu-text">7 · Genotypes</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · Limitations</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Extensions</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item">
@@ -223,7 +211,7 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<p>This workshop fits a daily growth equation for wheat biomass to simulated field-trial data, in R and Python. The growth rate is written as a sparse combination of candidate functions of the environment (SINDy), the coefficients are obtained by regression, and the equation is validated on seasons that were not used for fitting.</p>
+<p>This workshop accompanies our preprint, <a href="https://arxiv.org/pdf/2610.18920v1">Physiology-Informed Sparse Identification of Dynamic Crop Models</a>. It fits a daily growth equation for wheat biomass to simulated field-trial data, in R and Python. The growth rate is written as a sparse combination of candidate functions of the environment (SINDy), the coefficients are obtained by regression, and the equation is validated on seasons that were not used for fitting.</p>
 <p>The data are APSIM simulations for one site (Narrabri): 199 genotypes, 31 seasons (1983 to 2013), daily resolution. Each step below has a defined input and output, so that any step, in particular the regression method, can be replaced independently of the others.</p>
 <table class="caption-top table">
 <thead>
@@ -266,20 +254,11 @@ ul.task-list li input[type="checkbox"] {
 <td>Genotype-specific equations; ranking</td>
 </tr>
 <tr class="odd">
-<td><a href="08-limitations.html">8 · Limitations</a></td>
-<td>Library choice, collinearity, error accumulation</td>
-</tr>
-<tr class="even">
-<td><a href="09-further.html">9 · Extensions</a></td>
-<td>Coupled states and further directions</td>
-</tr>
-<tr class="odd">
 <td><a href="reference.html">Reference</a></td>
 <td>Symbols, functions, data, sources</td>
 </tr>
 </tbody>
 </table>
-<p>All functions are in <code>R/functions.R</code> and <code>python/dgxe.py</code>.</p>
 <p>Data: <a href="https://figshare.com/articles/dataset/24843705">APSIM simulation dataset</a> of wheat (Bustos-Korts et al., 2019).</p>
 
 

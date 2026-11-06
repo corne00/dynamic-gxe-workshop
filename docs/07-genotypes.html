@@ -71,7 +71,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
-<link href="./08-limitations.html" rel="next">
+<link href="./reference.html" rel="next">
 <link href="./06-reading.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -116,7 +116,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261106e"></script>
+<script src="js/controls.js?v=20261106f"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -210,18 +210,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  <span class="menu-text">7 · Genotypes</span></a>
   </div>
 </li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./08-limitations.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">8 · Limitations</span></a>
-  </div>
-</li>
-          <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./09-further.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">9 · Extensions</span></a>
-  </div>
-</li>
       </ul>
   </li>
         <li class="sidebar-item">
@@ -311,7 +299,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">spread_genotypes</span>(tr)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>mean_path <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, <span class="fu">apply</span>(Theta, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), mean))       <span class="co"># library, mean weather</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>mean_path <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, <span class="fu">apply</span>(Theta, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), mean))</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>das <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(mean_path) <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">das =</span> <span class="fu">rep</span>(das, <span class="fu">ncol</span>(coefs)),</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">genotype =</span> <span class="fu">rep</span>(<span class="fu">colnames</span>(coefs), <span class="at">each =</span> <span class="fu">length</span>(das)),</span>
@@ -330,7 +318,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> spread_genotypes(tr)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mean_path <span class="op">=</span> Theta.array.mean(axis<span class="op">=</span><span class="dv">0</span>)               <span class="co"># library, mean weather</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mean_path <span class="op">=</span> Theta.array.mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> coefs.to_numpy()</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>rate <span class="op">=</span> pd.DataFrame(b[<span class="dv">0</span>] <span class="op">+</span> mean_path <span class="op">@</span> b[<span class="dv">1</span>:], columns<span class="op">=</span>coefs.columns)</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>rate[<span class="st">"das"</span>] <span class="op">=</span> np.arange(<span class="bu">len</span>(rate)) <span class="op">+</span> tr.das0</span>
@@ -359,7 +347,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="ranking-genotypes" class="level2">
 <h2 class="anchored" data-anchor-id="ranking-genotypes">Ranking genotypes</h2>
-<p>For each season, the predicted and APSIM biomass of the 199 genotypes on a fixed day are compared by the Spearman correlation and by the overlap of the top 10%. The reference is again the mean of the genotype in the other seasons.</p>
+<p>For each season, the predicted and APSIM biomass of the 199 genotypes on a fixed day are compared by the Spearman correlation and by the overlap of the top 10%.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
@@ -399,53 +387,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>P <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"cv_stlsq.rds"</span>, <span class="fu">cross_validate</span>(Theta, tr, fit_stlsq))</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>base <span class="ot">&lt;-</span> <span class="fu">lookup_trajectory</span>(tr)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">35</span>, <span class="dv">50</span>, <span class="dv">63</span>, <span class="dv">84</span>, <span class="dv">99</span>)       <span class="co"># day index (das = index + 14)</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="cf">function</span>(d) {</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  model <span class="ot">&lt;-</span> <span class="fu">rank_scores</span>(P[, , d], tr<span class="sc">$</span>Y[, , d])</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  baseline <span class="ot">&lt;-</span> <span class="fu">rank_scores</span>(base[, , d], tr<span class="sc">$</span>Y[, , d])</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> d <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>, <span class="at">method =</span> <span class="fu">c</span>(<span class="st">"model"</span>, <span class="st">"baseline"</span>),</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">rho =</span> <span class="fu">c</span>(<span class="fu">mean</span>(model<span class="sc">$</span>rho), <span class="fu">mean</span>(baseline<span class="sc">$</span>rho)),</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">top10 =</span> <span class="fu">c</span>(<span class="fu">mean</span>(model<span class="sc">$</span>top), <span class="fu">mean</span>(baseline<span class="sc">$</span>top)))</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(days, scores))</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>out[, <span class="fu">c</span>(<span class="st">"rho"</span>, <span class="st">"top10"</span>)] <span class="ot">&lt;-</span> <span class="fu">round</span>(out[, <span class="fu">c</span>(<span class="st">"rho"</span>, <span class="st">"top10"</span>)], <span class="dv">3</span>)</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>days <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">35</span>, <span class="dv">50</span>, <span class="dv">63</span>, <span class="dv">84</span>, <span class="dv">99</span>)       <span class="co"># array index; day after sowing = index + 14</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>scores <span class="ot">&lt;-</span> <span class="cf">function</span>(d) {</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  s <span class="ot">&lt;-</span> <span class="fu">rank_scores</span>(P[, , d], tr<span class="sc">$</span>Y[, , d])</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> d <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span>, <span class="at">rho =</span> <span class="fu">mean</span>(s<span class="sc">$</span>rho), <span class="at">top10 =</span> <span class="fu">mean</span>(s<span class="sc">$</span>top))</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>out <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(days, scores))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>out[, <span class="fu">c</span>(<span class="st">"rho"</span>, <span class="st">"top10"</span>)] <span class="ot">&lt;-</span> <span class="fu">round</span>(out[, <span class="fu">c</span>(<span class="st">"rho"</span>, <span class="st">"top10"</span>)], <span class="dv">3</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>out</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>P <span class="op">=</span> cross_validate(Theta, tr, fit_stlsq)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>base <span class="op">=</span> lookup_trajectory(tr)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>days <span class="op">=</span> [<span class="dv">49</span>, <span class="dv">64</span>, <span class="dv">77</span>, <span class="dv">98</span>, <span class="dv">113</span>]                       <span class="co"># days after sowing</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> scores(day):</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    i <span class="op">=</span> day <span class="op">-</span> tr.das0</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> []</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> method, Q <span class="kw">in</span> [(<span class="st">"model"</span>, P), (<span class="st">"baseline"</span>, base)]:</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        rho, top <span class="op">=</span> rank_scores(Q[:, :, i], tr.Y[:, :, i])</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>        rows.append((day, method, rho.mean().<span class="bu">round</span>(<span class="dv">3</span>), top.mean().<span class="bu">round</span>(<span class="dv">3</span>)))</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rows</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> pd.DataFrame([r <span class="cf">for</span> day <span class="kw">in</span> days <span class="cf">for</span> r <span class="kw">in</span> scores(day)],</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>                   columns<span class="op">=</span>[<span class="st">"das"</span>, <span class="st">"method"</span>, <span class="st">"rho"</span>, <span class="st">"top10"</span>])</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(out)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>days <span class="op">=</span> [<span class="dv">49</span>, <span class="dv">64</span>, <span class="dv">77</span>, <span class="dv">98</span>, <span class="dv">113</span>]                       <span class="co"># days after sowing</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> scores(day):</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    i <span class="op">=</span> day <span class="op">-</span> tr.das0</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    rho, top <span class="op">=</span> rank_scores(P[:, :, i], tr.Y[:, :, i])</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> day, rho.mean().<span class="bu">round</span>(<span class="dv">3</span>), top.mean().<span class="bu">round</span>(<span class="dv">3</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>out <span class="op">=</span> pd.DataFrame([scores(day) <span class="cf">for</span> day <span class="kw">in</span> days],</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>                   columns<span class="op">=</span>[<span class="st">"das"</span>, <span class="st">"rho"</span>, <span class="st">"top10"</span>])</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(out)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>   das   method   rho top10
-1   49    model 0.967 0.913
-2   49 baseline 1.000 1.000
-3   64    model 0.985 0.908
-4   64 baseline 1.000 0.984
-5   77    model 0.986 0.944
-6   77 baseline 0.998 0.982
-7   98    model 0.981 0.900
-8   98 baseline 0.978 0.924
-9  113    model 0.971 0.845
-10 113 baseline 0.951 0.818</code></pre>
+<pre><code>  das   rho top10
+1  49 0.968 0.915
+2  64 0.985 0.908
+3  77 0.986 0.944
+4  98 0.981 0.900
+5 113 0.971 0.844</code></pre>
 </div>
 </div>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
@@ -454,32 +429,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>long <span class="ot">&lt;-</span> <span class="fu">rbind</span>(</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(out[<span class="fu">c</span>(<span class="st">"das"</span>, <span class="st">"method"</span>)], <span class="at">metric =</span> <span class="st">"Spearman correlation"</span>,</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>             <span class="at">score =</span> out<span class="sc">$</span>rho),</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(out[<span class="fu">c</span>(<span class="st">"das"</span>, <span class="st">"method"</span>)], <span class="at">metric =</span> <span class="st">"top-10% overlap"</span>,</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>             <span class="at">score =</span> out<span class="sc">$</span>top10))</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(long, <span class="fu">aes</span>(das, score, <span class="at">colour =</span> method)) <span class="sc">+</span></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="fl">1.8</span>) <span class="sc">+</span></span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>metric, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> out<span class="sc">$</span>das, <span class="at">metric =</span> <span class="st">"Spearman correlation"</span>, <span class="at">score =</span> out<span class="sc">$</span>rho),</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">das =</span> out<span class="sc">$</span>das, <span class="at">metric =</span> <span class="st">"top-10% overlap"</span>, <span class="at">score =</span> out<span class="sc">$</span>top10))</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(long, <span class="fu">aes</span>(das, score)) <span class="sc">+</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">size =</span> <span class="fl">1.8</span>) <span class="sc">+</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>metric, <span class="at">scales =</span> <span class="st">"free_y"</span>) <span class="sc">+</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_dgxe</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="fl">2.8</span>))</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, column, title <span class="kw">in</span> <span class="bu">zip</span>(axes, [<span class="st">"rho"</span>, <span class="st">"top10"</span>],</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>                             [<span class="st">"Spearman correlation"</span>, <span class="st">"top-10</span><span class="sc">% o</span><span class="st">verlap"</span>]):</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> method, colour <span class="kw">in</span> [(<span class="st">"model"</span>, BLUE), (<span class="st">"baseline"</span>, BURGUNDY)]:</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        o <span class="op">=</span> out[out[<span class="st">"method"</span>] <span class="op">==</span> method]</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        ax.plot(o[<span class="st">"das"</span>], o[column], <span class="st">"o-"</span>, color<span class="op">=</span>colour, label<span class="op">=</span>method)</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    ax.set_title(title, loc<span class="op">=</span><span class="st">"left"</span>)</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>fig.supxlabel(<span class="st">"days after sowing"</span>)</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    ax.plot(out[<span class="st">"das"</span>], out[column], <span class="st">"o-"</span>, color<span class="op">=</span>BLUE)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    ax.set_title(title, loc<span class="op">=</span><span class="st">"left"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>fig.supxlabel(<span class="st">"days after sowing"</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -492,17 +460,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>Early in the season the baseline ranks genotypes better, since the order is determined mainly by genotype and not yet by weather. Around day 98 (after sowing) the two are similar, and on day 113 the model is better on both measures. These results are for genotypes whose trajectories in other seasons are available for fitting.</p>
+<p>The ranking improves as the season progresses, when the weather has had more effect on the order of the genotypes. These results are for genotypes whose trajectories in other seasons are available for fitting.</p>
 </section>
 <section id="exploring-the-ranking" class="level2">
 <h2 class="anchored" data-anchor-id="exploring-the-ranking">Exploring the ranking</h2>
-<p>Predicted against APSIM biomass of the 199 genotypes in one season on one day, for the sparse model and for the baseline. Red points are the true top 10%.</p>
+<p>Predicted against APSIM biomass of the 199 genotypes in one season on one day, for the sparse model. Red points are the true top 10%.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb14" data-startfrom="237" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 236;"><span id="cb14-237"><a href="#cb14-237" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span>          <span class="co">// local copies, see js/</span></span>
-<span id="cb14-238"><a href="#cb14-238" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
-<span id="cb14-239"><a href="#cb14-239" aria-hidden="true" tabindex="-1"></a>rank <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/ranking.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
-<span id="cb14-240"><a href="#cb14-240" aria-hidden="true" tabindex="-1"></a>viewof season3 <span class="op">=</span> <span class="fu">slider</span>(<span class="st">"Season"</span><span class="op">,</span> rank<span class="op">.</span><span class="at">years</span><span class="op">,</span> rank<span class="op">.</span><span class="at">years</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="dv">1998</span>))</span>
-<span id="cb14-241"><a href="#cb14-241" aria-hidden="true" tabindex="-1"></a>viewof day <span class="op">=</span> <span class="fu">slider</span>(<span class="st">"Day after sowing"</span><span class="op">,</span> rank<span class="op">.</span><span class="at">days</span><span class="op">,</span> rank<span class="op">.</span><span class="at">days</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="dv">113</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb14" data-startfrom="222" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 221;"><span id="cb14-222"><a href="#cb14-222" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
+<span id="cb14-223"><a href="#cb14-223" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
+<span id="cb14-224"><a href="#cb14-224" aria-hidden="true" tabindex="-1"></a>rank <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/ranking.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
+<span id="cb14-225"><a href="#cb14-225" aria-hidden="true" tabindex="-1"></a>viewof season3 <span class="op">=</span> <span class="fu">slider</span>(<span class="st">"Season"</span><span class="op">,</span> rank<span class="op">.</span><span class="at">years</span><span class="op">,</span> rank<span class="op">.</span><span class="at">years</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="dv">1998</span>))</span>
+<span id="cb14-226"><a href="#cb14-226" aria-hidden="true" tabindex="-1"></a>viewof day <span class="op">=</span> <span class="fu">slider</span>(<span class="st">"Day after sowing"</span><span class="op">,</span> rank<span class="op">.</span><span class="at">days</span><span class="op">,</span> rank<span class="op">.</span><span class="at">days</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="dv">113</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <div id="ojs-cell-1-1" data-nodetype="declaration">
@@ -540,51 +508,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb15" data-startfrom="245" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 244;"><span id="cb15-245"><a href="#cb15-245" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb15-246"><a href="#cb15-246" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> obs <span class="op">=</span> rank<span class="op">.</span><span class="at">observed</span>[season3][day]<span class="op">;</span></span>
-<span id="cb15-247"><a href="#cb15-247" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> ranks <span class="op">=</span> a <span class="kw">=&gt;</span> {</span>
-<span id="cb15-248"><a href="#cb15-248" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> order <span class="op">=</span> d3<span class="op">.</span><span class="fu">range</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">sort</span>((i<span class="op">,</span> j) <span class="kw">=&gt;</span> a[i] <span class="op">-</span> a[j])<span class="op">;</span></span>
-<span id="cb15-249"><a href="#cb15-249" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> r <span class="op">=</span> <span class="kw">new</span> <span class="bu">Array</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">;</span></span>
-<span id="cb15-250"><a href="#cb15-250" aria-hidden="true" tabindex="-1"></a>    order<span class="op">.</span><span class="fu">forEach</span>((i<span class="op">,</span> k) <span class="kw">=&gt;</span> r[i] <span class="op">=</span> k)<span class="op">;</span></span>
-<span id="cb15-251"><a href="#cb15-251" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r<span class="op">;</span></span>
-<span id="cb15-252"><a href="#cb15-252" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
-<span id="cb15-253"><a href="#cb15-253" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> spearman <span class="op">=</span> (a<span class="op">,</span> b) <span class="kw">=&gt;</span> d3<span class="op">.</span><span class="fu">mean</span>(d3<span class="op">.</span><span class="fu">zip</span>(<span class="fu">ranks</span>(a)<span class="op">,</span> <span class="fu">ranks</span>(b))<span class="op">,</span></span>
-<span id="cb15-254"><a href="#cb15-254" aria-hidden="true" tabindex="-1"></a>    ([x<span class="op">,</span> y]) <span class="kw">=&gt;</span> (x <span class="op">-</span> (a<span class="op">.</span><span class="at">length</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>) <span class="op">*</span> (y <span class="op">-</span> (a<span class="op">.</span><span class="at">length</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>))</span>
-<span id="cb15-255"><a href="#cb15-255" aria-hidden="true" tabindex="-1"></a>    <span class="op">/</span> ((a<span class="op">.</span><span class="at">length</span> <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">12</span>)<span class="op">;</span></span>
-<span id="cb15-256"><a href="#cb15-256" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> top <span class="op">=</span> a <span class="kw">=&gt;</span> <span class="kw">new</span> <span class="bu">Set</span>(d3<span class="op">.</span><span class="fu">range</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">sort</span>((i<span class="op">,</span> j) <span class="kw">=&gt;</span> a[j] <span class="op">-</span> a[i])</span>
-<span id="cb15-257"><a href="#cb15-257" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">slice</span>(<span class="dv">0</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">round</span>(<span class="fl">0.1</span> <span class="op">*</span> a<span class="op">.</span><span class="at">length</span>)))<span class="op">;</span></span>
-<span id="cb15-258"><a href="#cb15-258" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> panel <span class="op">=</span> key <span class="kw">=&gt;</span> {</span>
-<span id="cb15-259"><a href="#cb15-259" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> pred <span class="op">=</span> rank[key][season3][day]<span class="op">;</span></span>
-<span id="cb15-260"><a href="#cb15-260" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> best <span class="op">=</span> <span class="fu">top</span>(obs)<span class="op">,</span> chosen <span class="op">=</span> <span class="fu">top</span>(pred)<span class="op">;</span></span>
-<span id="cb15-261"><a href="#cb15-261" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> overlap <span class="op">=</span> [<span class="op">...</span>best]<span class="op">.</span><span class="fu">filter</span>(i <span class="kw">=&gt;</span> chosen<span class="op">.</span><span class="fu">has</span>(i))<span class="op">.</span><span class="at">length</span> <span class="op">/</span> best<span class="op">.</span><span class="at">size</span><span class="op">;</span></span>
-<span id="cb15-262"><a href="#cb15-262" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> rows <span class="op">=</span> obs<span class="op">.</span><span class="fu">map</span>((o<span class="op">,</span> i) <span class="kw">=&gt;</span> ({<span class="dt">obs</span><span class="op">:</span> o<span class="op">,</span> <span class="dt">pred</span><span class="op">:</span> pred[i]<span class="op">,</span> <span class="dt">best</span><span class="op">:</span> best<span class="op">.</span><span class="fu">has</span>(i)}))<span class="op">;</span></span>
-<span id="cb15-263"><a href="#cb15-263" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> [lo<span class="op">,</span> hi] <span class="op">=</span> d3<span class="op">.</span><span class="fu">extent</span>([<span class="op">...</span>obs<span class="op">,</span> <span class="op">...</span>pred])<span class="op">;</span></span>
-<span id="cb15-264"><a href="#cb15-264" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> plot <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
-<span id="cb15-265"><a href="#cb15-265" aria-hidden="true" tabindex="-1"></a>      <span class="dt">width</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">45</span><span class="op">,</span></span>
-<span id="cb15-266"><a href="#cb15-266" aria-hidden="true" tabindex="-1"></a>      <span class="dt">x</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [lo<span class="op">,</span> hi]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"APSIM biomass (t/ha)"</span>}<span class="op">,</span></span>
-<span id="cb15-267"><a href="#cb15-267" aria-hidden="true" tabindex="-1"></a>      <span class="dt">y</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [lo<span class="op">,</span> hi]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"predicted (t/ha)"</span>}<span class="op">,</span></span>
-<span id="cb15-268"><a href="#cb15-268" aria-hidden="true" tabindex="-1"></a>      <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">line</span>([[lo<span class="op">,</span> lo]<span class="op">,</span> [hi<span class="op">,</span> hi]]<span class="op">,</span> {<span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span>})<span class="op">,</span></span>
-<span id="cb15-269"><a href="#cb15-269" aria-hidden="true" tabindex="-1"></a>              Plot<span class="op">.</span><span class="fu">dot</span>(rows<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"obs"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"pred"</span><span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="fl">2.5</span><span class="op">,</span> <span class="dt">fillOpacity</span><span class="op">:</span> <span class="fl">0.7</span><span class="op">,</span></span>
-<span id="cb15-270"><a href="#cb15-270" aria-hidden="true" tabindex="-1"></a>                <span class="dt">fill</span><span class="op">:</span> d <span class="kw">=&gt;</span> d<span class="op">.</span><span class="at">best</span> <span class="op">?</span> <span class="st">"#8B1E3F"</span> <span class="op">:</span> <span class="st">"#014E81"</span>})]</span>
-<span id="cb15-271"><a href="#cb15-271" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
-<span id="cb15-272"><a href="#cb15-272" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div&gt;</span><span class="sc">${</span>plot<span class="sc">}</span><span class="vs">&lt;p class="interactive-note"&gt;</span><span class="sc">${</span>key<span class="sc">}</span><span class="vs">: Spearman ρ = </span><span class="sc">${</span><span class="fu">spearman</span>(obs<span class="op">,</span> pred)<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs">, top-10% overlap </span><span class="sc">${</span>overlap<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs">&lt;/p&gt;&lt;/div&gt;`</span><span class="op">;</span></span>
-<span id="cb15-273"><a href="#cb15-273" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
-<span id="cb15-274"><a href="#cb15-274" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div style="display:flex;flex-wrap:wrap;gap:1rem"&gt;</span><span class="sc">${</span><span class="fu">panel</span>(<span class="st">"model"</span>)<span class="sc">}${</span><span class="fu">panel</span>(<span class="st">"baseline"</span>)<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span><span class="op">;</span></span>
-<span id="cb15-275"><a href="#cb15-275" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb15" data-startfrom="230" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 229;"><span id="cb15-230"><a href="#cb15-230" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb15-231"><a href="#cb15-231" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> obs <span class="op">=</span> rank<span class="op">.</span><span class="at">observed</span>[season3][day]<span class="op">;</span></span>
+<span id="cb15-232"><a href="#cb15-232" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> ranks <span class="op">=</span> a <span class="kw">=&gt;</span> {</span>
+<span id="cb15-233"><a href="#cb15-233" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> order <span class="op">=</span> d3<span class="op">.</span><span class="fu">range</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">sort</span>((i<span class="op">,</span> j) <span class="kw">=&gt;</span> a[i] <span class="op">-</span> a[j])<span class="op">;</span></span>
+<span id="cb15-234"><a href="#cb15-234" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> r <span class="op">=</span> <span class="kw">new</span> <span class="bu">Array</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">;</span></span>
+<span id="cb15-235"><a href="#cb15-235" aria-hidden="true" tabindex="-1"></a>    order<span class="op">.</span><span class="fu">forEach</span>((i<span class="op">,</span> k) <span class="kw">=&gt;</span> r[i] <span class="op">=</span> k)<span class="op">;</span></span>
+<span id="cb15-236"><a href="#cb15-236" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> r<span class="op">;</span></span>
+<span id="cb15-237"><a href="#cb15-237" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb15-238"><a href="#cb15-238" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> spearman <span class="op">=</span> (a<span class="op">,</span> b) <span class="kw">=&gt;</span> d3<span class="op">.</span><span class="fu">mean</span>(d3<span class="op">.</span><span class="fu">zip</span>(<span class="fu">ranks</span>(a)<span class="op">,</span> <span class="fu">ranks</span>(b))<span class="op">,</span></span>
+<span id="cb15-239"><a href="#cb15-239" aria-hidden="true" tabindex="-1"></a>    ([x<span class="op">,</span> y]) <span class="kw">=&gt;</span> (x <span class="op">-</span> (a<span class="op">.</span><span class="at">length</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>) <span class="op">*</span> (y <span class="op">-</span> (a<span class="op">.</span><span class="at">length</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>))</span>
+<span id="cb15-240"><a href="#cb15-240" aria-hidden="true" tabindex="-1"></a>    <span class="op">/</span> ((a<span class="op">.</span><span class="at">length</span> <span class="op">**</span> <span class="dv">2</span> <span class="op">-</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">12</span>)<span class="op">;</span></span>
+<span id="cb15-241"><a href="#cb15-241" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> top <span class="op">=</span> a <span class="kw">=&gt;</span> <span class="kw">new</span> <span class="bu">Set</span>(d3<span class="op">.</span><span class="fu">range</span>(a<span class="op">.</span><span class="at">length</span>)<span class="op">.</span><span class="fu">sort</span>((i<span class="op">,</span> j) <span class="kw">=&gt;</span> a[j] <span class="op">-</span> a[i])</span>
+<span id="cb15-242"><a href="#cb15-242" aria-hidden="true" tabindex="-1"></a>    <span class="op">.</span><span class="fu">slice</span>(<span class="dv">0</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">round</span>(<span class="fl">0.1</span> <span class="op">*</span> a<span class="op">.</span><span class="at">length</span>)))<span class="op">;</span></span>
+<span id="cb15-243"><a href="#cb15-243" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> panel <span class="op">=</span> key <span class="kw">=&gt;</span> {</span>
+<span id="cb15-244"><a href="#cb15-244" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> pred <span class="op">=</span> rank[key][season3][day]<span class="op">;</span></span>
+<span id="cb15-245"><a href="#cb15-245" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> best <span class="op">=</span> <span class="fu">top</span>(obs)<span class="op">,</span> chosen <span class="op">=</span> <span class="fu">top</span>(pred)<span class="op">;</span></span>
+<span id="cb15-246"><a href="#cb15-246" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> overlap <span class="op">=</span> [<span class="op">...</span>best]<span class="op">.</span><span class="fu">filter</span>(i <span class="kw">=&gt;</span> chosen<span class="op">.</span><span class="fu">has</span>(i))<span class="op">.</span><span class="at">length</span> <span class="op">/</span> best<span class="op">.</span><span class="at">size</span><span class="op">;</span></span>
+<span id="cb15-247"><a href="#cb15-247" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> rows <span class="op">=</span> obs<span class="op">.</span><span class="fu">map</span>((o<span class="op">,</span> i) <span class="kw">=&gt;</span> ({<span class="dt">obs</span><span class="op">:</span> o<span class="op">,</span> <span class="dt">pred</span><span class="op">:</span> pred[i]<span class="op">,</span> <span class="dt">best</span><span class="op">:</span> best<span class="op">.</span><span class="fu">has</span>(i)}))<span class="op">;</span></span>
+<span id="cb15-248"><a href="#cb15-248" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> [lo<span class="op">,</span> hi] <span class="op">=</span> d3<span class="op">.</span><span class="fu">extent</span>([<span class="op">...</span>obs<span class="op">,</span> <span class="op">...</span>pred])<span class="op">;</span></span>
+<span id="cb15-249"><a href="#cb15-249" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> plot <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb15-250"><a href="#cb15-250" aria-hidden="true" tabindex="-1"></a>      <span class="dt">width</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">45</span><span class="op">,</span></span>
+<span id="cb15-251"><a href="#cb15-251" aria-hidden="true" tabindex="-1"></a>      <span class="dt">x</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [lo<span class="op">,</span> hi]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"APSIM biomass (t/ha)"</span>}<span class="op">,</span></span>
+<span id="cb15-252"><a href="#cb15-252" aria-hidden="true" tabindex="-1"></a>      <span class="dt">y</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [lo<span class="op">,</span> hi]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"predicted (t/ha)"</span>}<span class="op">,</span></span>
+<span id="cb15-253"><a href="#cb15-253" aria-hidden="true" tabindex="-1"></a>      <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">line</span>([[lo<span class="op">,</span> lo]<span class="op">,</span> [hi<span class="op">,</span> hi]]<span class="op">,</span> {<span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span>})<span class="op">,</span></span>
+<span id="cb15-254"><a href="#cb15-254" aria-hidden="true" tabindex="-1"></a>              Plot<span class="op">.</span><span class="fu">dot</span>(rows<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"obs"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"pred"</span><span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="fl">2.5</span><span class="op">,</span> <span class="dt">fillOpacity</span><span class="op">:</span> <span class="fl">0.7</span><span class="op">,</span></span>
+<span id="cb15-255"><a href="#cb15-255" aria-hidden="true" tabindex="-1"></a>                <span class="dt">fill</span><span class="op">:</span> d <span class="kw">=&gt;</span> d<span class="op">.</span><span class="at">best</span> <span class="op">?</span> <span class="st">"#8B1E3F"</span> <span class="op">:</span> <span class="st">"#014E81"</span>})]</span>
+<span id="cb15-256"><a href="#cb15-256" aria-hidden="true" tabindex="-1"></a>    })<span class="op">;</span></span>
+<span id="cb15-257"><a href="#cb15-257" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div&gt;</span><span class="sc">${</span>plot<span class="sc">}</span><span class="vs">&lt;p class="interactive-note"&gt;Spearman ρ = </span><span class="sc">${</span><span class="fu">spearman</span>(obs<span class="op">,</span> pred)<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs">, top-10% overlap </span><span class="sc">${</span>overlap<span class="op">.</span><span class="fu">toFixed</span>(<span class="dv">2</span>)<span class="sc">}</span><span class="vs">&lt;/p&gt;&lt;/div&gt;`</span><span class="op">;</span></span>
+<span id="cb15-258"><a href="#cb15-258" aria-hidden="true" tabindex="-1"></a>  }<span class="op">;</span></span>
+<span id="cb15-259"><a href="#cb15-259" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div style="display:flex;flex-wrap:wrap;gap:1rem"&gt;</span><span class="sc">${</span><span class="fu">panel</span>(<span class="st">"model"</span>)<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span><span class="op">;</span></span>
+<span id="cb15-260"><a href="#cb15-260" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div id="ojs-cell-2" data-nodetype="expression">
 
 </div>
 </div>
 </div>
-<p>The figure uses results computed beforehand (<a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/scripts/precompute_interactive.R"><code>scripts/precompute_interactive.R</code></a>).</p>
 
 
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script type="ojs-module-contents">
-eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzICAgICAgICAgIC8vIGxvY2FsIGNvcGllcywgc2VlIGpzL1xuUGxvdCA9IHdpbmRvdy5QbG90XG5yYW5rID0gRmlsZUF0dGFjaG1lbnQoXCJkYXRhL2ludGVyYWN0aXZlL3JhbmtpbmcuanNvblwiKS5qc29uKClcbnZpZXdvZiBzZWFzb24zID0gc2xpZGVyKFwiU2Vhc29uXCIsIHJhbmsueWVhcnMsIHJhbmsueWVhcnMuaW5kZXhPZigxOTk4KSlcbnZpZXdvZiBkYXkgPSBzbGlkZXIoXCJEYXkgYWZ0ZXIgc293aW5nXCIsIHJhbmsuZGF5cywgcmFuay5kYXlzLmluZGV4T2YoMTEzKSlcbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMiIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IntcbiAgY29uc3Qgb2JzID0gcmFuay5vYnNlcnZlZFtzZWFzb24zXVtkYXldO1xuICBjb25zdCByYW5rcyA9IGEgPT4ge1xuICAgIGNvbnN0IG9yZGVyID0gZDMucmFuZ2UoYS5sZW5ndGgpLnNvcnQoKGksIGopID0+IGFbaV0gLSBhW2pdKTtcbiAgICBjb25zdCByID0gbmV3IEFycmF5KGEubGVuZ3RoKTtcbiAgICBvcmRlci5mb3JFYWNoKChpLCBrKSA9PiByW2ldID0gayk7XG4gICAgcmV0dXJuIHI7XG4gIH07XG4gIGNvbnN0IHNwZWFybWFuID0gKGEsIGIpID0+IGQzLm1lYW4oZDMuemlwKHJhbmtzKGEpLCByYW5rcyhiKSksXG4gICAgKFt4LCB5XSkgPT4gKHggLSAoYS5sZW5ndGggLSAxKSAvIDIpICogKHkgLSAoYS5sZW5ndGggLSAxKSAvIDIpKVxuICAgIC8gKChhLmxlbmd0aCAqKiAyIC0gMSkgLyAxMik7XG4gIGNvbnN0IHRvcCA9IGEgPT4gbmV3IFNldChkMy5yYW5nZShhLmxlbmd0aCkuc29ydCgoaSwgaikgPT4gYVtqXSAtIGFbaV0pXG4gICAgLnNsaWNlKDAsIE1hdGgucm91bmQoMC4xICogYS5sZW5ndGgpKSk7XG4gIGNvbnN0IHBhbmVsID0ga2V5ID0+IHtcbiAgICBjb25zdCBwcmVkID0gcmFua1trZXldW3NlYXNvbjNdW2RheV07XG4gICAgY29uc3QgYmVzdCA9IHRvcChvYnMpLCBjaG9zZW4gPSB0b3AocHJlZCk7XG4gICAgY29uc3Qgb3ZlcmxhcCA9IFsuLi5iZXN0XS5maWx0ZXIoaSA9PiBjaG9zZW4uaGFzKGkpKS5sZW5ndGggLyBiZXN0LnNpemU7XG4gICAgY29uc3Qgcm93cyA9IG9icy5tYXAoKG8sIGkpID0+ICh7b2JzOiBvLCBwcmVkOiBwcmVkW2ldLCBiZXN0OiBiZXN0LmhhcyhpKX0pKTtcbiAgICBjb25zdCBbbG8sIGhpXSA9IGQzLmV4dGVudChbLi4ub2JzLCAuLi5wcmVkXSk7XG4gICAgY29uc3QgcGxvdCA9IFBsb3QucGxvdCh7XG4gICAgICB3aWR0aDogMzIwLCBoZWlnaHQ6IDMyMCwgbWFyZ2luTGVmdDogNDUsXG4gICAgICB4OiB7ZG9tYWluOiBbbG8sIGhpXSwgbGFiZWw6IFwiQVBTSU0gYmlvbWFzcyAodC9oYSlcIn0sXG4gICAgICB5OiB7ZG9tYWluOiBbbG8sIGhpXSwgbGFiZWw6IFwicHJlZGljdGVkICh0L2hhKVwifSxcbiAgICAgIG1hcmtzOiBbUGxvdC5saW5lKFtbbG8sIGxvXSwgW2hpLCBoaV1dLCB7c3Ryb2tlOiBcIiM5Q0EzQUZcIn0pLFxuICAgICAgICAgICAgICBQbG90LmRvdChyb3dzLCB7eDogXCJvYnNcIiwgeTogXCJwcmVkXCIsIHI6IDIuNSwgZmlsbE9wYWNpdHk6IDAuNyxcbiAgICAgICAgICAgICAgICBmaWxsOiBkID0+IGQuYmVzdCA/IFwiIzhCMUUzRlwiIDogXCIjMDE0RTgxXCJ9KV1cbiAgICB9KTtcbiAgICByZXR1cm4gaHRtbGA8ZGl2PiR7cGxvdH08cCBjbGFzcz1cImludGVyYWN0aXZlLW5vdGVcIj4ke2tleX06IFNwZWFybWFuIM+BID0gJHtzcGVhcm1hbihvYnMsIHByZWQpLnRvRml4ZWQoMil9LCB0b3AtMTAlIG92ZXJsYXAgJHtvdmVybGFwLnRvRml4ZWQoMil9PC9wPjwvZGl2PmA7XG4gIH07XG4gIHJldHVybiBodG1sYDxkaXYgc3R5bGU9XCJkaXNwbGF5OmZsZXg7ZmxleC13cmFwOndyYXA7Z2FwOjFyZW1cIj4ke3BhbmVsKFwibW9kZWxcIil9JHtwYW5lbChcImJhc2VsaW5lXCIpfTwvZGl2PmA7XG59XG4ifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXRRdWlldCIsInNvdXJjZSI6InNoaW55SW5wdXQoJ3NlYXNvbjMnKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnZGF5JykifV19
+eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzXG5QbG90ID0gd2luZG93LlBsb3RcbnJhbmsgPSBGaWxlQXR0YWNobWVudChcImRhdGEvaW50ZXJhY3RpdmUvcmFua2luZy5qc29uXCIpLmpzb24oKVxudmlld29mIHNlYXNvbjMgPSBzbGlkZXIoXCJTZWFzb25cIiwgcmFuay55ZWFycywgcmFuay55ZWFycy5pbmRleE9mKDE5OTgpKVxudmlld29mIGRheSA9IHNsaWRlcihcIkRheSBhZnRlciBzb3dpbmdcIiwgcmFuay5kYXlzLCByYW5rLmRheXMuaW5kZXhPZigxMTMpKVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0IiwiY2VsbE5hbWUiOiJvanMtY2VsbC0yIiwiaW5saW5lIjpmYWxzZSwic291cmNlIjoie1xuICBjb25zdCBvYnMgPSByYW5rLm9ic2VydmVkW3NlYXNvbjNdW2RheV07XG4gIGNvbnN0IHJhbmtzID0gYSA9PiB7XG4gICAgY29uc3Qgb3JkZXIgPSBkMy5yYW5nZShhLmxlbmd0aCkuc29ydCgoaSwgaikgPT4gYVtpXSAtIGFbal0pO1xuICAgIGNvbnN0IHIgPSBuZXcgQXJyYXkoYS5sZW5ndGgpO1xuICAgIG9yZGVyLmZvckVhY2goKGksIGspID0+IHJbaV0gPSBrKTtcbiAgICByZXR1cm4gcjtcbiAgfTtcbiAgY29uc3Qgc3BlYXJtYW4gPSAoYSwgYikgPT4gZDMubWVhbihkMy56aXAocmFua3MoYSksIHJhbmtzKGIpKSxcbiAgICAoW3gsIHldKSA9PiAoeCAtIChhLmxlbmd0aCAtIDEpIC8gMikgKiAoeSAtIChhLmxlbmd0aCAtIDEpIC8gMikpXG4gICAgLyAoKGEubGVuZ3RoICoqIDIgLSAxKSAvIDEyKTtcbiAgY29uc3QgdG9wID0gYSA9PiBuZXcgU2V0KGQzLnJhbmdlKGEubGVuZ3RoKS5zb3J0KChpLCBqKSA9PiBhW2pdIC0gYVtpXSlcbiAgICAuc2xpY2UoMCwgTWF0aC5yb3VuZCgwLjEgKiBhLmxlbmd0aCkpKTtcbiAgY29uc3QgcGFuZWwgPSBrZXkgPT4ge1xuICAgIGNvbnN0IHByZWQgPSByYW5rW2tleV1bc2Vhc29uM11bZGF5XTtcbiAgICBjb25zdCBiZXN0ID0gdG9wKG9icyksIGNob3NlbiA9IHRvcChwcmVkKTtcbiAgICBjb25zdCBvdmVybGFwID0gWy4uLmJlc3RdLmZpbHRlcihpID0+IGNob3Nlbi5oYXMoaSkpLmxlbmd0aCAvIGJlc3Quc2l6ZTtcbiAgICBjb25zdCByb3dzID0gb2JzLm1hcCgobywgaSkgPT4gKHtvYnM6IG8sIHByZWQ6IHByZWRbaV0sIGJlc3Q6IGJlc3QuaGFzKGkpfSkpO1xuICAgIGNvbnN0IFtsbywgaGldID0gZDMuZXh0ZW50KFsuLi5vYnMsIC4uLnByZWRdKTtcbiAgICBjb25zdCBwbG90ID0gUGxvdC5wbG90KHtcbiAgICAgIHdpZHRoOiAzMjAsIGhlaWdodDogMzIwLCBtYXJnaW5MZWZ0OiA0NSxcbiAgICAgIHg6IHtkb21haW46IFtsbywgaGldLCBsYWJlbDogXCJBUFNJTSBiaW9tYXNzICh0L2hhKVwifSxcbiAgICAgIHk6IHtkb21haW46IFtsbywgaGldLCBsYWJlbDogXCJwcmVkaWN0ZWQgKHQvaGEpXCJ9LFxuICAgICAgbWFya3M6IFtQbG90LmxpbmUoW1tsbywgbG9dLCBbaGksIGhpXV0sIHtzdHJva2U6IFwiIzlDQTNBRlwifSksXG4gICAgICAgICAgICAgIFBsb3QuZG90KHJvd3MsIHt4OiBcIm9ic1wiLCB5OiBcInByZWRcIiwgcjogMi41LCBmaWxsT3BhY2l0eTogMC43LFxuICAgICAgICAgICAgICAgIGZpbGw6IGQgPT4gZC5iZXN0ID8gXCIjOEIxRTNGXCIgOiBcIiMwMTRFODFcIn0pXVxuICAgIH0pO1xuICAgIHJldHVybiBodG1sYDxkaXY+JHtwbG90fTxwIGNsYXNzPVwiaW50ZXJhY3RpdmUtbm90ZVwiPlNwZWFybWFuIM+BID0gJHtzcGVhcm1hbihvYnMsIHByZWQpLnRvRml4ZWQoMil9LCB0b3AtMTAlIG92ZXJsYXAgJHtvdmVybGFwLnRvRml4ZWQoMil9PC9wPjwvZGl2PmA7XG4gIH07XG4gIHJldHVybiBodG1sYDxkaXYgc3R5bGU9XCJkaXNwbGF5OmZsZXg7ZmxleC13cmFwOndyYXA7Z2FwOjFyZW1cIj4ke3BhbmVsKFwibW9kZWxcIil9PC9kaXY+YDtcbn1cbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc2Vhc29uMycpIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdkYXknKSJ9XX0=
 </script>
 <script type="module">
 if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }
@@ -1077,8 +1044,8 @@ window._ojs.runtime.interpretFromScriptTags();
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./08-limitations.html" class="pagination-link" aria-label="8 · Limitations">
-        <span class="nav-page-text">8 · Limitations</span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./reference.html" class="pagination-link" aria-label="Reference">
+        <span class="nav-page-text">Reference</span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
