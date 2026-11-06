@@ -4,16 +4,16 @@ title: "1 · Method"
 
 ## Growth is dynamic
 
-Crop growth responds to the environment over time. Each day, the weather sets a growth rate through the response of the crop, and the biomass at any day is the accumulation of the daily growth since sowing. Genotypes respond differently, so the same season gives different biomass trajectories, and the ranking of genotypes can change from one season to the next.
+Crop growth responds to the environment over time. Each day, the weather sets a growth rate through the response of the crop, and the biomass at any day is the accumulation of the daily growth since sowing. Genotypes respond differently, so the same year gives different biomass trajectories, and the ranking of genotypes can change from one year to the next.
 
-The figure below is a toy illustration. Three genotypes have a temperature response with an optimum and an upper limit, and they grow in a season of Narrabri weather. Select one of three contrasting seasons, move the day, and change the responses to see how the trajectories change. The responses are assumed here; in the workshop they are learned from data.
+The figure below is a toy illustration. Three genotypes have a temperature response with an optimum and an upper limit, and they grow in a year of Narrabri weather. Select one of three contrasting years, move the day, and change the responses to see how the trajectories change. The responses are assumed here; in the workshop they are learned from data.
 
 ```{ojs}
 //| echo: false
 d3 = window.d3
 Plot = window.Plot
 weather = FileAttachment("data/interactive/weather.json").json()
-viewof year = buttons("Season", [1989, 1998, 2008], 1998)
+viewof year = buttons("Year", [1989, 1998, 2008], 1998)
 viewof day = player("Day", d3.range(150), 60, i => weather.das0 + i)
 viewof genotypes = genotypeControls([
   {name: "Cool-adapted", colour: "#0089B3", optimum: 10, limit: 25},
@@ -107,7 +107,7 @@ where most coefficients $\xi_j$ are expected to be zero. The library contains ca
 
 Let $y_i = y(t_i)$ be observations on days $t_i$. The increments $\Delta y_i = y_{i+1} - y_i$ approximate $\frac{dy}{dt}(t_i)$ for a time step of one day.
 
-![Observed biomass of one genotype in one season (a). The box is enlarged in (b): the increment $\Delta y_i$ is the difference between two consecutive observations. The increments of the whole season are shown in (c); the regression is performed on these.](images/concept_increments.png){width=100%}
+![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the increment $\Delta y_i$ is the difference between two consecutive observations. The increments of the whole year are shown in (c); the regression is performed on these.](images/concept_increments.png){width=100%}
 
 Collecting all the increments in a vector $\Delta\mathbf{y}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
 
@@ -146,7 +146,7 @@ However, any regression method can be used. We will compare several methods in t
 
 ## Making predictions
 
-Given a fitted vector of coefficients $\hat{\boldsymbol{\xi}}$, the drivers $\mathbf{u}(t)$ of a season and an initial state $\mathbf{y}_0$, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice:
+Given a fitted vector of coefficients $\hat{\boldsymbol{\xi}}$, the drivers $\mathbf{u}(t)$ of a year and an initial state $\mathbf{y}_0$, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice:
 
 $$
 \frac{dy}{dt} = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \hat{\boldsymbol{\xi}}, \qquad \mathbf{y}(t_0) = \mathbf{y}_0.
@@ -154,7 +154,7 @@ $$
 
 If the library depends on the drivers only, the solution is the integral of the predicted growth rate, $y(t) = y_0 + \int_{t_0}^t \boldsymbol{\theta}(\mathbf{u}(s))^\top \hat{\boldsymbol{\xi}} \, ds$, as in the figure.
 
-![Season 1998 of one genotype, predicted by a model fitted to the other seasons. With a library that depends on the drivers only, the predicted growth rate (a) is integrated from the initial value $y_0$: the shaded area up to day $t$ is the predicted increase in biomass, $y(t) - y_0$ (b), which is compared with the APSIM trajectory.](images/concept_solution.png){width=100%}
+![Year 1998 of one genotype, predicted by a model fitted to the other years. With a library that depends on the drivers only, the predicted growth rate (a) is integrated from the initial value $y_0$: the shaded area up to day $t$ is the predicted increase in biomass, $y(t) - y_0$ (b), which is compared with the APSIM trajectory.](images/concept_solution.png){width=100%}
 
 ## Dealing with multiple genotypes
 
@@ -170,7 +170,7 @@ The environments and the library are shared, so the columns of $\hat{\boldsymbol
 
 To test the predictive ability of the model, we can use leave-one-environment-out cross-validation. We calibrate the model on all but one environment, and then predict the left-out environment. This is repeated for each environment, and the predictions are compared with the observed values.
 
-![Leave-one-season-out cross-validation. Each row is one fit: the model is fitted to the seasons in blue and used to predict the left-out season in red.](images/concept_validation.png){width=85%}
+![Leave-one-year-out cross-validation. Each row is one fit: the model is fitted to the years in blue and used to predict the left-out year in red.](images/concept_validation.png){width=85%}
 
 ## Steps
 

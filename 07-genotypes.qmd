@@ -29,7 +29,7 @@ from pipeline import *
 
 ## Equations of different genotypes
 
-Each genotype has its own equation, with coefficients estimated from the 31 trajectories of that genotype. The sparse models (STLSQ) of all genotypes, fitted to all seasons, give genotype-specific growth rates. Growth rate along the mean weather path, for every genotype (grey) and for the genotypes with the lowest, median and highest final biomass:
+Each genotype has its own equation, with coefficients estimated from the 31 trajectories of that genotype. The sparse models (STLSQ) of all genotypes, fitted to all years, give genotype-specific growth rates. Growth rate along the mean weather path, for every genotype (grey) and for the genotypes with the lowest, median and highest final biomass:
 
 ::: {.panel-tabset group="language"}
 
@@ -120,7 +120,7 @@ ggplot(d, aes(das, rate, group = genotype)) +
 
 ## Ranking genotypes
 
-For each season, the predicted and APSIM biomass of the 199 genotypes on a fixed day are compared by the Spearman correlation and by the overlap of the top 10%.
+For each year, the predicted and APSIM biomass of the 199 genotypes on a fixed day are compared by the Spearman correlation and by the overlap of the top 10%.
 
 ```{r}
 #| echo: false
@@ -211,25 +211,25 @@ ggplot(long, aes(das, score)) +
   theme_dgxe()
 ```
 
-The ranking improves as the season progresses, when the weather has had more effect on the order of the genotypes. These results are for genotypes whose trajectories in other seasons are available for fitting.
+The ranking improves as the year progresses, when the weather has had more effect on the order of the genotypes. These results are for genotypes whose trajectories in other years are available for fitting.
 
 ## Exploring the ranking
 
-Predicted against APSIM biomass of the 199 genotypes in one season on one day, for the sparse model. Red points are the true top 10%.
+Predicted against APSIM biomass of the 199 genotypes in one year on one day, for the sparse model. Red points are the true top 10%.
 
 ```{ojs}
 //| echo: false
 d3 = window.d3
 Plot = window.Plot
 rank = FileAttachment("data/interactive/ranking.json").json()
-viewof season3 = slider("Season", rank.years, rank.years.indexOf(1998))
+viewof year3 = slider("Year", rank.years, rank.years.indexOf(1998))
 viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
 ```
 
 ```{ojs}
 //| echo: false
 {
-  const obs = rank.observed[season3][day];
+  const obs = rank.observed[year3][day];
   const ranks = a => {
     const order = d3.range(a.length).sort((i, j) => a[i] - a[j]);
     const r = new Array(a.length);
@@ -242,7 +242,7 @@ viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
   const top = a => new Set(d3.range(a.length).sort((i, j) => a[j] - a[i])
     .slice(0, Math.round(0.1 * a.length)));
   const panel = key => {
-    const pred = rank[key][season3][day];
+    const pred = rank[key][year3][day];
     const best = top(obs), chosen = top(pred);
     const overlap = [...best].filter(i => chosen.has(i)).length / best.size;
     const rows = obs.map((o, i) => ({obs: o, pred: pred[i], best: best.has(i)}));

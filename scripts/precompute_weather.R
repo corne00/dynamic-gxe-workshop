@@ -1,4 +1,4 @@
-## Daily mean temperature of every season for the toy figure on the method
+## Daily mean temperature of every year for the toy figure on the method
 ## page (3-day moving average of (Tmin + Tmax) / 2); writes
 ## data/interactive/weather.json. Run from the repository root.
 library(jsonlite)

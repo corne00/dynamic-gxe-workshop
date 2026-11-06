@@ -9,8 +9,9 @@
 ##  Base R, except for glmnet and leaps in some of the fitting methods.
 ## =============================================================================
 
-## ---- Drivers: array U[season, day, driver], standardised -------------------
-make_drivers <- function(wx, drivers = c("TT", "DL", "RAW", "RAD")) {
+## ---- Drivers: array U[year, day, driver], standardised -------------------
+make_drivers <- function(wx, drivers = c("Tmin", "Tmax", "Rain", "RAD", "VP", "DL",
+                                          "TT", "RAW")) {
   years <- sort(unique(wx$year))
   das0 <- min(wx$das)
   nd <- max(wx$das) - das0 + 1
@@ -20,7 +21,7 @@ make_drivers <- function(wx, drivers = c("TT", "DL", "RAW", "RAD")) {
     i <- cbind(match(wx$year, years), wx$das - das0 + 1, j)
     U[i] <- wx[[drivers[j]]]
   }
-  # pad seasons that end early with their last value
+  # pad years that end early with their last value
   for (y in seq_along(years)) {
     for (j in seq_along(drivers)) {
       u <- U[y, , j]
@@ -56,7 +57,7 @@ library_matrix <- function(Z, degree = 3, pairs = FALSE) {
   do.call(cbind, cols)
 }
 
-## Theta[season, day, term]
+## Theta[year, day, term]
 make_library <- function(drv, degree = 3, pairs = FALSE) {
   d <- dim(drv$U)
   Z <- matrix(drv$U, ncol = d[3], dimnames = list(NULL, drv$drivers))
@@ -64,7 +65,7 @@ make_library <- function(drv, degree = 3, pairs = FALSE) {
   array(L, c(d[1:2], ncol(L)), dimnames = list(NULL, NULL, colnames(L)))
 }
 
-## ---- Trajectories: array Y[genotype, season, day], NA after maturity --------
+## ---- Trajectories: array Y[genotype, year, day], NA after maturity --------
 ## nend[g, y] is the number of daily steps of trajectory (g, y).
 make_trajectories <- function(traj, drv, var = "biomass") {
   gen <- sort(unique(traj$genotype))
@@ -79,31 +80,47 @@ make_trajectories <- function(traj, drv, var = "biomass") {
 }
 
 ## ---- Regression problem for one genotype ------------------------------------
-## Rows: all days of all seasons. X: library at day t. dy: y(t + 1) - y(t).
+## Rows: all days of all years. X: library at day t. dy: y(t + 1) - y(t).
 make_design <- function(Theta, tr, genotype) {
   g <- match(genotype, tr$genotypes)
   n <- tr$nend[g, ]
-  seasons <- seq_along(tr$years)
-  X <- lapply(seasons, function(y) matrix(Theta[y, 1:n[y], ], n[y]))
-  dy <- lapply(seasons, function(y) diff(tr$Y[g, y, 1:(n[y] + 1)]))
+  years <- seq_along(tr$years)
+  X <- lapply(years, function(y) matrix(Theta[y, 1:n[y], ], n[y]))
+  dy <- lapply(years, function(y) diff(tr$Y[g, y, 1:(n[y] + 1)]))
   X <- do.call(rbind, X)
   colnames(X) <- dimnames(Theta)[[3]]
-  list(X = X, dy = unlist(dy), season = rep(seasons, n))
+  list(X = X, dy = unlist(dy), year = rep(years, n))
 }
 
 ## ---- Fitting methods: fit(X, dy) -> coefficients (intercept first) ----------
 named <- function(b, X) setNames(unname(b), c("1", colnames(X)))
 
-fit_ols <- function(X, dy) {
-  lm.fit(cbind(`1` = 1, X), dy)$coefficients
+col_sd <- function(X) {
+  n <- nrow(X)
+  sqrt((colSums(X^2) - n * colMeans(X)^2) / (n - 1))
 }
 
-## Ridge (alpha = 0), lasso (alpha = 1) and elastic net by glmnet.
+fit_ols <- function(X, dy) {
+  Z <- cbind(`1` = 1, X)
+  drop(solve(crossprod(Z), crossprod(Z, dy)))
+}
+
+## Ridge in closed form, with the penalty scaling of glmnet.
+fit_ridge <- function(X, dy, lambda = 1e-3) {
+  n <- nrow(X); mx <- colMeans(X)
+  var_x <- col_sd(X)^2 * (n - 1) / n
+  sy <- sd(dy) * sqrt((n - 1) / n)
+  b <- solve(crossprod(X) / n - tcrossprod(mx) + diag(lambda / sy * var_x),
+             crossprod(X, dy) / n - mx * mean(dy))
+  c(`1` = mean(dy) - sum(mx * b), setNames(drop(b), colnames(X)))
+}
+
+## Lasso and elastic net by glmnet.
 fit_glmnet <- function(X, dy, alpha, lambda) {
-  fit <- glmnet::glmnet(X, dy, alpha = alpha, lambda = lambda)
+  fit <- glmnet::glmnet(X, dy, alpha = alpha, lambda = lambda,
+                        type.gaussian = "covariance")
   named(as.vector(coef(fit)), X)
 }
-fit_ridge <- function(X, dy, lambda = 1e-3) fit_glmnet(X, dy, 0, lambda)
 fit_lasso <- function(X, dy, lambda = 3e-4) fit_glmnet(X, dy, 1, lambda)
 fit_enet <- function(X, dy, lambda = 6e-4) fit_glmnet(X, dy, 0.5, lambda)
 
@@ -117,11 +134,15 @@ fit_subset <- function(X, dy, k = 8, method = "exhaustive") {
 
 ## Sequential thresholded least squares: refit, drop terms below the threshold.
 fit_stlsq <- function(X, dy, threshold = 0.05) {
-  size <- apply(X, 2, sd) / sd(dy)
+  Z <- cbind(`1` = 1, X)
+  G <- crossprod(Z)
+  rhs <- drop(crossprod(Z, dy))
+  size <- col_sd(X) / sd(dy)
   active <- colnames(X)
   repeat {
-    b <- lm.fit(cbind(`1` = 1, X[, active, drop = FALSE]), dy)$coefficients
-    keep <- abs(b[active]) * size[active] >= threshold
+    i <- c("1", active)
+    b <- drop(solve(G[i, i], rhs[i]))
+    keep <- abs(b[-1]) * size[active] >= threshold
     if (all(keep) || !any(keep)) break
     active <- active[keep]
   }
@@ -141,19 +162,21 @@ fit_methods <- list(
   STLSQ = fit_stlsq)
 
 ## ---- Simulation -------------------------------------------------------------
-## Solves dy/dt = (1, theta(y, u)) coef. coef: season x (1 + terms), U: season
+## Solves dy/dt = (1, theta(y, u)) coef. coef: year x (1 + terms), U: year
 ## x day x variable. terms(y, u) is the library; by default U is the library.
 simulate <- function(coef, U, y0, terms = function(y, u) u, method = "lsoda") {
   S <- dim(U)[1]; D <- dim(U)[2]
-  day <- function(j) matrix(U[, j, ], S)
+  days <- lapply(seq_len(D), function(j) matrix(U[, j, ], S))
+  b0 <- coef[, 1]; B <- coef[, -1, drop = FALSE]
   rhs <- function(t, y, parms) {
     pos <- min(max(t - 0.5, 0), D - 1)      # day j is placed at time j + 0.5
     j <- min(floor(pos), D - 2)
     w <- pos - j                            # linear interpolation between days
-    u <- (1 - w) * day(j + 1) + w * day(j + 2)
-    list(coef[, 1] + rowSums(terms(y, u) * coef[, -1]))
+    u <- (1 - w) * days[[j + 1]] + w * days[[j + 2]]
+    list(b0 + .rowSums(terms(y, u) * B, S, ncol(B)))
   }
-  deSolve::ode(y0, 0:(D - 1), rhs, NULL, method = method)[, -1, drop = FALSE]
+  deSolve::ode(y0, 0:(D - 1), rhs, NULL, method = method, rtol = 1e-4,
+               atol = 1e-4)[, -1, drop = FALSE]
 }
 
 ## n genotypes spread evenly over the ranking of mean final biomass.
@@ -165,17 +188,17 @@ spread_genotypes <- function(tr, n = 3) {
   ranked[round(seq(1, length(ranked), length.out = n))]
 }
 
-## ---- Validation: leave-one-season-out ---------------------------------------
-## Each season is predicted by a model fitted to the other seasons of the same
-## genotype, starting from the mean initial biomass of those seasons.
-## Returns P[genotype, season, day].
+## ---- Validation: leave-one-year-out ---------------------------------------
+## Each year is predicted by a model fitted to the other years of the same
+## genotype, starting from the mean initial biomass of those years.
+## Returns P[genotype, year, day].
 cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
   P <- array(NA_real_, dim(tr$Y))
   S <- length(tr$years)
   for (g in match(genotypes, tr$genotypes)) {
     d <- make_design(Theta, tr, tr$genotypes[g])
     coef <- t(sapply(seq_len(S), function(v) {
-      train <- d$season != v
+      train <- d$year != v
       fit(d$X[train, ], d$dy[train])
     }))
     y0 <- (sum(tr$Y[g, , 1]) - tr$Y[g, , 1]) / (S - 1)
@@ -197,18 +220,18 @@ evaluate <- function(P, tr, fixed_day = 99) {
 }
 
 ## ---- Interpretation: accumulated local effects (ALE) ------------------------
-## Standardised drivers on the days that occur in the data (season x day rows).
+## Standardised drivers on the days that occur in the data (year x day rows).
 observed_points <- function(drv, tr) {
-  season <- function(y) {
+  year <- function(y) {
     n <- max(tr$nend[, y])
     matrix(drv$U[y, 1:n, ], n, dimnames = list(NULL, drv$drivers))
   }
-  do.call(rbind, lapply(seq_along(drv$years), season))
+  do.call(rbind, lapply(seq_along(drv$years), year))
 }
 
 ## ---- Genotype ranking -------------------------------------------------------
-## Pd, Yd: genotype x season matrices of predicted and APSIM biomass on one
-## day. For each season: Spearman correlation of the two rankings and overlap
+## Pd, Yd: genotype x year matrices of predicted and APSIM biomass on one
+## day. For each year: Spearman correlation of the two rankings and overlap
 ## of the predicted and true top 10 %.
 rank_scores <- function(Pd, Yd, top = 0.1) {
   k <- max(1, round(top * nrow(Yd)))

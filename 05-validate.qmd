@@ -29,7 +29,7 @@ from pipeline import *
 
 ## Solution
 
-The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. All seasons are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times, so the value of day $j$ is placed at the middle of the day, $t = j + \tfrac{1}{2}$, and values in between are interpolated linearly.
+The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. All years are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times, so the value of day $j$ is placed at the middle of the day, $t = j + \tfrac{1}{2}$, and values in between are interpolated linearly.
 
 ```{r}
 #| echo: false
@@ -39,20 +39,20 @@ show_fun("simulate")
 
 If a library depends on the state, `terms(y, u)` is evaluated along the solution; by default the library depends on the drivers only.
 
-## Leave-one-season-out cross-validation
+## Leave-one-year-out cross-validation
 
-Each genotype has trajectories in the seasons $E$. A season $e$ is predicted by a model that has not seen it:
+Each genotype has trajectories in the years $E$. A year $e$ is predicted by a model that has not seen it:
 
 $$
 \begin{array}{ll}
-\textbf{for each genotype } g, \textbf{ for each season } e \in E: & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\mathbf{X}^{(-e)},\, \Delta\mathbf{y}^{(-e)}\bigr) & \text{fit on the other seasons} \\[2pt]
+\textbf{for each genotype } g, \textbf{ for each year } e \in E: & \\[2pt]
+\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\mathbf{X}^{(-e)},\, \Delta\mathbf{y}^{(-e)}\bigr) & \text{fit on the other years} \\[2pt]
 \quad \bar{y}_0^{(-e)} \leftarrow \tfrac{1}{|E|-1} \textstyle\sum_{e' \ne e} y_0^{(e')} & \text{mean initial biomass} \\[2pt]
-\quad \dfrac{d\hat y}{dt} = \boldsymbol{\theta}\bigl(\mathbf{u}^{(e)}(t)\bigr)^\top \hat{\boldsymbol{\xi}}^{(-e)}, \quad \hat y(t_0) = \bar{y}_0^{(-e)} & \text{predict season } e \text{ from its drivers}
+\quad \dfrac{d\hat y}{dt} = \boldsymbol{\theta}\bigl(\mathbf{u}^{(e)}(t)\bigr)^\top \hat{\boldsymbol{\xi}}^{(-e)}, \quad \hat y(t_0) = \bar{y}_0^{(-e)} & \text{predict year } e \text{ from its drivers}
 \end{array}
 $$
 
-Only the drivers of the left-out season enter the prediction. The error is the root-mean-square error (RMSE, t/ha) over whole trajectories, on a fixed day, and at maturity.
+Only the drivers of the left-out year enter the prediction. The error is the root-mean-square error (RMSE, t/ha) over whole trajectories, on a fixed day, and at maturity.
 
 ```{r}
 #| echo: false
@@ -90,7 +90,7 @@ round(evaluate(P, tr), 3)
 
 ## Predicted trajectories
 
-Held-out predictions of the sparse model, for genotypes spread over the ranking of final biomass and for selected seasons. Thick lines: APSIM; thin lines: model. Switch genotypes and seasons on and off. The right panel shows the daily growth rate, the increment of biomass per day, of the same curves.
+Held-out predictions of the sparse model, for genotypes spread over the ranking of final biomass and for selected years. Thick lines: APSIM; thin lines: model. Switch genotypes and years on and off. The right panel shows the daily growth rate, the increment of biomass per day, of the same curves.
 
 ```{ojs}
 //| echo: false
@@ -99,23 +99,23 @@ Plot = window.Plot
 traj = FileAttachment("data/interactive/trajectories.json").json()
 shades = ["#8B1E3F", "#00A6D6", "#014E81", "#6D8B1E", "#6B7280"]
 viewof genos = toggles("Genotypes", traj.genotypes, shades, [traj.genotypes[0], traj.genotypes[2], traj.genotypes[4]])
-viewof seasons = toggles("Seasons", [1983, 1989, 1998, 2008], ["#374151", "#374151", "#374151", "#374151"], [1989, 1998, 2008])
+viewof years = toggles("Years", [1983, 1989, 1998, 2008], ["#374151", "#374151", "#374151", "#374151"], [1989, 1998, 2008])
 ```
 
 ```{ojs}
 //| echo: false
 {
-  const rows = genos.flatMap(name => seasons.flatMap(year => {
+  const rows = genos.flatMap(name => years.flatMap(year => {
     const g = traj.genotypes.indexOf(name), s = traj.years.indexOf(year);
     return ["observed", "model"].flatMap(source => traj[source][g][s].map((y, i, a) => ({
       name, year, source, das: traj.das0 + i, y, rate: i ? y - a[i - 1] : null})));
   }));
   const panel = (key, label, domain) => Plot.plot({
-    width: 262, height: 70 + 120 * seasons.length, marginLeft: 42, marginRight: 8,
+    width: 262, height: 70 + 120 * years.length, marginLeft: 42, marginRight: 8,
     style: {fontSize: "10px"},
     x: {label: "days after sowing"},
     y: {label, domain},
-    fy: {label: null, domain: seasons, tickFormat: d => d},
+    fy: {label: null, domain: years, tickFormat: d => d},
     color: {domain: traj.genotypes, range: shades},
     marks: [
       Plot.line(rows.filter(d => d.source === "observed" && d[key] !== null),
@@ -130,7 +130,7 @@ viewof seasons = toggles("Seasons", [1983, 1989, 1998, 2008], ["#374151", "#3741
 
 ## Predicted against APSIM biomass at maturity
 
-Final biomass of all genotype-season pairs, coloured by season:
+Final biomass of all genotype-year pairs, coloured by year:
 
 ::: {.panel-tabset group="language"}
 
@@ -161,7 +161,7 @@ ax.text(0.04, 0.95, f"RMSE {rmse:.2f} t/ha", transform=ax.transAxes, va="top")
 ax.set_aspect("equal")
 ax.set_xlabel("APSIM biomass at maturity (t/ha)")
 ax.set_ylabel("predicted biomass (t/ha)")
-fig.colorbar(points, label="season", shrink=0.8)
+fig.colorbar(points, label="year", shrink=0.8)
 fig.tight_layout()
 ```
 
@@ -185,7 +185,7 @@ ggplot(d, aes(obs, pred, colour = year)) +
            size = 3.4, label = sprintf("RMSE %.2f t/ha", rmse)) +
   scale_colour_gradientn(colours = c(dgxe[["blue"]], dgxe[["cyan"]],
                                      dgxe[["burgundy"]]),
-                         name = "season") +
+                         name = "year") +
   coord_equal() +
   labs(x = "APSIM biomass at maturity (t/ha)",
        y = "predicted biomass (t/ha)") +
@@ -230,7 +230,7 @@ The methods are close to each other. The sparse models use fewer terms for a sim
 
 ## Number of terms
 
-With 12 terms there is little to remove. For a larger library that includes products of drivers (`pairs = TRUE`, 36 terms), the held-out error of backward elimination (every fifth genotype) as a function of the number of terms is:
+For a library that also contains products of pairs of drivers (`pairs = TRUE`, 136 terms), the held-out error of backward elimination (every twentieth genotype) as a function of the number of terms is:
 
 ::: {.panel-tabset group="language"}
 
@@ -246,8 +246,8 @@ With 12 terms there is little to remove. For a larger library that includes prod
 
 ```python
 Theta2 = make_library(drv, pairs=True)
-genotypes = tr.genotypes[::5]
-ks = [4, 6, 8, 12, 16, 20, 28, 36]
+genotypes = tr.genotypes[::20]
+ks = [4, 8, 12, 16, 24, 36, 60, 136]
 
 def rmse_for(k):
     def fit(X, dy):
@@ -264,8 +264,8 @@ by_k = pd.DataFrame({"k": ks, "rmse": [rmse_for(k) for k in ks]})
 #| label: 05-7-run
 #| echo: false
 Theta2 <- make_library(drv, pairs = TRUE)
-genotypes <- tr$genotypes[seq(1, 199, by = 5)]
-ks <- c(4, 6, 8, 12, 16, 20, 28, 36)
+genotypes <- tr$genotypes[seq(1, 199, by = 20)]
+ks <- c(4, 8, 12, 16, 24, 36, 60, 136)
 
 by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k) {
   fit <- function(X, dy) fit_subset(X, dy, k, "backward")
@@ -288,7 +288,7 @@ by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k)
 ```python
 fig, ax = plt.subplots(figsize=(5, 2.8))
 ax.plot(by_k["k"], by_k["rmse"], "o-", color=BLUE)
-ax.set_xlabel("number of terms (36-term library)")
+ax.set_xlabel("number of terms (136-term library)")
 ax.set_ylabel("held-out trajectory RMSE (t/ha)")
 fig.tight_layout()
 ```
@@ -303,7 +303,7 @@ fig.tight_layout()
 ggplot(by_k, aes(k, rmse)) +
   geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
   geom_point(colour = dgxe[["blue"]], size = 2) +
-  labs(x = "number of terms (36-term library)",
+  labs(x = "number of terms (136-term library)",
        y = "held-out trajectory RMSE (t/ha)") +
   theme_dgxe()
 ```

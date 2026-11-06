@@ -65,6 +65,8 @@ d <- make_design(Theta, tr, "g001")
 
 ## Least squares
 
+The reference: all terms are used, so there is no sparsity.
+
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 $$
@@ -81,6 +83,8 @@ show_fun("fit_ols", level = 3)
 
 ## Ridge
 
+Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.
+
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 $$
@@ -89,15 +93,17 @@ Hyperparameters:
 
 - $\lambda$: strength of the penalty; shrinks the coefficients of correlated terms, but removes none.
 
-R: `glmnet`. Python: closed form, with the penalty scaled as in `glmnet`.
+Closed form, with the penalty scaled as in `glmnet`.
 
 ```{r}
 #| echo: false
 #| results: asis
-show_fun("fit_glmnet", "fit_ridge", level = 3)
+show_fun("fit_ridge", level = 3)
 ```
 
 ## Lasso
+
+The $\ell_1$ penalty sets coefficients exactly to zero, which gives a sparse equation.
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
@@ -116,6 +122,8 @@ show_fun("fit_glmnet", "fit_lasso", level = 3)
 ```
 
 ## Elastic net
+
+A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
@@ -136,6 +144,8 @@ show_fun("fit_glmnet", "fit_enet", level = 3)
 
 ## Best subset
 
+The best model with exactly $k$ terms, found by searching all subsets.
+
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 $$
@@ -144,7 +154,7 @@ Hyperparameters:
 
 - $k$: number of terms that are kept.
 
-With $K = 12$ terms all subsets can be searched. R: `leaps`. Python: the residual sums of squares are computed from the Gram matrix.
+R: `leaps`, which searches all subsets efficiently. Python: computed from the Gram matrix; with $K = 24$ terms the exhaustive search takes about a second per fit, so it is left out of the comparison below.
 
 ```{r}
 #| echo: false
@@ -153,6 +163,8 @@ show_fun("fit_subset", level = 3)
 ```
 
 ## Backward elimination
+
+A greedy alternative to best subset: start with all terms and repeatedly remove the one that increases the residual error least.
 
 $$
 S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \bigr]
@@ -171,6 +183,8 @@ show_fun("fit_subset", level = 3)
 ```
 
 ## STLSQ
+
+Sequential thresholded least squares, the algorithm of the original SINDy method.
 
 $$
 \hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \Delta\mathbf{y} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\Delta\mathbf{y})}
@@ -241,7 +255,7 @@ size = d.X.std(axis=0, ddof=1) / d.dy.std(ddof=1)
 effect = fits.iloc[1:].mul(size, axis=0)
 
 fig, axes = plt.subplots(1, effect.shape[1], sharey=True, sharex=True,
-                         figsize=(9, 3.4))
+                         figsize=(9, 5.6))
 for ax, (name, column) in zip(axes, effect.items()):
     ax.barh(column.index, column,
             color=np.where(column > 0, BLUE, BURGUNDY))
@@ -257,7 +271,7 @@ fig.tight_layout()
 ```{r}
 #| label: 04-3-run
 #| echo: false
-#| fig-height: 3.4
+#| fig-height: 5.6
 #| fig-width: 9
 size <- apply(d$X, 2, sd) / sd(d$dy)
 effect <- fits[-1, ] * size
@@ -283,7 +297,7 @@ ggplot(long, aes(effect, term, fill = effect > 0)) +
         panel.spacing.x = unit(0.6, "lines"))
 ```
 
-The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen seasons in step 5.
+The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen years in step 5.
 
 ## Exploring a method
 
@@ -308,21 +322,23 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
   const all = Object.values(hyper.methods);
   const reach = d3.max(all.flatMap(m => m.effect.flat(2).map(Math.abs)));
   const rmse = [d3.min(all.flatMap(m => m.rmse)), 0.8];   // cap: very large penalties are off scale
+  const band = 6, n = shown.length;
+  const key = (term, name) => term + "|" + name;
+  const domain = hyper.terms.flatMap(term => [...shown.map(name => key(term, name)), key(term, "")]);
+  const middle = hyper.terms.map(term => key(term, shown[Math.floor(n / 2)]));
   const rows = shown.flatMap(name => {
     const g = hyper.genotypes.indexOf(name);
-    return hyper.terms.map((term, i) => ({name, term, effect: spec.effect[step][g][i]}));
+    return hyper.terms.map((term, i) => ({name, band: key(term, name), effect: spec.effect[step][g][i]}));
+  });
+  const coefficients = Plot.plot({
+    width: 520, height: 40 + band * domain.length, marginLeft: 56,
+    x: {domain: [-reach, reach], label: "scaled coefficient", ticks: 4},
+    y: {domain, ticks: middle, tickFormat: d => d.split("|")[0], label: null, padding: 0},
+    color: {domain: contrast, range: shades},
+    marks: [Plot.barX(rows, {x: "effect", y: "band", fill: "name"}), Plot.ruleX([0])]
   });
   const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
   const scale = spec.param === "terms" ? "linear" : "log";
-  const coefficients = Plot.plot({
-    width: 520, height: 300, marginLeft: 50, marginTop: 22,
-    x: {domain: [-reach, reach], label: "scaled coefficient", ticks: 3},
-    y: {domain: hyper.terms, label: null},
-    fx: {label: null, domain: shown},
-    color: {domain: contrast, range: shades},
-    marks: [Plot.barX(rows, {x: "effect", y: "term", fx: "name", fill: "name"}),
-            Plot.ruleX([0])]
-  });
   const error = Plot.plot({
     width: 520, height: 220,
     x: {type: scale, label: spec.param, tickFormat: ".2~g"},
@@ -334,4 +350,3 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
   return html`<div>${coefficients}${error}</div>`;
 }
 ```
-

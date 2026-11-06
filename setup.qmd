@@ -50,4 +50,4 @@ print(evaluate(P, tr))
 
 :::
 
-The result is the root-mean-square error (t/ha) of 20 genotypes on seasons that were left out of the fit; it should take a few seconds.
+The result is the root-mean-square error (t/ha) of 20 genotypes on years that were left out of the fit; it should take a few seconds.

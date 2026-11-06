@@ -1,4 +1,4 @@
-# Leave-one-season-out validation for a few genotypes and all fitting methods.
+# Leave-one-year-out validation for a few genotypes and all fitting methods.
 source("R/functions.R")
 wx <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")

@@ -22,13 +22,13 @@ All functions are in `R/functions.R` (R) and `python/dgxe.py` (Python), with the
 
 | Function | Purpose |
 |---|---|
-| `make_drivers(wx)` | standardised drivers `U[season, day, driver]` |
-| `make_library(drv, degree, pairs)` | library `Theta[season, day, term]` |
-| `make_trajectories(traj, drv, var)` | response `Y[genotype, season, day]` |
+| `make_drivers(wx)` | standardised drivers `U[year, day, driver]` |
+| `make_library(drv, degree, pairs)` | library `Theta[year, day, term]` |
+| `make_trajectories(traj, drv, var)` | response `Y[genotype, year, day]` |
 | `make_design(Theta, tr, genotype)` | design matrix `X` and increments `dy` |
 | `fit_ols`, `fit_ridge`, `fit_lasso`, `fit_enet`, `fit_subset`, `fit_stlsq` | fitting methods `fit(X, dy)` |
 | `simulate(coef, U, y0)` | solution of the fitted equation with an ODE solver |
-| `cross_validate(Theta, tr, fit)` | leave-one-season-out predictions |
+| `cross_validate(Theta, tr, fit)` | leave-one-year-out predictions |
 | `evaluate(P, tr)` | trajectory, fixed-day and maturity RMSE |
 | `ale_curve(rate, Z, j)` | accumulated local effect of driver `j` |
 | `rank_scores(Pd, Yd)` | ranking metrics |
@@ -37,7 +37,7 @@ The R and Python versions differ only in conventions: R uses `TRUE`/`FALSE` and 
 
 ## Data
 
-APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes, 31 seasons (1983 to 2013), daily. Columns are described in [Data](02-data.qmd). Files are in `data/`.
+APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes, 31 years (1983 to 2013), daily. Columns are described in [Data](02-data.qmd). Files are in `data/`.
 
 ## Sources
 

@@ -27,7 +27,7 @@ save <- function(plots, name, w, h) {
 blue <- dgxe[["blue"]]; cyan <- dgxe[["cyan"]]; bur <- dgxe[["burgundy"]]
 grey <- "#D1D5DB"
 
-## 1. Increments of an observed trajectory (genotype g114, season 1998) -------
+## 1. Increments of an observed trajectory (genotype g114, year 1998) -------
 g <- match("g114", tr$genotypes); v <- match(1998, tr$years)
 yy <- tr$Y[g, v, 1:(tr$nend[g, v] + 1)]
 d <- data.frame(das = seq_along(yy) + tr$das0 - 1, y = yy)
@@ -75,7 +75,7 @@ p3 <- ggplot(d[-nrow(d), ], aes(das, dy)) +
   concept()
 save(list(p1, p2, p3), "concept_increments.png", 9, 2.5)
 
-## 2. Solution: the fitted equation integrated over the season ---------------
+## 2. Solution: the fitted equation integrated over the year ---------------
 P <- readRDS("precomputed/cv_stlsq.rds")
 pred <- P[g, v, 1:(tr$nend[g, v] + 1)]
 e <- data.frame(das = d$das, rate = c(diff(pred), NA), pred = pred, obs = yy)
@@ -113,8 +113,8 @@ q2 <- ggplot(e, aes(das)) +
   concept()
 save(list(q1, q2), "concept_solution.png", 8, 2.5)
 
-## 3. Leave-one-season-out validation ----------------------------------------
-## Seasons 1983, 1984, 1985 and 2013; dots stand for the seasons in between.
+## 3. Leave-one-year-out validation ----------------------------------------
+## Years 1983, 1984, 1985 and 2013; dots stand for the years in between.
 shown <- c(1, 2, 3, 5)                            # grid positions
 yrs <- c(tr$years[1:3], tr$years[length(tr$years)])
 cv <- expand.grid(col = shown, row = shown)
@@ -134,7 +134,7 @@ pv <- ggplot() +
   scale_x_continuous(breaks = shown, labels = yrs, expand = c(0.02, 0),
                      position = "top") +
   scale_y_reverse(breaks = shown, labels = yrs, expand = c(0.02, 0)) +
-  labs(x = "season", y = "left-out season") +
+  labs(x = "year", y = "left-out year") +
   theme_dgxe() +
   theme(legend.position = "right", legend.title = element_blank(),
         axis.line = element_blank(), axis.ticks = element_blank())
@@ -142,26 +142,28 @@ save(pv, "concept_validation.png", 6.5, 2.7)
 
 ## 4. Regression on the library: dy = X xi (genotype g114, as a table) -------
 dd <- make_design(Theta, tr, "g114")
-first <- cumsum(c(1, table(factor(dd$season))))[c(1, 2, 31)]  # first row of seasons 1, 2, 31
-blocks <- lapply(1:3, function(s) first[s] + 70 + 0:2)   # mid-season days
+first <- cumsum(c(1, table(factor(dd$year))))[c(1, 2, 31)]  # first row of years 1, 2, 31
+blocks <- lapply(1:3, function(s) first[s] + 70 + 0:2)   # mid-year days
 ypos <- unlist(lapply(1:3, function(s) (s - 1) * 4 + 1:3))
 rows <- unlist(blocks)
-k <- ncol(dd$X)
+show <- c(1:6, 19:24)                  # Tmin, Tmax, TT, RAW; the rest is indicated
+k <- length(show)
 xcol <- 2.4 + rep(0:3, each = 3) * 3.35 + rep(0:2, 4) * 1.05
 cells <- data.frame(
   x = rep(xcol, each = length(rows)), y = rep(ypos, k),
-  label = sub("^-(0\\.0+)$", "\\1", sprintf("%.2f", as.vector(dd$X[rows, ]))))
+  label = sub("^-(0\\.0+)$", "\\1", sprintf("%.2f", as.vector(dd$X[rows, show]))))
 dycells <- data.frame(x = 0, y = ypos, label = sprintf("%.2f", dd$dy[rows]))
 xicells <- data.frame(x = 2.4 + 4 * 3.35 + 0.9, y = (seq_len(k) - 0.5) * 11 / k + 0.5,
-                      label = sprintf("xi[%d]", seq_len(k)))
+                      label = sprintf("xi[%d]", show))
 hi <- 2                                           # highlighted row of block 1
 box <- function(x, y, w, h, fill = "#E8EEF4", colour = "white", lw = 0.6) {
   geom_rect(data = data.frame(x = x, y = y), aes(xmin = x - w / 2,
             xmax = x + w / 2, ymin = y - h / 2, ymax = y + h / 2),
             fill = fill, colour = colour, linewidth = lw)
 }
-heads <- data.frame(x = xcol, label = colnames(dd$X))
+heads <- data.frame(x = xcol, label = colnames(dd$X)[show])
 groups <- data.frame(x = 2.4 + (0:3) * 3.35 + 1.05, label = c("TT", "DL", "RAW", "RAD"))
+gap <- data.frame(x = 2.4 + 2 * 3.35 - 0.62, y = ypos)
 dots <- function(x, y) {                          # three vertical dots
   p <- expand.grid(i = c(-0.25, 0, 0.25), k = seq_along(x))
   geom_point(data = data.frame(x = x[p$k], y = y + p$i), aes(x, y),
@@ -182,6 +184,7 @@ pd <- ggplot() +
             aes(x, y, label = label), size = 2.2, colour = "#1F2937") +
   geom_text(data = xicells, aes(x, y, label = label), size = 2.8, parse = TRUE,
             colour = "#1F2937") +
+  geom_text(data = gap, aes(x, y, label = "..."), size = 3, colour = "#6B7280") +
   dots(c(0, xcol), 4) + dots(c(0, xcol), 8) +
   annotate("text", x = -1.3, y = c(2, 6, 10), label = c("1983", "1984",
            "2013"), angle = 90, size = 2.8, colour = "#6B7280") +
@@ -207,7 +210,7 @@ pd <- ggplot() +
   theme(plot.margin = margin(4, 4, 4, 4))
 save(pd, "concept_design.png", 7.4, 3.5)
 
-## 5. The data at a glance: weather, one season, one genotype ----------------
+## 5. The data at a glance: weather, one year, one genotype ----------------
 v <- match(1998, tr$years)
 gm <- match("g114", tr$genotypes)
 traj_long <- function(A, idx) {
@@ -216,7 +219,7 @@ traj_long <- function(A, idx) {
     data.frame(id = k, das = seq_along(y) + tr$das0 - 1, y = y)
   }))
 }
-season_rows <- traj_long(function(k) {
+year_rows <- traj_long(function(k) {
   y <- tr$Y[k, v, ]; y[!is.na(y)]
 }, seq_along(tr$genotypes))
 genotype_rows <- traj_long(function(k) {
@@ -229,25 +232,25 @@ d1 <- ggplot(w98, aes(das)) +
   geom_ribbon(aes(ymin = Tmin, ymax = Tmax), fill = "#B8CBDC") +
   geom_line(aes(y = Tmax), colour = blue, linewidth = 0.4) +
   geom_line(aes(y = Tmin), colour = blue, linewidth = 0.4) +
-  labs(title = "(a) Weather, season 1998", x = "days after sowing",
+  labs(title = "(a) Weather, year 1998", x = "days after sowing",
        y = expression("temperature range (" * degree * "C)")) +
   data_theme
 final98 <- tr$Y[cbind(seq_along(tr$genotypes), v, tr$nend[, v] + 1)]
 ends <- c(which.min(final98), which.max(final98))   # lowest and highest
-three_rows <- season_rows[season_rows$id %in% c(ends, gm), ]
-d2 <- ggplot(season_rows, aes(das, y, group = id)) +
+three_rows <- year_rows[year_rows$id %in% c(ends, gm), ]
+d2 <- ggplot(year_rows, aes(das, y, group = id)) +
   geom_line(colour = grey, linewidth = 0.2) +
   geom_line(data = three_rows, aes(colour = factor(id)), linewidth = 0.8) +
   scale_colour_manual(values = setNames(c(bur, blue, cyan),
                                         c(ends, gm))) +
-  labs(title = "(b) 199 genotypes, season 1998", x = "days after sowing",
+  labs(title = "(b) 199 genotypes, year 1998", x = "days after sowing",
        y = "biomass (t/ha)") +
   data_theme
 d3 <- ggplot(genotype_rows, aes(das, y, group = id)) +
   geom_line(colour = grey, linewidth = 0.3) +
   geom_line(data = genotype_rows[genotype_rows$id == v, ], colour = cyan,
             linewidth = 0.8) +
-  labs(title = "(c) Genotype g114, 31 seasons",
+  labs(title = "(c) Genotype g114, 31 years",
        x = "days after sowing", y = "biomass (t/ha)") +
   data_theme
 save(list(d1, d2, d3), "concept_data.png", 8, 2.6)

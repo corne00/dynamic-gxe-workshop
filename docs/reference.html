@@ -315,15 +315,15 @@ window.Quarto = {
 <tbody>
 <tr class="odd">
 <td><code>make_drivers(wx)</code></td>
-<td>standardised drivers <code>U[season, day, driver]</code></td>
+<td>standardised drivers <code>U[year, day, driver]</code></td>
 </tr>
 <tr class="even">
 <td><code>make_library(drv, degree, pairs)</code></td>
-<td>library <code>Theta[season, day, term]</code></td>
+<td>library <code>Theta[year, day, term]</code></td>
 </tr>
 <tr class="odd">
 <td><code>make_trajectories(traj, drv, var)</code></td>
-<td>response <code>Y[genotype, season, day]</code></td>
+<td>response <code>Y[genotype, year, day]</code></td>
 </tr>
 <tr class="even">
 <td><code>make_design(Theta, tr, genotype)</code></td>
@@ -339,7 +339,7 @@ window.Quarto = {
 </tr>
 <tr class="odd">
 <td><code>cross_validate(Theta, tr, fit)</code></td>
-<td>leave-one-season-out predictions</td>
+<td>leave-one-year-out predictions</td>
 </tr>
 <tr class="even">
 <td><code>evaluate(P, tr)</code></td>
@@ -359,7 +359,7 @@ window.Quarto = {
 </section>
 <section id="data" class="level2">
 <h2 class="anchored" data-anchor-id="data">Data</h2>
-<p>APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes, 31 seasons (1983 to 2013), daily. Columns are described in <a href="./02-data.html">Data</a>. Files are in <code>data/</code>.</p>
+<p>APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes, 31 years (1983 to 2013), daily. Columns are described in <a href="./02-data.html">Data</a>. Files are in <code>data/</code>.</p>
 </section>
 <section id="sources" class="level2">
 <h2 class="anchored" data-anchor-id="sources">Sources</h2>

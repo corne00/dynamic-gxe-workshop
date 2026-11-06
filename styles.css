@@ -14,7 +14,7 @@ figure img, .cell-output-display img { max-width: 100%; }
 .dgxe-play { border: 1px solid #9CA3AF; border-radius: 3px; background: white;
   color: #014E81; width: 2rem; cursor: pointer; padding: 0; }
 
-/* season buttons and genotype controls */
+/* year buttons and genotype controls */
 .dgxe-buttons { display: flex; gap: .4rem; }
 .dgxe-buttons button, .dgxe-reset { padding: .15rem .8rem; cursor: pointer;
   border: 1px solid #9CA3AF; border-radius: 3px; background: white;

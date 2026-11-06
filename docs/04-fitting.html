@@ -321,6 +321,7 @@ window.Quarto = {
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">Least squares</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">Ridge</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-3-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-3" role="tab" aria-controls="tabset-10-3" aria-selected="false" href="">Lasso</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-4-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-4" role="tab" aria-controls="tabset-10-4" aria-selected="false" href="">Elastic net</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-5-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-5" role="tab" aria-controls="tabset-10-5" aria-selected="false" href="">Best subset</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-6-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-6" role="tab" aria-controls="tabset-10-6" aria-selected="false" href="">Backward elimination</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-7-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-7" role="tab" aria-controls="tabset-10-7" aria-selected="false" href="">STLSQ</a></li></ul>
 <div class="tab-content">
 <div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<p>The reference: all terms are used, so there is no sparsity.</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 \]</span></p>
@@ -331,8 +332,9 @@ window.Quarto = {
 <div class="tab-content" data-group="language">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>fit_ols <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy) {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lm.fit</span>(<span class="fu">cbind</span>(<span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">1</span>, X), dy)<span class="sc">$</span>coefficients</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">1</span>, X)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">drop</span>(<span class="fu">solve</span>(<span class="fu">crossprod</span>(Z), <span class="fu">crossprod</span>(Z, dy)))</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ols(X, dy):</span>
@@ -343,6 +345,7 @@ window.Quarto = {
 </div>
 </div>
 <div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<p>Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 \]</span></p>
@@ -350,43 +353,35 @@ window.Quarto = {
 <ul>
 <li><span class="math inline">\(\lambda\)</span>: strength of the penalty; shrinks the coefficients of correlated terms, but removes none.</li>
 </ul>
-<p>R: <code>glmnet</code>. Python: closed form, with the penalty scaled as in <code>glmnet</code>.</p>
+<p>Closed form, with the penalty scaled as in <code>glmnet</code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge (alpha = 0), lasso (alpha = 1) and elastic net by glmnet.</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>fit_glmnet <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, alpha, lambda) {</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> glmnet<span class="sc">::</span><span class="fu">glmnet</span>(X, dy, <span class="at">alpha =</span> alpha, <span class="at">lambda =</span> lambda)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">named</span>(<span class="fu">as.vector</span>(<span class="fu">coef</span>(fit)), X)</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>fit_ridge <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">1e-3</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="dv">0</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge in closed form, with the penalty scaling of glmnet.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>fit_ridge <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">1e-3</span>) {</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(X); mx <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(X)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  var_x <span class="ot">&lt;-</span> <span class="fu">col_sd</span>(X)<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> (n <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> n</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  sy <span class="ot">&lt;-</span> <span class="fu">sd</span>(dy) <span class="sc">*</span> <span class="fu">sqrt</span>((n <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> n)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  b <span class="ot">&lt;-</span> <span class="fu">solve</span>(<span class="fu">crossprod</span>(X) <span class="sc">/</span> n <span class="sc">-</span> <span class="fu">tcrossprod</span>(mx) <span class="sc">+</span> <span class="fu">diag</span>(lambda <span class="sc">/</span> sy <span class="sc">*</span> var_x),</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>             <span class="fu">crossprod</span>(X, dy) <span class="sc">/</span> n <span class="sc">-</span> mx <span class="sc">*</span> <span class="fu">mean</span>(dy))</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">mean</span>(dy) <span class="sc">-</span> <span class="fu">sum</span>(mx <span class="sc">*</span> b), <span class="fu">setNames</span>(<span class="fu">drop</span>(b), <span class="fu">colnames</span>(X)))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso and elastic net, with the penalty scaling of glmnet.</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_glmnet(X, dy, alpha, lam):</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ridge: closed form, same scaling.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ridge(X, dy, lam<span class="op">=</span><span class="fl">1e-3</span>):</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    l1, l2 <span class="op">=</span> lam <span class="op">*</span> alpha, lam <span class="op">*</span> (<span class="dv">1</span> <span class="op">-</span> alpha) <span class="op">/</span> dy.std()</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> ElasticNet(alpha<span class="op">=</span>l1 <span class="op">+</span> l2, l1_ratio<span class="op">=</span>l1 <span class="op">/</span> (l1 <span class="op">+</span> l2), tol<span class="op">=</span><span class="fl">1e-12</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>                       max_iter<span class="op">=</span><span class="dv">100000</span>, precompute<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    model.fit((X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx, dy <span class="op">-</span> dy.mean())</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> model.coef_ <span class="op">/</span> sx</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Ridge: closed form, same scaling.</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_ridge(X, dy, lam<span class="op">=</span><span class="fl">1e-3</span>):</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    sx <span class="op">=</span> X.std(axis<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> (X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    A <span class="op">=</span> Z.T <span class="op">@</span> Z <span class="op">/</span> <span class="bu">len</span>(dy) <span class="op">+</span> lam <span class="op">/</span> dy.std() <span class="op">*</span> np.eye(X.shape[<span class="dv">1</span>])</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.linalg.solve(A, Z.T <span class="op">@</span> (dy <span class="op">-</span> dy.mean()) <span class="op">/</span> <span class="bu">len</span>(dy)) <span class="op">/</span> sx</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> (X <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>)) <span class="op">/</span> sx</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    A <span class="op">=</span> Z.T <span class="op">@</span> Z <span class="op">/</span> <span class="bu">len</span>(dy) <span class="op">+</span> lam <span class="op">/</span> dy.std() <span class="op">*</span> np.eye(X.shape[<span class="dv">1</span>])</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    b <span class="op">=</span> np.linalg.solve(A, Z.T <span class="op">@</span> (dy <span class="op">-</span> dy.mean()) <span class="op">/</span> <span class="bu">len</span>(dy)) <span class="op">/</span> sx</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.concatenate([[dy.mean() <span class="op">-</span> X.mean(axis<span class="op">=</span><span class="dv">0</span>) <span class="op">@</span> b], b])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
 </div>
 <div id="tabset-10-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-3-tab">
+<p>The <span class="math inline">\(\ell_1\)</span> penalty sets coefficients exactly to zero, which gives a sparse equation.</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
 \]</span></p>
@@ -399,13 +394,14 @@ window.Quarto = {
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge (alpha = 0), lasso (alpha = 1) and elastic net by glmnet.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Lasso and elastic net by glmnet.</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>fit_glmnet <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, alpha, lambda) {</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> glmnet<span class="sc">::</span><span class="fu">glmnet</span>(X, dy, <span class="at">alpha =</span> alpha, <span class="at">lambda =</span> lambda)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">named</span>(<span class="fu">as.vector</span>(<span class="fu">coef</span>(fit)), X)</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">3e-4</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="dv">1</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> glmnet<span class="sc">::</span><span class="fu">glmnet</span>(X, dy, <span class="at">alpha =</span> alpha, <span class="at">lambda =</span> lambda,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type.gaussian =</span> <span class="st">"covariance"</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">named</span>(<span class="fu">as.vector</span>(<span class="fu">coef</span>(fit)), X)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>fit_lasso <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">3e-4</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="dv">1</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso and elastic net, with the penalty scaling of glmnet.</span></span>
@@ -426,6 +422,7 @@ window.Quarto = {
 </div>
 </div>
 <div id="tabset-10-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-4-tab">
+<p>A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
 \]</span></p>
@@ -439,13 +436,14 @@ window.Quarto = {
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Ridge (alpha = 0), lasso (alpha = 1) and elastic net by glmnet.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Lasso and elastic net by glmnet.</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>fit_glmnet <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, alpha, lambda) {</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> glmnet<span class="sc">::</span><span class="fu">glmnet</span>(X, dy, <span class="at">alpha =</span> alpha, <span class="at">lambda =</span> lambda)</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">named</span>(<span class="fu">as.vector</span>(<span class="fu">coef</span>(fit)), X)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>fit_enet <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">6e-4</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="fl">0.5</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> glmnet<span class="sc">::</span><span class="fu">glmnet</span>(X, dy, <span class="at">alpha =</span> alpha, <span class="at">lambda =</span> lambda,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">type.gaussian =</span> <span class="st">"covariance"</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">named</span>(<span class="fu">as.vector</span>(<span class="fu">coef</span>(fit)), X)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>fit_enet <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">lambda =</span> <span class="fl">6e-4</span>) <span class="fu">fit_glmnet</span>(X, dy, <span class="fl">0.5</span>, lambda)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lasso and elastic net, with the penalty scaling of glmnet.</span></span>
@@ -466,6 +464,7 @@ window.Quarto = {
 </div>
 </div>
 <div id="tabset-10-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-5-tab">
+<p>The best model with exactly <span class="math inline">\(k\)</span> terms, found by searching all subsets.</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \Delta\mathbf{y} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
 \]</span></p>
@@ -473,7 +472,7 @@ window.Quarto = {
 <ul>
 <li><span class="math inline">\(k\)</span>: number of terms that are kept.</li>
 </ul>
-<p>With <span class="math inline">\(K = 12\)</span> terms all subsets can be searched. R: <code>leaps</code>. Python: the residual sums of squares are computed from the Gram matrix.</p>
+<p>R: <code>leaps</code>, which searches all subsets efficiently. Python: computed from the Gram matrix; with <span class="math inline">\(K = 24\)</span> terms the exhaustive search takes about a second per fit, so it is left out of the comparison below.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
@@ -510,6 +509,7 @@ window.Quarto = {
 </div>
 </div>
 <div id="tabset-10-6" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-6-tab">
+<p>A greedy alternative to best subset: start with all terms and repeatedly remove the one that increases the residual error least.</p>
 <p><span class="math display">\[
 S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \bigr]
 \]</span></p>
@@ -554,6 +554,7 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 </div>
 </div>
 <div id="tabset-10-7" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-7-tab">
+<p>Sequential thresholded least squares, the algorithm of the original SINDy method.</p>
 <p><span class="math display">\[
 \hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \Delta\mathbf{y} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\Delta\mathbf{y})}
 \]</span></p>
@@ -568,18 +569,22 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 <div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Sequential thresholded least squares: refit, drop terms below the threshold.</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>fit_stlsq <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy, <span class="at">threshold =</span> <span class="fl">0.05</span>) {</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  size <span class="ot">&lt;-</span> <span class="fu">apply</span>(X, <span class="dv">2</span>, sd) <span class="sc">/</span> <span class="fu">sd</span>(dy)</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  active <span class="ot">&lt;-</span> <span class="fu">colnames</span>(X)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">&lt;-</span> <span class="fu">lm.fit</span>(<span class="fu">cbind</span>(<span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">1</span>, X[, active, <span class="at">drop =</span> <span class="cn">FALSE</span>]), dy)<span class="sc">$</span>coefficients</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    keep <span class="ot">&lt;-</span> <span class="fu">abs</span>(b[active]) <span class="sc">*</span> size[active] <span class="sc">&gt;=</span> threshold</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">all</span>(keep) <span class="sc">||</span> <span class="sc">!</span><span class="fu">any</span>(keep)) <span class="cf">break</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    active <span class="ot">&lt;-</span> active[keep]</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>  full <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">numeric</span>(<span class="fu">ncol</span>(X) <span class="sc">+</span> <span class="dv">1</span>), <span class="fu">c</span>(<span class="st">"1"</span>, <span class="fu">colnames</span>(X)))</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>  full[<span class="fu">names</span>(b)] <span class="ot">&lt;-</span> b</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>  full</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="st">`</span><span class="at">1</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">1</span>, X)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  G <span class="ot">&lt;-</span> <span class="fu">crossprod</span>(Z)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  rhs <span class="ot">&lt;-</span> <span class="fu">drop</span>(<span class="fu">crossprod</span>(Z, dy))</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  size <span class="ot">&lt;-</span> <span class="fu">col_sd</span>(X) <span class="sc">/</span> <span class="fu">sd</span>(dy)</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  active <span class="ot">&lt;-</span> <span class="fu">colnames</span>(X)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">repeat</span> {</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    i <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"1"</span>, active)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>    b <span class="ot">&lt;-</span> <span class="fu">drop</span>(<span class="fu">solve</span>(G[i, i], rhs[i]))</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>    keep <span class="ot">&lt;-</span> <span class="fu">abs</span>(b[<span class="sc">-</span><span class="dv">1</span>]) <span class="sc">*</span> size[active] <span class="sc">&gt;=</span> threshold</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> (<span class="fu">all</span>(keep) <span class="sc">||</span> <span class="sc">!</span><span class="fu">any</span>(keep)) <span class="cf">break</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    active <span class="ot">&lt;-</span> active[keep]</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>  full <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">numeric</span>(<span class="fu">ncol</span>(X) <span class="sc">+</span> <span class="dv">1</span>), <span class="fu">c</span>(<span class="st">"1"</span>, <span class="fu">colnames</span>(X)))</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>  full[<span class="fu">names</span>(b)] <span class="ot">&lt;-</span> b</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>  full</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Sequential thresholded least squares: refit, drop terms below the threshold.</span></span>
@@ -624,34 +629,58 @@ S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm
 </div>
 <div class="cell">
 <div class="cell-output cell-output-stdout">
-<pre><code>         OLS  ridge  lasso elastic net best subset (k = 8) backward (k = 8)
-1      0.163  0.158  0.157       0.157               0.160            0.160
-TT    -0.046 -0.008 -0.001      -0.001              -0.025           -0.025
-TT^2  -0.034 -0.034 -0.038      -0.037              -0.032           -0.032
-TT^3   0.015  0.007  0.003       0.003               0.011            0.011
-DL     0.020 -0.004 -0.007      -0.006               0.000            0.000
-DL^2  -0.055 -0.047 -0.043      -0.042              -0.056           -0.056
-DL^3   0.019  0.018  0.018       0.017               0.022            0.022
-RAW    0.019  0.016  0.014       0.014               0.015            0.015
-RAW^2 -0.015 -0.015 -0.014      -0.014              -0.015           -0.015
-RAW^3 -0.002 -0.001  0.000       0.000               0.000            0.000
-RAD    0.006  0.005  0.004       0.004               0.008            0.008
-RAD^2 -0.003 -0.003 -0.003      -0.003               0.000            0.000
-RAD^3  0.000  0.000  0.000       0.000               0.000            0.000
-       STLSQ
-1      0.162
-TT    -0.045
-TT^2  -0.033
-TT^3   0.016
-DL     0.017
-DL^2  -0.058
-DL^3   0.020
-RAW    0.020
-RAW^2 -0.016
-RAW^3 -0.002
-RAD    0.008
-RAD^2  0.000
-RAD^3  0.000</code></pre>
+<pre><code>          OLS  ridge  lasso elastic net best subset (k = 8) backward (k = 8)
+1       0.162  0.157  0.156       0.156               0.157            0.155
+Tmin   -0.002 -0.002 -0.001      -0.001               0.000            0.000
+Tmin^2 -0.001  0.000  0.000       0.000               0.000            0.000
+Tmin^3  0.001  0.001  0.000       0.000               0.000            0.000
+Tmax   -0.012 -0.011 -0.010      -0.010              -0.011           -0.012
+Tmax^2 -0.004 -0.004 -0.003      -0.003               0.000            0.000
+Tmax^3  0.003  0.002  0.002       0.002               0.002            0.002
+Rain    0.000  0.000  0.000       0.000               0.000            0.000
+Rain^2  0.000  0.000  0.000       0.000               0.000            0.000
+Rain^3  0.000  0.000  0.000       0.000               0.000            0.000
+RAD     0.008  0.007  0.005       0.005               0.000            0.008
+RAD^2  -0.002 -0.003 -0.003      -0.003               0.000            0.000
+RAD^3   0.000  0.000  0.000       0.000               0.003            0.000
+VP      0.000 -0.001 -0.001      -0.001               0.000            0.000
+VP^2    0.000  0.000  0.000       0.000               0.000            0.000
+VP^3    0.000  0.000  0.000       0.000               0.000            0.000
+DL      0.016 -0.002 -0.003      -0.002               0.000            0.000
+DL^2   -0.053 -0.046 -0.042      -0.042              -0.045           -0.042
+DL^3    0.019  0.017  0.017       0.016               0.018            0.016
+TT     -0.036 -0.006  0.000       0.000               0.000            0.000
+TT^2   -0.032 -0.032 -0.036      -0.035              -0.039           -0.039
+TT^3    0.013  0.006  0.003       0.003               0.000            0.000
+RAW     0.017  0.015  0.013       0.013               0.014            0.014
+RAW^2  -0.015 -0.014 -0.014      -0.014              -0.015           -0.015
+RAW^3  -0.002 -0.001  0.000       0.000               0.000            0.000
+        STLSQ
+1       0.162
+Tmin    0.000
+Tmin^2  0.000
+Tmin^3  0.000
+Tmax   -0.012
+Tmax^2 -0.004
+Tmax^3  0.003
+Rain    0.000
+Rain^2  0.000
+Rain^3  0.000
+RAD     0.009
+RAD^2   0.000
+RAD^3   0.000
+VP      0.000
+VP^2    0.000
+VP^3    0.000
+DL      0.014
+DL^2   -0.055
+DL^3    0.019
+TT     -0.036
+TT^2   -0.031
+TT^3    0.014
+RAW     0.017
+RAW^2  -0.015
+RAW^3  -0.002</code></pre>
 </div>
 </div>
 <p>Each bar is a coefficient, scaled to a common size (coefficient times the standard deviation of the term, relative to that of the increments). Terms that a method removed have no bar.</p>
@@ -689,7 +718,7 @@ RAD^3  0.000</code></pre>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>effect <span class="op">=</span> fits.iloc[<span class="dv">1</span>:].mul(size, axis<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, effect.shape[<span class="dv">1</span>], sharey<span class="op">=</span><span class="va">True</span>, sharex<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                         figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">3.4</span>))</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>                         figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">5.6</span>))</span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, (name, column) <span class="kw">in</span> <span class="bu">zip</span>(axes, effect.items()):</span>
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    ax.barh(column.index, column,</span>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>            color<span class="op">=</span>np.where(column <span class="op">&gt;</span> <span class="dv">0</span>, BLUE, BURGUNDY))</span>
@@ -710,21 +739,21 @@ RAD^3  0.000</code></pre>
 </div>
 </div>
 </div>
-<p>The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen seasons in step 5.</p>
+<p>The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen years in step 5.</p>
 </section>
 <section id="exploring-a-method" class="level2">
 <h2 class="anchored" data-anchor-id="exploring-a-method">Exploring a method</h2>
 <p>Each method has one hyperparameter. Switch genotypes on and off to compare their coefficients (top); the lower panel shows the held-out error for all settings, as the mean over 20 genotypes.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb24" data-startfrom="294" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 293;"><span id="cb24-294"><a href="#cb24-294" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
-<span id="cb24-295"><a href="#cb24-295" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
-<span id="cb24-296"><a href="#cb24-296" aria-hidden="true" tabindex="-1"></a>hyper <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/hyper.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
-<span id="cb24-297"><a href="#cb24-297" aria-hidden="true" tabindex="-1"></a>contrast <span class="op">=</span> [<span class="st">"g181"</span><span class="op">,</span> <span class="st">"g171"</span><span class="op">,</span> <span class="st">"g021"</span><span class="op">,</span> <span class="st">"g141"</span><span class="op">,</span> <span class="st">"g151"</span>]</span>
-<span id="cb24-298"><a href="#cb24-298" aria-hidden="true" tabindex="-1"></a>shades <span class="op">=</span> [<span class="st">"#8B1E3F"</span><span class="op">,</span> <span class="st">"#014E81"</span><span class="op">,</span> <span class="st">"#00A6D6"</span><span class="op">,</span> <span class="st">"#6D8B1E"</span><span class="op">,</span> <span class="st">"#6B7280"</span>]</span>
-<span id="cb24-299"><a href="#cb24-299" aria-hidden="true" tabindex="-1"></a>viewof method <span class="op">=</span> <span class="fu">select</span>(<span class="st">"Method"</span><span class="op">,</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">keys</span>(hyper<span class="op">.</span><span class="at">methods</span>)<span class="op">,</span> <span class="st">"STLSQ"</span>)</span>
-<span id="cb24-300"><a href="#cb24-300" aria-hidden="true" tabindex="-1"></a>spec <span class="op">=</span> hyper<span class="op">.</span><span class="at">methods</span>[method]</span>
-<span id="cb24-301"><a href="#cb24-301" aria-hidden="true" tabindex="-1"></a>viewof shown <span class="op">=</span> <span class="fu">toggles</span>(<span class="st">"Genotypes"</span><span class="op">,</span> contrast<span class="op">,</span> shades)</span>
-<span id="cb24-302"><a href="#cb24-302" aria-hidden="true" tabindex="-1"></a>viewof step <span class="op">=</span> <span class="fu">slider</span>(spec<span class="op">.</span><span class="at">param</span><span class="op">,</span> spec<span class="op">.</span><span class="at">values</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(spec<span class="op">.</span><span class="at">values</span><span class="op">.</span><span class="at">length</span> <span class="op">/</span> <span class="dv">2</span>)<span class="op">,</span> v <span class="kw">=&gt;</span> (<span class="op">+</span>v)<span class="op">.</span><span class="fu">toPrecision</span>(<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb24" data-startfrom="308" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 307;"><span id="cb24-308"><a href="#cb24-308" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
+<span id="cb24-309"><a href="#cb24-309" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
+<span id="cb24-310"><a href="#cb24-310" aria-hidden="true" tabindex="-1"></a>hyper <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/hyper.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
+<span id="cb24-311"><a href="#cb24-311" aria-hidden="true" tabindex="-1"></a>contrast <span class="op">=</span> [<span class="st">"g181"</span><span class="op">,</span> <span class="st">"g171"</span><span class="op">,</span> <span class="st">"g021"</span><span class="op">,</span> <span class="st">"g141"</span><span class="op">,</span> <span class="st">"g151"</span>]</span>
+<span id="cb24-312"><a href="#cb24-312" aria-hidden="true" tabindex="-1"></a>shades <span class="op">=</span> [<span class="st">"#8B1E3F"</span><span class="op">,</span> <span class="st">"#014E81"</span><span class="op">,</span> <span class="st">"#00A6D6"</span><span class="op">,</span> <span class="st">"#6D8B1E"</span><span class="op">,</span> <span class="st">"#6B7280"</span>]</span>
+<span id="cb24-313"><a href="#cb24-313" aria-hidden="true" tabindex="-1"></a>viewof method <span class="op">=</span> <span class="fu">select</span>(<span class="st">"Method"</span><span class="op">,</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">keys</span>(hyper<span class="op">.</span><span class="at">methods</span>)<span class="op">,</span> <span class="st">"STLSQ"</span>)</span>
+<span id="cb24-314"><a href="#cb24-314" aria-hidden="true" tabindex="-1"></a>spec <span class="op">=</span> hyper<span class="op">.</span><span class="at">methods</span>[method]</span>
+<span id="cb24-315"><a href="#cb24-315" aria-hidden="true" tabindex="-1"></a>viewof shown <span class="op">=</span> <span class="fu">toggles</span>(<span class="st">"Genotypes"</span><span class="op">,</span> contrast<span class="op">,</span> shades)</span>
+<span id="cb24-316"><a href="#cb24-316" aria-hidden="true" tabindex="-1"></a>viewof step <span class="op">=</span> <span class="fu">slider</span>(spec<span class="op">.</span><span class="at">param</span><span class="op">,</span> spec<span class="op">.</span><span class="at">values</span><span class="op">,</span> <span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(spec<span class="op">.</span><span class="at">values</span><span class="op">.</span><span class="at">length</span> <span class="op">/</span> <span class="dv">2</span>)<span class="op">,</span> v <span class="kw">=&gt;</span> (<span class="op">+</span>v)<span class="op">.</span><span class="fu">toPrecision</span>(<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div>
 <div id="ojs-cell-1-1" data-nodetype="declaration">
@@ -790,35 +819,37 @@ RAD^3  0.000</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb25" data-startfrom="306" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 305;"><span id="cb25-306"><a href="#cb25-306" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb25-307"><a href="#cb25-307" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> all <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">values</span>(hyper<span class="op">.</span><span class="at">methods</span>)<span class="op">;</span></span>
-<span id="cb25-308"><a href="#cb25-308" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> reach <span class="op">=</span> d3<span class="op">.</span><span class="fu">max</span>(all<span class="op">.</span><span class="fu">flatMap</span>(m <span class="kw">=&gt;</span> m<span class="op">.</span><span class="at">effect</span><span class="op">.</span><span class="fu">flat</span>(<span class="dv">2</span>)<span class="op">.</span><span class="fu">map</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>)))<span class="op">;</span></span>
-<span id="cb25-309"><a href="#cb25-309" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rmse <span class="op">=</span> [d3<span class="op">.</span><span class="fu">min</span>(all<span class="op">.</span><span class="fu">flatMap</span>(m <span class="kw">=&gt;</span> m<span class="op">.</span><span class="at">rmse</span>))<span class="op">,</span> <span class="fl">0.8</span>]<span class="op">;</span>   <span class="co">// cap: very large penalties are off scale</span></span>
-<span id="cb25-310"><a href="#cb25-310" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rows <span class="op">=</span> shown<span class="op">.</span><span class="fu">flatMap</span>(name <span class="kw">=&gt;</span> {</span>
-<span id="cb25-311"><a href="#cb25-311" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> g <span class="op">=</span> hyper<span class="op">.</span><span class="at">genotypes</span><span class="op">.</span><span class="fu">indexOf</span>(name)<span class="op">;</span></span>
-<span id="cb25-312"><a href="#cb25-312" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> hyper<span class="op">.</span><span class="at">terms</span><span class="op">.</span><span class="fu">map</span>((term<span class="op">,</span> i) <span class="kw">=&gt;</span> ({name<span class="op">,</span> term<span class="op">,</span> <span class="dt">effect</span><span class="op">:</span> spec<span class="op">.</span><span class="at">effect</span>[step][g][i]}))<span class="op">;</span></span>
-<span id="cb25-313"><a href="#cb25-313" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
-<span id="cb25-314"><a href="#cb25-314" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> curve <span class="op">=</span> spec<span class="op">.</span><span class="at">values</span><span class="op">.</span><span class="fu">map</span>((value<span class="op">,</span> i) <span class="kw">=&gt;</span> ({value<span class="op">,</span> <span class="dt">rmse</span><span class="op">:</span> spec<span class="op">.</span><span class="at">rmse</span>[i]}))<span class="op">;</span></span>
-<span id="cb25-315"><a href="#cb25-315" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> scale <span class="op">=</span> spec<span class="op">.</span><span class="at">param</span> <span class="op">===</span> <span class="st">"terms"</span> <span class="op">?</span> <span class="st">"linear"</span> <span class="op">:</span> <span class="st">"log"</span><span class="op">;</span></span>
-<span id="cb25-316"><a href="#cb25-316" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> coefficients <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
-<span id="cb25-317"><a href="#cb25-317" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">520</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">300</span><span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">50</span><span class="op">,</span> <span class="dt">marginTop</span><span class="op">:</span> <span class="dv">22</span><span class="op">,</span></span>
-<span id="cb25-318"><a href="#cb25-318" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [<span class="op">-</span>reach<span class="op">,</span> reach]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"scaled coefficient"</span><span class="op">,</span> <span class="dt">ticks</span><span class="op">:</span> <span class="dv">3</span>}<span class="op">,</span></span>
-<span id="cb25-319"><a href="#cb25-319" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> hyper<span class="op">.</span><span class="at">terms</span><span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="kw">null</span>}<span class="op">,</span></span>
-<span id="cb25-320"><a href="#cb25-320" aria-hidden="true" tabindex="-1"></a>    <span class="dt">fx</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="kw">null</span><span class="op">,</span> <span class="dt">domain</span><span class="op">:</span> shown}<span class="op">,</span></span>
-<span id="cb25-321"><a href="#cb25-321" aria-hidden="true" tabindex="-1"></a>    <span class="dt">color</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> contrast<span class="op">,</span> <span class="dt">range</span><span class="op">:</span> shades}<span class="op">,</span></span>
-<span id="cb25-322"><a href="#cb25-322" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">barX</span>(rows<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"effect"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"term"</span><span class="op">,</span> <span class="dt">fx</span><span class="op">:</span> <span class="st">"name"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> <span class="st">"name"</span>})<span class="op">,</span></span>
-<span id="cb25-323"><a href="#cb25-323" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">ruleX</span>([<span class="dv">0</span>])]</span>
-<span id="cb25-324"><a href="#cb25-324" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
-<span id="cb25-325"><a href="#cb25-325" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> error <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
-<span id="cb25-326"><a href="#cb25-326" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">520</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">220</span><span class="op">,</span></span>
-<span id="cb25-327"><a href="#cb25-327" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">type</span><span class="op">:</span> scale<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> spec<span class="op">.</span><span class="at">param</span><span class="op">,</span> <span class="dt">tickFormat</span><span class="op">:</span> <span class="st">".2~g"</span>}<span class="op">,</span></span>
-<span id="cb25-328"><a href="#cb25-328" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [rmse[<span class="dv">0</span>] <span class="op">-</span> <span class="fl">0.01</span><span class="op">,</span> rmse[<span class="dv">1</span>] <span class="op">+</span> <span class="fl">0.01</span>]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"held-out RMSE (t/ha)"</span>}<span class="op">,</span></span>
-<span id="cb25-329"><a href="#cb25-329" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">line</span>(curve<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"rmse"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="dt">clip</span><span class="op">:</span> <span class="kw">true</span>})<span class="op">,</span></span>
-<span id="cb25-330"><a href="#cb25-330" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">dot</span>(curve<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"rmse"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span> <span class="dt">clip</span><span class="op">:</span> <span class="kw">true</span>})<span class="op">,</span></span>
-<span id="cb25-331"><a href="#cb25-331" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">dot</span>([curve[step]]<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"rmse"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> <span class="st">"#8B1E3F"</span><span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="dv">6</span><span class="op">,</span> <span class="dt">clip</span><span class="op">:</span> <span class="kw">true</span>})]</span>
-<span id="cb25-332"><a href="#cb25-332" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
-<span id="cb25-333"><a href="#cb25-333" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div&gt;</span><span class="sc">${</span>coefficients<span class="sc">}${</span>error<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span><span class="op">;</span></span>
-<span id="cb25-334"><a href="#cb25-334" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb25" data-startfrom="320" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 319;"><span id="cb25-320"><a href="#cb25-320" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb25-321"><a href="#cb25-321" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> all <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">values</span>(hyper<span class="op">.</span><span class="at">methods</span>)<span class="op">;</span></span>
+<span id="cb25-322"><a href="#cb25-322" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> reach <span class="op">=</span> d3<span class="op">.</span><span class="fu">max</span>(all<span class="op">.</span><span class="fu">flatMap</span>(m <span class="kw">=&gt;</span> m<span class="op">.</span><span class="at">effect</span><span class="op">.</span><span class="fu">flat</span>(<span class="dv">2</span>)<span class="op">.</span><span class="fu">map</span>(<span class="bu">Math</span><span class="op">.</span><span class="fu">abs</span>)))<span class="op">;</span></span>
+<span id="cb25-323"><a href="#cb25-323" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rmse <span class="op">=</span> [d3<span class="op">.</span><span class="fu">min</span>(all<span class="op">.</span><span class="fu">flatMap</span>(m <span class="kw">=&gt;</span> m<span class="op">.</span><span class="at">rmse</span>))<span class="op">,</span> <span class="fl">0.8</span>]<span class="op">;</span>   <span class="co">// cap: very large penalties are off scale</span></span>
+<span id="cb25-324"><a href="#cb25-324" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> band <span class="op">=</span> <span class="dv">6</span><span class="op">,</span> n <span class="op">=</span> shown<span class="op">.</span><span class="at">length</span><span class="op">;</span></span>
+<span id="cb25-325"><a href="#cb25-325" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> key <span class="op">=</span> (term<span class="op">,</span> name) <span class="kw">=&gt;</span> term <span class="op">+</span> <span class="st">"|"</span> <span class="op">+</span> name<span class="op">;</span></span>
+<span id="cb25-326"><a href="#cb25-326" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> domain <span class="op">=</span> hyper<span class="op">.</span><span class="at">terms</span><span class="op">.</span><span class="fu">flatMap</span>(term <span class="kw">=&gt;</span> [<span class="op">...</span>shown<span class="op">.</span><span class="fu">map</span>(name <span class="kw">=&gt;</span> <span class="fu">key</span>(term<span class="op">,</span> name))<span class="op">,</span> <span class="fu">key</span>(term<span class="op">,</span> <span class="st">""</span>)])<span class="op">;</span></span>
+<span id="cb25-327"><a href="#cb25-327" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> middle <span class="op">=</span> hyper<span class="op">.</span><span class="at">terms</span><span class="op">.</span><span class="fu">map</span>(term <span class="kw">=&gt;</span> <span class="fu">key</span>(term<span class="op">,</span> shown[<span class="bu">Math</span><span class="op">.</span><span class="fu">floor</span>(n <span class="op">/</span> <span class="dv">2</span>)]))<span class="op">;</span></span>
+<span id="cb25-328"><a href="#cb25-328" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rows <span class="op">=</span> shown<span class="op">.</span><span class="fu">flatMap</span>(name <span class="kw">=&gt;</span> {</span>
+<span id="cb25-329"><a href="#cb25-329" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> g <span class="op">=</span> hyper<span class="op">.</span><span class="at">genotypes</span><span class="op">.</span><span class="fu">indexOf</span>(name)<span class="op">;</span></span>
+<span id="cb25-330"><a href="#cb25-330" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> hyper<span class="op">.</span><span class="at">terms</span><span class="op">.</span><span class="fu">map</span>((term<span class="op">,</span> i) <span class="kw">=&gt;</span> ({name<span class="op">,</span> <span class="dt">band</span><span class="op">:</span> <span class="fu">key</span>(term<span class="op">,</span> name)<span class="op">,</span> <span class="dt">effect</span><span class="op">:</span> spec<span class="op">.</span><span class="at">effect</span>[step][g][i]}))<span class="op">;</span></span>
+<span id="cb25-331"><a href="#cb25-331" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb25-332"><a href="#cb25-332" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> coefficients <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb25-333"><a href="#cb25-333" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">520</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">40</span> <span class="op">+</span> band <span class="op">*</span> domain<span class="op">.</span><span class="at">length</span><span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">56</span><span class="op">,</span></span>
+<span id="cb25-334"><a href="#cb25-334" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [<span class="op">-</span>reach<span class="op">,</span> reach]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"scaled coefficient"</span><span class="op">,</span> <span class="dt">ticks</span><span class="op">:</span> <span class="dv">4</span>}<span class="op">,</span></span>
+<span id="cb25-335"><a href="#cb25-335" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {domain<span class="op">,</span> <span class="dt">ticks</span><span class="op">:</span> middle<span class="op">,</span> <span class="dt">tickFormat</span><span class="op">:</span> d <span class="kw">=&gt;</span> d<span class="op">.</span><span class="fu">split</span>(<span class="st">"|"</span>)[<span class="dv">0</span>]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="kw">null</span><span class="op">,</span> <span class="dt">padding</span><span class="op">:</span> <span class="dv">0</span>}<span class="op">,</span></span>
+<span id="cb25-336"><a href="#cb25-336" aria-hidden="true" tabindex="-1"></a>    <span class="dt">color</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> contrast<span class="op">,</span> <span class="dt">range</span><span class="op">:</span> shades}<span class="op">,</span></span>
+<span id="cb25-337"><a href="#cb25-337" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">barX</span>(rows<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"effect"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"band"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> <span class="st">"name"</span>})<span class="op">,</span> Plot<span class="op">.</span><span class="fu">ruleX</span>([<span class="dv">0</span>])]</span>
+<span id="cb25-338"><a href="#cb25-338" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb25-339"><a href="#cb25-339" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> curve <span class="op">=</span> spec<span class="op">.</span><span class="at">values</span><span class="op">.</span><span class="fu">map</span>((value<span class="op">,</span> i) <span class="kw">=&gt;</span> ({value<span class="op">,</span> <span class="dt">rmse</span><span class="op">:</span> spec<span class="op">.</span><span class="at">rmse</span>[i]}))<span class="op">;</span></span>
+<span id="cb25-340"><a href="#cb25-340" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> scale <span class="op">=</span> spec<span class="op">.</span><span class="at">param</span> <span class="op">===</span> <span class="st">"terms"</span> <span class="op">?</span> <span class="st">"linear"</span> <span class="op">:</span> <span class="st">"log"</span><span class="op">;</span></span>
+<span id="cb25-341"><a href="#cb25-341" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> error <span class="op">=</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
+<span id="cb25-342"><a href="#cb25-342" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">520</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">220</span><span class="op">,</span></span>
+<span id="cb25-343"><a href="#cb25-343" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">type</span><span class="op">:</span> scale<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> spec<span class="op">.</span><span class="at">param</span><span class="op">,</span> <span class="dt">tickFormat</span><span class="op">:</span> <span class="st">".2~g"</span>}<span class="op">,</span></span>
+<span id="cb25-344"><a href="#cb25-344" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [rmse[<span class="dv">0</span>] <span class="op">-</span> <span class="fl">0.01</span><span class="op">,</span> rmse[<span class="dv">1</span>] <span class="op">+</span> <span class="fl">0.01</span>]<span class="op">,</span> <span class="dt">label</span><span class="op">:</span> <span class="st">"held-out RMSE (t/ha)"</span>}<span class="op">,</span></span>
+<span id="cb25-345"><a href="#cb25-345" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">line</span>(curve<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"rmse"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="dt">clip</span><span class="op">:</span> <span class="kw">true</span>})<span class="op">,</span></span>
+<span id="cb25-346"><a href="#cb25-346" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">dot</span>(curve<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"rmse"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="dv">3</span><span class="op">,</span> <span class="dt">clip</span><span class="op">:</span> <span class="kw">true</span>})<span class="op">,</span></span>
+<span id="cb25-347"><a href="#cb25-347" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">dot</span>([curve[step]]<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"rmse"</span><span class="op">,</span> <span class="dt">fill</span><span class="op">:</span> <span class="st">"#8B1E3F"</span><span class="op">,</span> <span class="dt">r</span><span class="op">:</span> <span class="dv">6</span><span class="op">,</span> <span class="dt">clip</span><span class="op">:</span> <span class="kw">true</span>})]</span>
+<span id="cb25-348"><a href="#cb25-348" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
+<span id="cb25-349"><a href="#cb25-349" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> <span class="fu">html</span><span class="vs">`&lt;div&gt;</span><span class="sc">${</span>coefficients<span class="sc">}${</span>error<span class="sc">}</span><span class="vs">&lt;/div&gt;`</span><span class="op">;</span></span>
+<span id="cb25-350"><a href="#cb25-350" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display">
 <div id="ojs-cell-2" data-nodetype="expression">
 
@@ -831,7 +862,7 @@ RAD^3  0.000</code></pre>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script type="ojs-module-contents">
-eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzXG5QbG90ID0gd2luZG93LlBsb3Rcbmh5cGVyID0gRmlsZUF0dGFjaG1lbnQoXCJkYXRhL2ludGVyYWN0aXZlL2h5cGVyLmpzb25cIikuanNvbigpXG5jb250cmFzdCA9IFtcImcxODFcIiwgXCJnMTcxXCIsIFwiZzAyMVwiLCBcImcxNDFcIiwgXCJnMTUxXCJdXG5zaGFkZXMgPSBbXCIjOEIxRTNGXCIsIFwiIzAxNEU4MVwiLCBcIiMwMEE2RDZcIiwgXCIjNkQ4QjFFXCIsIFwiIzZCNzI4MFwiXVxudmlld29mIG1ldGhvZCA9IHNlbGVjdChcIk1ldGhvZFwiLCBPYmplY3Qua2V5cyhoeXBlci5tZXRob2RzKSwgXCJTVExTUVwiKVxuc3BlYyA9IGh5cGVyLm1ldGhvZHNbbWV0aG9kXVxudmlld29mIHNob3duID0gdG9nZ2xlcyhcIkdlbm90eXBlc1wiLCBjb250cmFzdCwgc2hhZGVzKVxudmlld29mIHN0ZXAgPSBzbGlkZXIoc3BlYy5wYXJhbSwgc3BlYy52YWx1ZXMsIE1hdGguZmxvb3Ioc3BlYy52YWx1ZXMubGVuZ3RoIC8gMiksIHYgPT4gKCt2KS50b1ByZWNpc2lvbigyKSlcbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMiIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IntcbiAgY29uc3QgYWxsID0gT2JqZWN0LnZhbHVlcyhoeXBlci5tZXRob2RzKTtcbiAgY29uc3QgcmVhY2ggPSBkMy5tYXgoYWxsLmZsYXRNYXAobSA9PiBtLmVmZmVjdC5mbGF0KDIpLm1hcChNYXRoLmFicykpKTtcbiAgY29uc3Qgcm1zZSA9IFtkMy5taW4oYWxsLmZsYXRNYXAobSA9PiBtLnJtc2UpKSwgMC44XTsgICAvLyBjYXA6IHZlcnkgbGFyZ2UgcGVuYWx0aWVzIGFyZSBvZmYgc2NhbGVcbiAgY29uc3Qgcm93cyA9IHNob3duLmZsYXRNYXAobmFtZSA9PiB7XG4gICAgY29uc3QgZyA9IGh5cGVyLmdlbm90eXBlcy5pbmRleE9mKG5hbWUpO1xuICAgIHJldHVybiBoeXBlci50ZXJtcy5tYXAoKHRlcm0sIGkpID0+ICh7bmFtZSwgdGVybSwgZWZmZWN0OiBzcGVjLmVmZmVjdFtzdGVwXVtnXVtpXX0pKTtcbiAgfSk7XG4gIGNvbnN0IGN1cnZlID0gc3BlYy52YWx1ZXMubWFwKCh2YWx1ZSwgaSkgPT4gKHt2YWx1ZSwgcm1zZTogc3BlYy5ybXNlW2ldfSkpO1xuICBjb25zdCBzY2FsZSA9IHNwZWMucGFyYW0gPT09IFwidGVybXNcIiA/IFwibGluZWFyXCIgOiBcImxvZ1wiO1xuICBjb25zdCBjb2VmZmljaWVudHMgPSBQbG90LnBsb3Qoe1xuICAgIHdpZHRoOiA1MjAsIGhlaWdodDogMzAwLCBtYXJnaW5MZWZ0OiA1MCwgbWFyZ2luVG9wOiAyMixcbiAgICB4OiB7ZG9tYWluOiBbLXJlYWNoLCByZWFjaF0sIGxhYmVsOiBcInNjYWxlZCBjb2VmZmljaWVudFwiLCB0aWNrczogM30sXG4gICAgeToge2RvbWFpbjogaHlwZXIudGVybXMsIGxhYmVsOiBudWxsfSxcbiAgICBmeDoge2xhYmVsOiBudWxsLCBkb21haW46IHNob3dufSxcbiAgICBjb2xvcjoge2RvbWFpbjogY29udHJhc3QsIHJhbmdlOiBzaGFkZXN9LFxuICAgIG1hcmtzOiBbUGxvdC5iYXJYKHJvd3MsIHt4OiBcImVmZmVjdFwiLCB5OiBcInRlcm1cIiwgZng6IFwibmFtZVwiLCBmaWxsOiBcIm5hbWVcIn0pLFxuICAgICAgICAgICAgUGxvdC5ydWxlWChbMF0pXVxuICB9KTtcbiAgY29uc3QgZXJyb3IgPSBQbG90LnBsb3Qoe1xuICAgIHdpZHRoOiA1MjAsIGhlaWdodDogMjIwLFxuICAgIHg6IHt0eXBlOiBzY2FsZSwgbGFiZWw6IHNwZWMucGFyYW0sIHRpY2tGb3JtYXQ6IFwiLjJ+Z1wifSxcbiAgICB5OiB7ZG9tYWluOiBbcm1zZVswXSAtIDAuMDEsIHJtc2VbMV0gKyAwLjAxXSwgbGFiZWw6IFwiaGVsZC1vdXQgUk1TRSAodC9oYSlcIn0sXG4gICAgbWFya3M6IFtQbG90LmxpbmUoY3VydmUsIHt4OiBcInZhbHVlXCIsIHk6IFwicm1zZVwiLCBzdHJva2U6IFwiIzlDQTNBRlwiLCBjbGlwOiB0cnVlfSksXG4gICAgICAgICAgICBQbG90LmRvdChjdXJ2ZSwge3g6IFwidmFsdWVcIiwgeTogXCJybXNlXCIsIGZpbGw6IFwiIzlDQTNBRlwiLCByOiAzLCBjbGlwOiB0cnVlfSksXG4gICAgICAgICAgICBQbG90LmRvdChbY3VydmVbc3RlcF1dLCB7eDogXCJ2YWx1ZVwiLCB5OiBcInJtc2VcIiwgZmlsbDogXCIjOEIxRTNGXCIsIHI6IDYsIGNsaXA6IHRydWV9KV1cbiAgfSk7XG4gIHJldHVybiBodG1sYDxkaXY+JHtjb2VmZmljaWVudHN9JHtlcnJvcn08L2Rpdj5gO1xufVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdtZXRob2QnKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc2hvd24nKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc3RlcCcpIn1dfQ==
+eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzXG5QbG90ID0gd2luZG93LlBsb3Rcbmh5cGVyID0gRmlsZUF0dGFjaG1lbnQoXCJkYXRhL2ludGVyYWN0aXZlL2h5cGVyLmpzb25cIikuanNvbigpXG5jb250cmFzdCA9IFtcImcxODFcIiwgXCJnMTcxXCIsIFwiZzAyMVwiLCBcImcxNDFcIiwgXCJnMTUxXCJdXG5zaGFkZXMgPSBbXCIjOEIxRTNGXCIsIFwiIzAxNEU4MVwiLCBcIiMwMEE2RDZcIiwgXCIjNkQ4QjFFXCIsIFwiIzZCNzI4MFwiXVxudmlld29mIG1ldGhvZCA9IHNlbGVjdChcIk1ldGhvZFwiLCBPYmplY3Qua2V5cyhoeXBlci5tZXRob2RzKSwgXCJTVExTUVwiKVxuc3BlYyA9IGh5cGVyLm1ldGhvZHNbbWV0aG9kXVxudmlld29mIHNob3duID0gdG9nZ2xlcyhcIkdlbm90eXBlc1wiLCBjb250cmFzdCwgc2hhZGVzKVxudmlld29mIHN0ZXAgPSBzbGlkZXIoc3BlYy5wYXJhbSwgc3BlYy52YWx1ZXMsIE1hdGguZmxvb3Ioc3BlYy52YWx1ZXMubGVuZ3RoIC8gMiksIHYgPT4gKCt2KS50b1ByZWNpc2lvbigyKSlcbiJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMiIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6IntcbiAgY29uc3QgYWxsID0gT2JqZWN0LnZhbHVlcyhoeXBlci5tZXRob2RzKTtcbiAgY29uc3QgcmVhY2ggPSBkMy5tYXgoYWxsLmZsYXRNYXAobSA9PiBtLmVmZmVjdC5mbGF0KDIpLm1hcChNYXRoLmFicykpKTtcbiAgY29uc3Qgcm1zZSA9IFtkMy5taW4oYWxsLmZsYXRNYXAobSA9PiBtLnJtc2UpKSwgMC44XTsgICAvLyBjYXA6IHZlcnkgbGFyZ2UgcGVuYWx0aWVzIGFyZSBvZmYgc2NhbGVcbiAgY29uc3QgYmFuZCA9IDYsIG4gPSBzaG93bi5sZW5ndGg7XG4gIGNvbnN0IGtleSA9ICh0ZXJtLCBuYW1lKSA9PiB0ZXJtICsgXCJ8XCIgKyBuYW1lO1xuICBjb25zdCBkb21haW4gPSBoeXBlci50ZXJtcy5mbGF0TWFwKHRlcm0gPT4gWy4uLnNob3duLm1hcChuYW1lID0+IGtleSh0ZXJtLCBuYW1lKSksIGtleSh0ZXJtLCBcIlwiKV0pO1xuICBjb25zdCBtaWRkbGUgPSBoeXBlci50ZXJtcy5tYXAodGVybSA9PiBrZXkodGVybSwgc2hvd25bTWF0aC5mbG9vcihuIC8gMildKSk7XG4gIGNvbnN0IHJvd3MgPSBzaG93bi5mbGF0TWFwKG5hbWUgPT4ge1xuICAgIGNvbnN0IGcgPSBoeXBlci5nZW5vdHlwZXMuaW5kZXhPZihuYW1lKTtcbiAgICByZXR1cm4gaHlwZXIudGVybXMubWFwKCh0ZXJtLCBpKSA9PiAoe25hbWUsIGJhbmQ6IGtleSh0ZXJtLCBuYW1lKSwgZWZmZWN0OiBzcGVjLmVmZmVjdFtzdGVwXVtnXVtpXX0pKTtcbiAgfSk7XG4gIGNvbnN0IGNvZWZmaWNpZW50cyA9IFBsb3QucGxvdCh7XG4gICAgd2lkdGg6IDUyMCwgaGVpZ2h0OiA0MCArIGJhbmQgKiBkb21haW4ubGVuZ3RoLCBtYXJnaW5MZWZ0OiA1NixcbiAgICB4OiB7ZG9tYWluOiBbLXJlYWNoLCByZWFjaF0sIGxhYmVsOiBcInNjYWxlZCBjb2VmZmljaWVudFwiLCB0aWNrczogNH0sXG4gICAgeToge2RvbWFpbiwgdGlja3M6IG1pZGRsZSwgdGlja0Zvcm1hdDogZCA9PiBkLnNwbGl0KFwifFwiKVswXSwgbGFiZWw6IG51bGwsIHBhZGRpbmc6IDB9LFxuICAgIGNvbG9yOiB7ZG9tYWluOiBjb250cmFzdCwgcmFuZ2U6IHNoYWRlc30sXG4gICAgbWFya3M6IFtQbG90LmJhclgocm93cywge3g6IFwiZWZmZWN0XCIsIHk6IFwiYmFuZFwiLCBmaWxsOiBcIm5hbWVcIn0pLCBQbG90LnJ1bGVYKFswXSldXG4gIH0pO1xuICBjb25zdCBjdXJ2ZSA9IHNwZWMudmFsdWVzLm1hcCgodmFsdWUsIGkpID0+ICh7dmFsdWUsIHJtc2U6IHNwZWMucm1zZVtpXX0pKTtcbiAgY29uc3Qgc2NhbGUgPSBzcGVjLnBhcmFtID09PSBcInRlcm1zXCIgPyBcImxpbmVhclwiIDogXCJsb2dcIjtcbiAgY29uc3QgZXJyb3IgPSBQbG90LnBsb3Qoe1xuICAgIHdpZHRoOiA1MjAsIGhlaWdodDogMjIwLFxuICAgIHg6IHt0eXBlOiBzY2FsZSwgbGFiZWw6IHNwZWMucGFyYW0sIHRpY2tGb3JtYXQ6IFwiLjJ+Z1wifSxcbiAgICB5OiB7ZG9tYWluOiBbcm1zZVswXSAtIDAuMDEsIHJtc2VbMV0gKyAwLjAxXSwgbGFiZWw6IFwiaGVsZC1vdXQgUk1TRSAodC9oYSlcIn0sXG4gICAgbWFya3M6IFtQbG90LmxpbmUoY3VydmUsIHt4OiBcInZhbHVlXCIsIHk6IFwicm1zZVwiLCBzdHJva2U6IFwiIzlDQTNBRlwiLCBjbGlwOiB0cnVlfSksXG4gICAgICAgICAgICBQbG90LmRvdChjdXJ2ZSwge3g6IFwidmFsdWVcIiwgeTogXCJybXNlXCIsIGZpbGw6IFwiIzlDQTNBRlwiLCByOiAzLCBjbGlwOiB0cnVlfSksXG4gICAgICAgICAgICBQbG90LmRvdChbY3VydmVbc3RlcF1dLCB7eDogXCJ2YWx1ZVwiLCB5OiBcInJtc2VcIiwgZmlsbDogXCIjOEIxRTNGXCIsIHI6IDYsIGNsaXA6IHRydWV9KV1cbiAgfSk7XG4gIHJldHVybiBodG1sYDxkaXY+JHtjb2VmZmljaWVudHN9JHtlcnJvcn08L2Rpdj5gO1xufVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdtZXRob2QnKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc2hvd24nKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnc3RlcCcpIn1dfQ==
 </script>
 <script type="module">
 if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }

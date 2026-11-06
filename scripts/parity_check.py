@@ -1,4 +1,4 @@
-"""Leave-one-season-out validation for a few genotypes and all fitting
+"""Leave-one-year-out validation for a few genotypes and all fitting
 methods (counterpart of parity_check.R). Run from the repository root with
 PYTHONPATH=python."""
 import pandas as pd

@@ -16,18 +16,18 @@ import pandas as pd
 from scipy.integrate import solve_ivp
 from sklearn.linear_model import ElasticNet
 
-DRIVERS = ["TT", "DL", "RAW", "RAD"]
+DRIVERS = ["Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW"]
 GREY, BLUE, CYAN, BURGUNDY = "#D1D5DB", "#014E81", "#00A6D6", "#8B1E3F"
 
 
-# ---- Drivers: array U[season, day, driver], standardised -------------------
+# ---- Drivers: array U[year, day, driver], standardised -------------------
 def make_drivers(wx, drivers=DRIVERS):
     years = np.sort(wx["year"].unique())
     das0 = wx["das"].min()
     U = np.full((len(years), wx["das"].max() - das0 + 1, len(drivers)), np.nan)
     y = np.searchsorted(years, wx["year"])
     U[y, (wx["das"] - das0).to_numpy(), :] = wx[drivers].to_numpy()
-    for s in range(len(years)):                  # seasons end on different days
+    for s in range(len(years)):                  # years end on different days
         for j in range(len(drivers)):            # pad with the last value
             u = U[s, :, j]
             u[np.isnan(u)] = u[~np.isnan(u)][-1]
@@ -57,15 +57,15 @@ def library_matrix(Z, names, degree=3, pairs=False):
     return np.column_stack(list(cols.values())), list(cols)
 
 
-# Theta[season, day, term]
+# Theta[year, day, term]
 def make_library(drv, degree=3, pairs=False):
-    n_season, n_day, n_driver = drv.U.shape
+    n_year, n_day, n_driver = drv.U.shape
     Z = drv.U.reshape(-1, n_driver)
     L, terms = library_matrix(Z, drv.drivers, degree, pairs)
-    return SimpleNamespace(array=L.reshape(n_season, n_day, -1), terms=terms)
+    return SimpleNamespace(array=L.reshape(n_year, n_day, -1), terms=terms)
 
 
-# ---- Trajectories: array Y[genotype, season, day], NaN after maturity ------
+# ---- Trajectories: array Y[genotype, year, day], NaN after maturity ------
 # nend[g, s] is the number of daily steps of trajectory (g, s).
 def make_trajectories(traj, drv, var="biomass"):
     genotypes = np.sort(traj["genotype"].unique())
@@ -79,15 +79,15 @@ def make_trajectories(traj, drv, var="biomass"):
 
 
 # ---- Regression problem for one genotype -----------------------------------
-# Rows: all days of all seasons. X: library at day t. dy: y(t + 1) - y(t).
+# Rows: all days of all years. X: library at day t. dy: y(t + 1) - y(t).
 def make_design(Theta, tr, genotype):
     g = list(tr.genotypes).index(genotype)
     n = tr.nend[g]
-    seasons = range(len(tr.years))
-    X = np.vstack([Theta.array[s, :n[s], :] for s in seasons])
-    dy = np.concatenate([np.diff(tr.Y[g, s, :n[s] + 1]) for s in seasons])
-    season = np.repeat(np.arange(len(tr.years)), n)
-    return SimpleNamespace(X=X, dy=dy, season=season, terms=Theta.terms)
+    years = range(len(tr.years))
+    X = np.vstack([Theta.array[s, :n[s], :] for s in years])
+    dy = np.concatenate([np.diff(tr.Y[g, s, :n[s] + 1]) for s in years])
+    year = np.repeat(np.arange(len(tr.years)), n)
+    return SimpleNamespace(X=X, dy=dy, year=year, terms=Theta.terms)
 
 
 # ---- Fitting methods: fit(X, dy) -> coefficients (intercept first) ---------
@@ -165,14 +165,14 @@ fit_methods = {
     "ridge": fit_ridge,
     "lasso": fit_lasso,
     "elastic net": fit_enet,
-    "best subset (k = 8)": lambda X, dy: fit_subset(X, dy, 8),
+    # "best subset (k = 8)": exhaustive search, about a second per fit
     "backward (k = 8)": lambda X, dy: fit_subset(X, dy, 8, "backward"),
     "STLSQ": fit_stlsq,
 }
 
 
 # ---- Simulation -------------------------------------------------------------
-# Solves dy/dt = (1, theta(y, u)) coef. coef: season x (1 + terms), U: season
+# Solves dy/dt = (1, theta(y, u)) coef. coef: year x (1 + terms), U: year
 # x day x variable. terms(y, u) is the library; by default U is the library.
 def simulate(coef, U, y0, terms=lambda y, u: u, method="LSODA"):
     D = U.shape[1]
@@ -185,7 +185,7 @@ def simulate(coef, U, y0, terms=lambda y, u: u, method="LSODA"):
         return coef[:, 0] + np.einsum("sk,sk->s", terms(y, u), coef[:, 1:])
 
     return solve_ivp(rhs, (0, D - 1), y0, method=method, t_eval=np.arange(D),
-                     rtol=1e-6, atol=1e-6).y
+                     rtol=1e-4, atol=1e-4).y
 
 
 # n genotypes spread evenly over the ranking of mean final biomass.
@@ -196,17 +196,17 @@ def spread_genotypes(tr, n=3):
     return ranked[np.round(np.linspace(0, len(ranked) - 1, n)).astype(int)]
 
 
-# ---- Validation: leave-one-season-out --------------------------------------
-# Each season is predicted by a model fitted to the other seasons of the same
-# genotype, starting from the mean initial biomass of those seasons.
-# Returns P[genotype, season, day].
+# ---- Validation: leave-one-year-out --------------------------------------
+# Each year is predicted by a model fitted to the other years of the same
+# genotype, starting from the mean initial biomass of those years.
+# Returns P[genotype, year, day].
 def cross_validate(Theta, tr, fit, genotypes=None):
     P = np.full(tr.Y.shape, np.nan)
     S = len(tr.years)
     for g in (tr.genotypes if genotypes is None else genotypes):
         i = list(tr.genotypes).index(g)
         d = make_design(Theta, tr, g)
-        coef = np.array([fit(d.X[d.season != s], d.dy[d.season != s])
+        coef = np.array([fit(d.X[d.year != s], d.dy[d.year != s])
                          for s in range(S)])
         y0 = (tr.Y[i, :, 0].sum() - tr.Y[i, :, 0]) / (S - 1)
         P[i] = simulate(coef, Theta.array, y0)
@@ -229,8 +229,8 @@ def evaluate(P, tr, fixed_day=113):
 
 
 # ---- Genotype ranking -------------------------------------------------------
-# Pd, Yd: genotype x season matrices of predicted and APSIM biomass on one
-# day. For each season: Spearman correlation of the two rankings and overlap
+# Pd, Yd: genotype x year matrices of predicted and APSIM biomass on one
+# day. For each year: Spearman correlation of the two rankings and overlap
 # of the predicted and true top 10 %.
 def rank_scores(Pd, Yd, top=0.1):
     from scipy.stats import spearmanr
@@ -244,7 +244,7 @@ def rank_scores(Pd, Yd, top=0.1):
 
 
 # ---- Interpretation --------------------------------------------------------
-# Standardised drivers on the days that occur in the data (season x day rows).
+# Standardised drivers on the days that occur in the data (year x day rows).
 def observed_points(drv, tr):
     last = tr.nend.max(axis=0)
     rows = [drv.U[s, :last[s]] for s in range(len(tr.years))]

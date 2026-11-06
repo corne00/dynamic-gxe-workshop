@@ -38,14 +38,15 @@ grid <- list(
                        fit = function(v) function(X, dy) fit_enet(X, dy, v)),
   ridge = list(param = "lambda", values = 10^seq(-5, -1, length.out = 11),
                fit = function(v) function(X, dy) fit_ridge(X, dy, v)),
-  `best subset` = list(param = "terms", values = 1:12,
+  `best subset` = list(param = "terms", values = 1:16,
                        fit = function(v) function(X, dy) fit_subset(X, dy, v)),
-  backward = list(param = "terms", values = 1:12,
+  backward = list(param = "terms", values = 1:16,
                   fit = function(v) function(X, dy) {
                     fit_subset(X, dy, v, "backward")
                   }))
 methods <- lapply(grid, function(m) {
-  s <- lapply(m$values, function(v) setting(m$fit(v)))
+  s <- parallel::mclapply(m$values, function(v) setting(m$fit(v)),
+                          mc.cores = parallel::detectCores())
   list(param = m$param, values = m$values,
        effect = lapply(s, `[[`, "effect"),
        nterms = t(sapply(s, `[[`, "nterms")), rmse = sapply(s, `[[`, "rmse"))
