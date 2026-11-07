@@ -9,10 +9,19 @@ dir.create("precomputed", showWarnings = FALSE)
 store <- function(file, x) saveRDS(x, file.path("precomputed", file))
 cores <- parallel::detectCores()
 
-## Held-out predictions of the sparse model, and the method comparison (step 5)
-store("cv_stlsq.rds", cross_validate_par(Theta, tr, fit_stlsq))
-store("cv_methods.rds", t(sapply(fit_methods, function(fit) {
-  evaluate(cross_validate_par(Theta, tr, fit), tr)
+## Held-out predictions of the sparse model, and the method comparison (step 5).
+## OLS, ridge and STLSQ use the moment-based fits (same values as fit_ols,
+## fit_ridge and fit_stlsq); the STLSQ predictions serve both results.
+moment_fit <- list(OLS = list(mpath_ols, 0), ridge = list(mpath_ridge, 1e-3),
+                   STLSQ = list(mpath_stlsq, 0.05))
+P_moment <- lapply(moment_fit, function(m) {
+  cv_moments(Theta, tr, m[[1]], m[[2]], what = "P")[[1]]
+})
+store("cv_stlsq.rds", P_moment$STLSQ)
+store("cv_methods.rds", t(sapply(names(fit_methods), function(name) {
+  P <- if (name %in% names(P_moment)) P_moment[[name]]
+       else cross_validate_par(Theta, tr, fit_methods[[name]])
+  evaluate(P, tr)
 })))
 
 ## Error against the number of terms, with products of pairs (step 5)

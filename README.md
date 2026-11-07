@@ -19,7 +19,7 @@ Python: `PYTHONPATH=python`, then `from dgxe import *`. `scripts/parity_check.R`
 Requires [Quarto](https://quarto.org) and R with `ggplot2`, `glmnet`, `leaps`, `deSolve`, `pracma` and `iml`.
 
 ```sh
-scripts/rebuild.sh   # everything from scratch: precomputed results, figures, one render
+scripts/rebuild.sh   # precomputed results, figures, render; stages whose inputs are unchanged are skipped (--force: everything)
 quarto render        # after text changes only; writes docs/, outputs cached in _freeze/ and precomputed/
 ```
 

@@ -20,18 +20,18 @@ designs <- lapply(cv_genotypes, function(g) make_design(Theta, tr, g))
 sd_x <- lapply(designs, function(d) apply(d$X, 2, sd))
 sd_y <- sapply(designs, function(d) sd(d$dy))
 grid <- list(
-  STLSQ = list(param = "threshold", path = path_stlsq,
-               values = c(0.005, 0.01, 0.02, 0.03, 0.05, 0.08, 0.12, 0.2, 0.3)),
+  STLSQ = list(param = "threshold", path = path_stlsq, mpath = mpath_stlsq,
+               values = signif(10^seq(log10(0.004), log10(0.4), length.out = 25), 2)),
   lasso = list(param = "lambda", path = path_glmnet(1),
-               values = 10^seq(-5, -2.5, length.out = 11)),
+               values = 10^seq(-5, -2.5, length.out = 25)),
   `elastic net` = list(param = "lambda", path = path_glmnet(0.5),
-                       values = 10^seq(-5, -2.5, length.out = 11)),
-  ridge = list(param = "lambda", path = path_ridge,
-               values = 10^seq(-5, -1, length.out = 11)),
+                       values = 10^seq(-5, -2.5, length.out = 25)),
+  ridge = list(param = "lambda", path = path_ridge, mpath = mpath_ridge,
+               values = 10^seq(-5, -1, length.out = 25)),
   `best subset` = list(param = "terms", path = path_subset("exhaustive"),
-                       values = 1:16),
+                       values = 1:24),
   backward = list(param = "terms", path = path_subset("backward"),
-                  values = 1:16))
+                  values = 1:24))
 methods <- lapply(grid, function(m) {
   fits <- lapply(designs, function(d) m$path(d$X, d$dy, m$values))
   i_val <- seq_along(m$values); i_gen <- seq_along(designs)
@@ -48,7 +48,8 @@ methods <- lapply(grid, function(m) {
        nterms = t(sapply(i_val, function(i) sapply(i_gen, function(g) {
          sum(fits[[g]][[i]][-1] != 0)
        }))),
-       rmse = cv_rmse_path(Theta, tr, m$path, m$values, cv_genotypes))
+       rmse = if (is.null(m$mpath)) cv_rmse_path(Theta, tr, m$path, m$values, cv_genotypes)
+               else cv_moments(Theta, tr, m$mpath, m$values, cv_genotypes))
 })
 out(list(terms = colnames(designs[[1]]$X), genotypes = cv_genotypes,
          methods = methods), "hyper.json", 5)

@@ -6,3 +6,5 @@
 .vscode/
 **/*.quarto_ipynb
 __pycache__/
+/.build/
+
