@@ -418,25 +418,53 @@ const Builder = (() => {
   // One line per term, "name = expression" or just "expression".
   const dummy = Object.fromEntries(["Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW", "Tmean", "VPD", "das"]
     .map((v) => [v, new Float64Array([1, 2, 3])]));
-  function parseExtras(text) {
+  function parseExtras(text, traits = []) {
     const terms = [], errors = [];
+    const known = Object.assign({}, dummy);
+    traits.forEach((t) => { known[t] = new Float64Array([1, 2, 3]); });
     text.split("\n").forEach((line, i) => {
       const raw = line.trim();
       if (!raw || raw.startsWith("#")) return;
       const eq = raw.match(/^([A-Za-z_][A-Za-z0-9_.]*)\s*=(?!=)\s*(.+)$/);
       const [name, expr] = eq ? [eq[1], eq[2]] : [raw.replace(/\s+/g, ""), raw];
-      try { evaluate(parseExpression(expr), dummy, 3); terms.push({name, expr}); }
+      try { evaluate(parseExpression(expr), known, 3); terms.push({name, expr}); }
       catch (e) { errors.push({line: i + 1, text: raw, message: e.message}); }
     });
     return {terms, errors};
   }
 
+  // ---- Measured states used like drivers --------------------------------------
+  // A record is the value at the end of a day, so the value of a day is the mean
+  // of the records at its start and end; later days repeat the last value. The
+  // standardised series are scaled like the drivers (over all years and days).
+  const traitCache = new Map();
+  function traitSeries(data, g, name) {
+    const key = `${g}|${name}`;
+    if (traitCache.has(key)) return traitCache.get(key);
+    const source = name === "lai" ? data.L[g] : data.Y[g];
+    const D = data.U[0].length;
+    const raw = source.map((rec) => {
+      const day = new Float64Array(D);
+      for (let d = 0; d < D; d++) {
+        day[d] = d === 0 ? rec[0] : d < rec.length ? (rec[d - 1] + rec[d]) / 2 : day[d - 1];
+      }
+      return day;
+    });
+    let n = 0, sum = 0, sq = 0;
+    for (const row of raw) for (const x of row) { n++; sum += x; sq += x * x; }
+    const mean = sum / n, sd = Math.sqrt(sq / n - mean * mean);
+    const out = {raw, std: raw.map((row) => Float64Array.from(row, (x) => (x - mean) / sd))};
+    traitCache.set(key, out);
+    return out;
+  }
+
   // Standardised columns [year][day] for the extra terms (like the drivers).
   const extraCache = new Map();
-  function extraColumns(data, extras) {
-    const key = extras.map((e) => `${e.name}=${e.expr}`).join(";");
+  function extraColumns(data, extras, g = 0, trait = null) {
+    const key = extras.map((e) => `${e.name}=${e.expr}`).join(";") + `|${g}|${trait}`;
     if (extraCache.has(key)) return extraCache.get(key);
     const S = data.years.length, D = data.U[0].length;
+    const series = trait ? traitSeries(data, g, trait) : null;
     const raw = (y) => {
       const v = {};
       data.drivers.forEach((name, k) => {
@@ -445,6 +473,7 @@ const Builder = (() => {
       v.Tmean = Float64Array.from({length: D}, (_, d) => (v.Tmin[d] + v.Tmax[d]) / 2);
       v.VPD = Float64Array.from({length: D}, (_, d) => 6.108 * Math.exp((17.27 * v.Tmax[d]) / (v.Tmax[d] + 237.3)) - v.VP[d]);
       v.das = Float64Array.from({length: D}, (_, d) => data.das0 + d);
+      if (series) v[trait] = series.raw[y];
       return v;
     };
     const vars = Array.from({length: S}, (_, y) => raw(y));
@@ -469,25 +498,27 @@ const Builder = (() => {
   const cache = new Map();
 
   // Library rows (days 0..nend of every year), and raw sums per year.
-  function prepare(data, g, selected, degree, pairs, extras = []) {
-    const key = [g, selected.join(","), degree, pairs, extras.map((e) => `${e.name}=${e.expr}`).join(";")].join("|");
+  function prepare(data, g, selected, degree, pairs, extras = [], target = "biomass", trait = null) {
+    const key = [g, selected.join(","), degree, pairs, extras.map((e) => `${e.name}=${e.expr}`).join(";"), target, trait].join("|");
     if (cache.has(key)) return cache.get(key);
     if (cache.size > 6) cache.delete(cache.keys().next().value);
     const base = termSpecs(selected, degree, pairs), specs = base.specs;
-    const extra = extraColumns(data, extras);
+    const extra = extraColumns(data, extras, g, trait);
+    const series = trait ? traitSeries(data, g, trait) : null;
     const names = base.names.concat(extra.map((e) => e.name));
     const K = specs.length + extra.length, S = data.years.length;
-    const col = selected.map((d) => data.drivers.indexOf(d));
+    const col = selected.map((d) => (d === trait ? -1 : data.drivers.indexOf(d)));
+    const targetSeries = target === "lai" ? data.L[g] : data.Y[g];
     const years = [];
     const lib = (y, d) => {
-      const u = col.map((c) => data.U[y][d][c]);
+      const u = col.map((c) => (c < 0 ? series.std[y][d] : data.U[y][d][c]));
       const row = new Float64Array(K);
       specs.forEach((s, j) => { row[j] = s.reduce((acc, [i, p]) => acc * u[i] ** p, 1); });
       extra.forEach((e, j) => { row[specs.length + j] = e.values[y][d]; });
       return row;
     };
     for (let y = 0; y < S; y++) {
-      const nend = data.nend[g][y], Y = data.Y[g][y];
+      const nend = data.nend[g][y], Y = targetSeries[y];
       const rows = Array.from({length: Math.min(nend + 2, data.U[y].length)}, (_, d) => lib(y, d));
       const raw = {n: 0, sx: new Float64Array(K), sy: 0, sxx: new Float64Array(K * K),
                    sxy: new Float64Array(K), syy: 0};
@@ -550,7 +581,7 @@ const Builder = (() => {
   // ---- Run: fit to all years, validate leaving one year out ------------------
   function run(data, g, config) {
     const t0 = (typeof performance !== "undefined" ? performance : Date).now();
-    const design = prepare(data, g, config.drivers, config.degree, config.pairs, config.extras || []);
+    const design = prepare(data, g, config.drivers, config.degree, config.pairs, config.extras || [], config.target || "biomass", config.trait || null);
     const {K, years, total} = design;
     const method = methods(K)[config.method];
     const full = method.fit(centred(total, K), config.value);
@@ -584,7 +615,7 @@ const Builder = (() => {
     };
   }
 
-  return {termSpecs, methods, prepare, run, centred, fits, integrate, parseExtras, parseExpression, evaluate, extraColumns};
+  return {termSpecs, methods, prepare, run, centred, fits, integrate, parseExtras, parseExpression, evaluate, extraColumns, traitSeries};
 })();
 
 if (typeof module !== "undefined") module.exports = Builder;

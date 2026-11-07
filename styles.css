@@ -68,3 +68,5 @@ figure img, .cell-output-display img { max-width: 100%; }
   border-radius: 3px; resize: vertical; }
 .dgxe-expressions .dgxe-buttons { margin-top: .4rem; }
 .dgxe-expressions .dgxe-buttons button { font-size: .8rem; padding: .1rem .55rem; }
+
+.dgxe-equation { overflow-x: auto; font-size: 0.85em; margin: 0.2rem 0 0.8rem; }

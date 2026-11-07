@@ -2,7 +2,7 @@
 title: "8 · Build your own model"
 ---
 
-Choose the drivers, the library and the fitting method, and see the resulting equation and its prediction for years that were left out of the fit. The calculations run in the browser and follow the functions of the previous steps: the genotype is fitted to all years for the coefficients, and leave-one-year-out validation gives the held-out error.
+Choose the modelled state, the drivers, the library and the fitting method, and see the resulting equation and its prediction for years that were left out of the fit. The calculations run in the browser and follow the functions of the previous steps: the genotype is fitted to all years for the coefficients, and leave-one-year-out validation gives the held-out error.
 
 ```{ojs}
 //| echo: false
@@ -10,7 +10,11 @@ d3 = window.d3
 Plot = window.Plot
 builder = FileAttachment("data/interactive/builder.json").json()
 palette = ["#014E81", "#00A6D6", "#8B1E3F", "#469C2A", "#6F1D77", "#EF60A3", "#00A390", "#6B7280"]
+viewof stateName = select("Modelled state", ["biomass", "LAI"], "biomass")
+stateKey = stateName === "LAI" ? "lai" : "biomass"
+traitKey = stateKey === "lai" ? "biomass" : "lai"
 viewof chosen = toggles("Drivers", builder.drivers, builder.drivers.map(() => "#014E81"), builder.drivers)
+viewof measured = buttons(stateKey === "lai" ? "Measured biomass as input" : "Measured LAI as input", ["no", "yes"], "no")
 viewof degree = buttons("Powers up to degree", [1, 2, 3], 3)
 viewof products = buttons("Products of pairs", ["no", "yes"], "no")
 examples = [
@@ -24,18 +28,22 @@ examples = [
   {label: "RAD / DL", line: "ratio = RAD / DL"},
   {label: "temperature × water", line: "TW = Tmean * RAW"},
   {label: "lagged Tmax", line: "lag3 = lag(Tmax, 3)"},
-  {label: "yearly cycle", line: "cycle = sin(2 * pi * das / 365)"}]
+  {label: "yearly cycle", line: "cycle = sin(2 * pi * das / 365)"},
+  {label: "canopy light (measured LAI)", line: "canopy = lai * RAD"},
+  {label: "LAI, 5 days (measured LAI)", line: "lai5 = roll(lai, 5)"}]
 viewof extraText = expressions("Extra terms", examples)
-parsed = Builder.parseExtras(extraText)
+traitName = measured === "yes" ? traitKey : null
+drivers = traitName ? [...chosen, traitName] : chosen
+parsed = Builder.parseExtras(extraText, traitName ? [traitName] : [])
 extras = parsed.terms
 html`${parsed.errors.map(e => html`<p class="interactive-note">Line ${e.line}: ${e.message}</p>`)}`
 ```
 
-Extra terms are functions of the raw weather. Each line adds one term to the library, standardised like the drivers: write `name = expression`, or click an example. The variables are `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT`, `RAW`, `Tmean`, `VPD` (vapour pressure deficit, from `Tmax` and `VP`) and `das` (days after sowing). The operators are `+ - * / ^`, and the functions are `exp`, `log`, `sqrt`, `abs`, `sin`, `cos`, `tan`, `tanh`, `min` and `max` (elementwise), `roll(x, k)` (mean of the last `k` days), `cum(x)` and `lag(x, k)`.
+Extra terms are functions of the raw weather. Each line adds one term to the library, standardised like the drivers: write `name = expression`, or click an example. The variables are `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT`, `RAW`, `Tmean`, `VPD` (vapour pressure deficit, from `Tmax` and `VP`), `das` (days after sowing) and, with the measured input switched on, `lai` or `biomass`. The operators are `+ - * / ^`, and the functions are `exp`, `log`, `sqrt`, `abs`, `sin`, `cos`, `tan`, `tanh`, `min` and `max` (elementwise), `roll(x, k)` (mean of the last `k` days), `cum(x)` and `lag(x, k)`.
 
 ```{ojs}
 //| echo: false
-library = Builder.termSpecs(chosen, degree, products === "yes")
+library = Builder.termSpecs(drivers, degree, products === "yes")
 K = library.names.length + extras.length
 catalogue = Builder.methods(K)
 available = Object.keys(catalogue).filter(m => catalogue[m].values.length > 0)
@@ -53,7 +61,8 @@ viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
 result = {
   try {
     return Builder.run(builder, builder.genotypes.indexOf(genotype), {
-      drivers: chosen, degree, pairs: products === "yes", extras, method, value: spec.values[step]});
+      drivers, degree, pairs: products === "yes", extras, method, value: spec.values[step],
+      target: stateKey, trait: traitName});
   } catch (e) {
     return {error: e.message};
   }
@@ -62,7 +71,22 @@ result = {
 
 ```{ojs}
 //| echo: false
-result.error ? html`<p class="interactive-note">${result.error}</p>` : html`<p class="interactive-note">${K} terms in the library, ${result.nterms} retained. Held-out RMSE ${result.rmse.toFixed(3)} t/ha over all years; at maturity ${result.maturityRmse.toFixed(3)} t/ha. (${result.ms.toFixed(0)} ms)</p>`
+unit = stateKey === "lai" ? "m²/m²" : "t/ha"
+stateLabel = stateKey === "lai" ? "LAI" : "biomass"
+lhs = stateKey === "lai" ? "\\frac{d\\,\\mathrm{LAI}}{dt}" : "\\frac{d\\,\\mathrm{B}}{dt}"
+series = stateKey === "lai" ? builder.L : builder.Y
+```
+
+```{ojs}
+//| echo: false
+result.error ? html`<p class="interactive-note">${result.error}</p>` : html`<p class="interactive-note">${K} terms in the library, ${result.nterms} retained. Held-out RMSE ${result.rmse.toFixed(3)} ${unit} over all years; ${stateKey === "lai" ? "at peak LAI" : "at maturity"} ${result.maturityRmse.toFixed(3)} ${unit}. (${result.ms.toFixed(0)} ms)</p>`
+```
+
+```{ojs}
+//| echo: false
+result.error ? html`` : html`<div>
+  ${Equation.element(Equation.latex(result.terms, result.intercept, result.coef, lhs))}
+  <p class="interactive-note">The fit for all years of genotype ${genotype}. The terms are functions of the standardised drivers${traitName ? `, with the measured ${traitName === "lai" ? "LAI" : "biomass"} as an additional driver` : ""}.</p></div>`
 ```
 
 ```{ojs}
@@ -80,28 +104,29 @@ result.error ? html`<p class="interactive-note">${result.error}</p>` : html`<p c
   });
   const g = builder.genotypes.indexOf(genotype), s = year, shown = builder.years[s];
   const das = i => builder.das0 + i;
-  const observed = builder.Y[g][s].map((y, i) => ({das: das(i), y}));
+  const observed = series[g][s].map((y, i) => ({das: das(i), y}));
   const predicted = result.predicted[s].map((y, i) => ({das: das(i), y}));
   const trajectory = Plot.plot({
     width: 520, height: 260, marginLeft: 50,
-    x: {label: "days after sowing"}, y: {label: "biomass (t/ha)", domain: [0, d3.max([...observed, ...predicted], d => d.y) * 1.05]},
+    x: {label: "days after sowing"}, y: {label: `${stateLabel} (${unit})`, domain: [0, d3.max([...observed, ...predicted], d => d.y) * 1.05]},
     marks: [Plot.line(observed, {x: "das", y: "y", stroke: "#9CA3AF", strokeWidth: 4}),
             Plot.line(predicted, {x: "das", y: "y", stroke: "#8B1E3F", strokeWidth: 2})]
   });
+  const summary = a => stateKey === "lai" ? d3.max(a) : a.at(-1);
   const finals = builder.years.map((yr, i) => ({
-    year: yr, observed: builder.Y[g][i].at(-1), predicted: result.predicted[i].at(-1)}));
+    year: yr, observed: summary(series[g][i]), predicted: summary(result.predicted[i])}));
   const [lo, hi] = d3.extent(finals.flatMap(d => [d.observed, d.predicted]));
   const scatter = Plot.plot({
     width: 520, height: 300, marginLeft: 50,
-    x: {domain: [lo - 0.5, hi + 0.5], label: "APSIM biomass at maturity (t/ha)"},
-    y: {domain: [lo - 0.5, hi + 0.5], label: "predicted (t/ha)"},
+    x: {domain: [lo - 0.5, hi + 0.5], label: `APSIM ${stateKey === "lai" ? "peak LAI" : "biomass at maturity"} (${unit})`},
+    y: {domain: [lo - 0.5, hi + 0.5], label: `predicted (${unit})`},
     color: {type: "linear", scheme: "blues"},
     marks: [Plot.line([[lo - 0.5, lo - 0.5], [hi + 0.5, hi + 0.5]], {stroke: "#9CA3AF"}),
             Plot.dot(finals, {x: "observed", y: "predicted", fill: "year", stroke: "#014E81", r: 4}),
             Plot.dot(finals.filter(d => d.year === shown), {x: "observed", y: "predicted", fill: "#8B1E3F", stroke: "#8B1E3F", r: 6})]
   });
   return html`<div>${coefficients}${trajectory}${scatter}</div>
-    <p class="interactive-note">Grey: APSIM. Red: prediction for year ${shown}, from a model fitted to the other years. Each point in the lower panel is one year.</p>`;
+    <p class="interactive-note">Grey: APSIM. Red: prediction for year ${shown}, from a model fitted to the other years. Each point in the lower panel is one year.${traitName ? " The measured input of the held-out year is used in the prediction." : ""}</p>`;
 }
 ```
 
@@ -124,28 +149,34 @@ code = {
   }[method];
   const v = spec.values[step];
   const rArgs = call[1](v), pyArgs = call[2](v);
-  const rDrivers = `c(${chosen.map(d => `"${d}"`).join(", ")})`;
-  const pyDrivers = `[${chosen.map(d => `"${d}"`).join(", ")}]`;
+  const rDrivers = `c(${drivers.map(d => `"${d}"`).join(", ")})`;
+  const pyDrivers = `[${drivers.map(d => `"${d}"`).join(", ")}]`;
   const pairs = products === "yes";
+  const tr = traitName ? `"${traitName}"` : null;
+  const rLoad = tr ? `wg <- with_traits(wx, traj, "${genotype}", ${tr})\n` : "";
+  const pyLoad = tr ? `wg = with_traits(wx, traj, "${genotype}", [${tr}])\n` : "";
+  const W = tr ? "wg" : "wx";
+  const rTarget = stateKey === "lai" ? `, "lai"` : "";
+  const pyTarget = stateKey === "lai" ? `, "lai"` : "";
   const rExtra = extras.length ? `
-extra <- extra_terms(wx, c(${extras.map(e => `${e.name} = "${e.expr}"`).join(",\n                           ")}))
+extra <- extra_terms(${W}, c(${extras.map(e => `${e.name} = "${e.expr}"`).join(",\n                           ")}))
 Theta <- bind_terms(Theta, extra)` : "";
   const pyExtra = extras.length ? `
-extra = extra_terms(wx, {${extras.map(e => `"${e.name}": "${e.expr}"`).join(",\n                         ")}})
+extra = extra_terms(${W}, {${extras.map(e => `"${e.name}": "${e.expr}"`).join(",\n                         ")}})
 Theta = bind_terms(Theta, extra)` : "";
   return {
-    r: `drv <- make_drivers(wx, ${rDrivers})
+    r: `${rLoad}drv <- make_drivers(${W}, ${rDrivers})
 Theta <- make_library(drv, degree = ${degree}, pairs = ${pairs ? "TRUE" : "FALSE"})${rExtra}
-tr <- make_trajectories(traj, drv)
+tr <- make_trajectories(traj, drv${rTarget})
 fit <- function(X, dy) ${call[0]}(X, dy${rArgs})
 
 d <- make_design(Theta, tr, "${genotype}")
 coef <- fit(d$X, d$dy)
 P <- cross_validate(Theta, tr, fit, "${genotype}")
 evaluate(P, tr)`,
-    py: `drv = make_drivers(wx, ${pyDrivers})
+    py: `${pyLoad}drv = make_drivers(${W}, ${pyDrivers})
 Theta = make_library(drv, degree=${degree}, pairs=${pairs ? "True" : "False"})${pyExtra}
-tr = make_trajectories(traj, drv)
+tr = make_trajectories(traj, drv${pyTarget})
 
 def fit(X, dy):
     return ${call[0]}(X, dy${pyArgs})
@@ -175,4 +206,4 @@ html`<pre class="sourceCode python"><code>${code.py}</code></pre>`
 
 :::
 
-Best subset is offered only for libraries with a small number of subsets; backward elimination approximates it for larger libraries.
+Best subset is offered only for libraries with a small number of subsets; backward elimination approximates it for larger libraries. Only one state is modelled at a time: the other state may enter the right-hand side as a measured input, so the prediction of a held-out year uses its measured values and the model is not a coupled system for both states.

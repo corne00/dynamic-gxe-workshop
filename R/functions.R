@@ -81,8 +81,11 @@ extra_terms <- function(wx, exprs, years = sort(unique(wx$year))) {
              dimnames = list(years, NULL, names(exprs)))
   for (y in seq_along(years)) {
     w <- wx[wx$year == years[y], ]
-    v <- lapply(w[setdiff(names(w), c("year", "das"))],
-                function(x) c(x, rep(tail(x, 1), nd - length(x))))
+    v <- lapply(w[setdiff(names(w), c("year", "das"))], function(x) {
+      x <- c(x, rep(NA, nd - length(x)))
+      x[is.na(x)] <- tail(x[!is.na(x)], 1)     # later days repeat the last value
+      x
+    })
     v$das <- das0 + seq_len(nd) - 1
     v$Tmean <- (v$Tmin + v$Tmax) / 2
     v$VPD <- 6.108 * exp(17.27 * v$Tmax / (v$Tmax + 237.3)) - v$VP
@@ -100,6 +103,26 @@ bind_terms <- function(Theta, extra) {
   d <- dim(Theta)
   array(c(Theta, extra), c(d[1:2], d[3] + dim(extra)[3]),
         dimnames = list(NULL, NULL, c(dimnames(Theta)[[3]], dimnames(extra)[[3]])))
+}
+
+## ---- Measured traits as drivers ---------------------------------------------
+## Adds measured states of one genotype (columns of traj, for example "lai" or
+## "biomass") to the weather table, so that they can be used like drivers. A
+## record is the value at the end of a day, so the value of a day is the mean of
+## the records at its start and end.
+with_traits <- function(wx, traj, genotype, vars = "lai") {
+  t <- traj[traj$genotype == genotype, ]
+  for (v in vars) {
+    wx[[v]] <- NA_real_
+    for (y in unique(wx$year)) {
+      r <- t[t$year == y, ]
+      r <- r[order(r$das), ]
+      day <- c(r[[v]][1], (r[[v]][-1] + r[[v]][-nrow(r)]) / 2)
+      i <- wx$year == y
+      wx[[v]][i] <- day[match(wx$das[i], r$das)]
+    }
+  }
+  wx
 }
 
 ## ---- Trajectories: array Y[genotype, year, day], NA after maturity --------

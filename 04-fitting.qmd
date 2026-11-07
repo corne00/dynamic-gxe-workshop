@@ -350,3 +350,10 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
   return html`<div>${coefficients}${error}</div>`;
 }
 ```
+
+```{ojs}
+//| echo: false
+shown.length ? html`<div>
+  <p class="interactive-note">Fitted equation for genotype ${shown[0]} (${method}, ${spec.param} ${(+spec.values[step]).toPrecision(2)}); the terms are functions of the standardised drivers.</p>
+  ${Equation.element(Equation.latex(hyper.terms, spec.intercept[step][hyper.genotypes.indexOf(shown[0])], spec.coef[step][hyper.genotypes.indexOf(shown[0])]))}</div>` : html``
+```

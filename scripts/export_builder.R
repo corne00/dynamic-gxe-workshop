@@ -1,9 +1,11 @@
 ## Data for the "build your own model" page (data/interactive/builder.json):
-## standardised drivers of all years and the biomass of a few genotypes.
+## standardised drivers of all years, and biomass (Y) and LAI (L) of a few
+## genotypes.
 library(jsonlite)
 source("R/pipeline.R")
 
 genotypes <- spread_genotypes(tr, 8)
+trl <- make_trajectories(traj, drv, "lai")
 pick <- match(genotypes, tr$genotypes)
 write_json(list(
   drivers = drv$drivers, center = drv$center, scale = drv$scale,
@@ -14,5 +16,8 @@ write_json(list(
   nend = lapply(pick, function(g) tr$nend[g, ]),
   Y = lapply(pick, function(g) lapply(seq_along(tr$years), function(y) {
     round(tr$Y[g, y, 1:(tr$nend[g, y] + 1)], 4)
+  })),
+  L = lapply(pick, function(g) lapply(seq_along(tr$years), function(y) {
+    round(trl$Y[g, y, 1:(tr$nend[g, y] + 1)], 4)
   }))),
   "data/interactive/builder.json", auto_unbox = TRUE, digits = NA)

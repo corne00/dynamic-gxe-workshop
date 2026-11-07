@@ -39,6 +39,12 @@ methods <- lapply(grid, function(m) {
        effect = lapply(i_val, function(i) lapply(i_gen, function(g) {
          unname(fits[[g]][[i]][-1] * sd_x[[g]] / sd_y[g])
        })),
+       coef = lapply(i_val, function(i) lapply(i_gen, function(g) {
+         signif(unname(fits[[g]][[i]][-1]), 4)
+       })),
+       intercept = lapply(i_val, function(i) sapply(i_gen, function(g) {
+         signif(unname(fits[[g]][[i]][1]), 4)
+       })),
        nterms = t(sapply(i_val, function(i) sapply(i_gen, function(g) {
          sum(fits[[g]][[i]][-1] != 0)
        }))),

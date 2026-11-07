@@ -7,9 +7,12 @@ for (const cf of ref) {
   const values = Builder.methods(1000)[cf.method].values;
   for (const r of cf.results) {
     const g = data.genotypes.indexOf(r.genotype);
-    const out = Builder.run(data, g, {drivers: cf.drivers, degree: cf.degree, pairs: cf.pairs,
-                                      method: cf.method, value: cf.value ?? null});
-    console.log(cf.method.padEnd(12), cf.drivers.length, cf.degree, cf.pairs ? "pairs" : "     ",
+    const trait = cf.trait ?? null;
+    const extras = cf.extras ? Object.entries(cf.extras).map(([name, expr]) => ({name, expr})) : [];
+    const out = Builder.run(data, g, {drivers: trait ? [...cf.drivers, trait] : cf.drivers, degree: cf.degree,
+                                      pairs: cf.pairs, method: cf.method, value: cf.value ?? null,
+                                      target: cf.target ?? "biomass", trait, extras});
+    console.log(cf.method.padEnd(12), cf.drivers.length, cf.degree, cf.pairs ? "pairs" : "     ", (cf.target ?? "biomass").padEnd(7), (cf.trait ?? "-").padEnd(7),
       "R", r.rmse.toFixed(4), "JS", out.rmse.toFixed(4),
       "| maturity R", r.maturity.toFixed(3), "JS", out.maturityRmse.toFixed(3),
       "| terms", r.nterms, out.nterms, "|", out.ms.toFixed(0), "ms");

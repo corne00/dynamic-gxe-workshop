@@ -88,7 +88,8 @@ def extra_terms(wx, exprs, years=None):
     X = np.full((len(years), nd, len(exprs)), np.nan)
     for s, year in enumerate(years):
         w = wx[wx["year"] == year]
-        v = {c: np.concatenate([w[c], np.full(nd - len(w), w[c].iloc[-1])])
+        v = {c: pd.Series(w[c].to_numpy(), index=w["das"].to_numpy() - das0)
+                  .reindex(range(nd)).ffill().to_numpy()    # repeat the last value
              for c in w.columns if c not in ("year", "das")}
         v["das"] = das0 + np.arange(nd)
         v["Tmean"] = (v["Tmin"] + v["Tmax"]) / 2
@@ -104,6 +105,26 @@ def extra_terms(wx, exprs, years=None):
 def bind_terms(Theta, extra):
     return SimpleNamespace(array=np.concatenate([Theta.array, extra.array], axis=2),
                            terms=Theta.terms + extra.terms)
+
+
+# ---- Measured traits as drivers --------------------------------------------
+# Adds measured states of one genotype (columns of traj, for example "lai" or
+# "biomass") to the weather table, so that they can be used like drivers. A
+# record is the value at the end of a day, so the value of a day is the mean of
+# the records at its start and end.
+def with_traits(wx, traj, genotype, vars=("lai",)):
+    wx = wx.copy()
+    t = traj[traj["genotype"] == genotype]
+    for v in vars:
+        wx[v] = np.nan
+        for year, r in t.groupby("year"):
+            r = r.sort_values("das")
+            x = r[v].to_numpy()
+            day = pd.Series(np.concatenate([[x[0]], (x[1:] + x[:-1]) / 2]),
+                            index=r["das"].to_numpy())
+            i = (wx["year"] == year).to_numpy()
+            wx.loc[i, v] = day.reindex(wx.loc[i, "das"]).to_numpy()
+    return wx
 
 
 # ---- Trajectories: array Y[genotype, year, day], NaN after maturity ------

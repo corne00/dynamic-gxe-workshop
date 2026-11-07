@@ -25,6 +25,7 @@ All functions are in `R/functions.R` (R) and `python/dgxe.py` (Python), with the
 | `make_drivers(wx)` | standardised drivers `U[year, day, driver]` |
 | `make_library(drv, degree, pairs)` | library `Theta[year, day, term]` |
 | `extra_terms(wx, exprs)`, `bind_terms(Theta, extra)` | extra library terms from expressions of the raw weather |
+| `with_traits(wx, traj, genotype, vars)` | adds measured states (`"lai"`, `"biomass"`) to the weather as day series, so they can be drivers or appear in expressions |
 | `make_trajectories(traj, drv, var)` | response `Y[genotype, year, day]` |
 | `make_design(Theta, tr, genotype)` | design matrix `X` and growth rates `dy` (centered differences) |
 | `fit_ols`, `fit_ridge`, `fit_lasso`, `fit_enet`, `fit_subset`, `fit_stlsq` | fitting methods `fit(X, dy)` |

@@ -29,7 +29,7 @@ Publish with GitHub Pages: Settings → Pages → Deploy from a branch → `main
 
 ## Interactive figures
 
-Pages 1 and 4–8 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute.R` (which runs `scripts/precompute_interactive.R`) and `scripts/precompute_weather.R`; both write `data/interactive/*.json`. Page 8 fits models in the browser, with optional extra terms typed as expressions (also available as `extra_terms` in R and Python) (`js/builder.js`, data from `scripts/export_builder.R`); `scripts/builder_check.js` compares it with the R functions (`scripts/builder_reference.R`). Page 1 has a toy of the chain environment, response and biomass, driven by the observed temperature of a Narrabri year.
+Pages 1 and 4–8 contain sliders and menus (Observable JS, with `d3` and Observable Plot in `js/`, no external requests). They read results computed beforehand by `scripts/precompute.R` (which runs `scripts/precompute_interactive.R`) and `scripts/precompute_weather.R`; both write `data/interactive/*.json`. Page 8 fits models in the browser, with the modelled state (biomass or LAI), the other state optionally as a measured input (`with_traits` in R and Python), the fitted equation in LaTeX (`js/equation.js`), and optional extra terms typed as expressions (also available as `extra_terms` in R and Python) (`js/builder.js`, data from `scripts/export_builder.R`); `scripts/builder_check.js` compares it with the R functions (`scripts/builder_reference.R`). Page 1 has a toy of the chain environment, response and biomass, driven by the observed temperature of a Narrabri year.
 
 ## Layout
 
