@@ -78,9 +78,9 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108a"></script>
-<script src="js/builder.js?v=20261108a"></script>
-<script src="js/equation.js?v=20261108a"></script>
+<script src="js/controls.js?v=20261108c"></script>
+<script src="js/builder.js?v=20261108c"></script>
+<script src="js/equation.js?v=20261108c"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -358,14 +358,26 @@ window.Quarto = {
 <td>leave-one-year-out predictions</td>
 </tr>
 <tr class="even">
+<td><code>make_design_states(Theta, trs, genotype, drivers, degree, pairs, feedback)</code></td>
+<td>design with state terms (<code>state_terms</code>) and one column of <code>dy</code> per modelled state; <code>trs</code> is a list of trajectory sets, one per state</td>
+</tr>
+<tr class="odd">
+<td><code>simulate_states(coef, U, y0, terms)</code></td>
+<td>solution of the coupled system; years that blow up are returned as <code>NA</code></td>
+</tr>
+<tr class="even">
+<td><code>cross_validate_states(Theta, trs, fit, genotypes, drivers, degree, pairs, feedback)</code></td>
+<td>leave-one-year-out predictions of the (coupled) model, one <code>P</code> per state, and the number of diverged years</td>
+</tr>
+<tr class="odd">
 <td><code>evaluate(P, tr)</code></td>
 <td>trajectory, fixed-day and maturity RMSE</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>ale_curve(rate, Z, j)</code></td>
 <td>accumulated local effect of driver <code>j</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>rank_scores(Pd, Yd)</code></td>
 <td>ranking metrics</td>
 </tr>

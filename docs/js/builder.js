@@ -615,7 +615,212 @@ const Builder = (() => {
     };
   }
 
-  return {termSpecs, methods, prepare, run, centred, fits, integrate, parseExtras, parseExpression, evaluate, extraColumns, traitSeries};
+  // ---- State feedback and coupled models ---------------------------------------
+  // The modelled states enter the library through standardised terms (centre and
+  // standard deviation of the genotype's records): powers of each state, and with
+  // products also products of states and products of a state with the powers 1 and
+  // 2 of each driver (counterpart of state_terms in R/functions.R). Every state has
+  // its own equation, fitted with the same method; the system is integrated with
+  // fixed-step RK4 (a quarter of a day), and a held-out year whose solution exceeds
+  // ten times the largest observed value is reported as diverged.
+  const stateSeries = (data, g, name) => (name === "lai" ? data.L[g] : data.Y[g]);
+
+  function stateScale(series) {
+    let n = 0, sum = 0, sq = 0;
+    for (const rec of series) for (const x of rec) { n++; sum += x; sq += x * x; }
+    const center = sum / n;
+    return {center, scale: Math.sqrt(sq / n - center * center)};
+  }
+
+  // Terms {a, p, b, q, c}: z_a^p times z_b^q (b >= 0), a library column c (c >= 0) or 1.
+  function stateSpecs(states, base, degree, pairs) {
+    const name = (x, p) => (p === 1 ? x : `${x}^${p}`);
+    const inter = [];                     // library columns that interact with a state
+    base.specs.forEach((sp, j) => { if (sp.length === 1 && sp[0][1] <= 2) inter.push(j); });
+    const specs = [], names = [];
+    states.forEach((a, i) => {
+      for (let p = 1; p <= degree; p++) { specs.push({a: i, p, b: -1, q: 0, c: -1}); names.push(name(a, p)); }
+    });
+    if (pairs) {
+      for (let i = 0; i < states.length; i++) for (let j = i + 1; j < states.length; j++) {
+        for (let p = 1; p <= 2; p++) for (let q = 1; q <= 2; q++) {
+          specs.push({a: i, p, b: j, q, c: -1}); names.push(`${name(states[i], p)}*${name(states[j], q)}`);
+        }
+      }
+      states.forEach((a, i) => {
+        for (const c of inter) for (let p = 1; p <= 2; p++) {
+          specs.push({a: i, p, b: -1, q: 0, c}); names.push(`${name(a, p)}*${base.names[c]}`);
+        }
+      });
+    }
+    return {specs, names};
+  }
+
+  // State terms for the states z (standardised) and the library columns x.
+  function stateRow(specs, z, x, out, offset) {
+    for (let s = 0; s < specs.length; s++) {
+      const t = specs[s];
+      let v = z[t.a] ** t.p;
+      if (t.b >= 0) v *= z[t.b] ** t.q;
+      else if (t.c >= 0) v *= x[t.c];
+      out[offset + s] = v;
+    }
+  }
+
+  const stateCache = new Map();
+  function prepareStates(data, g, config) {
+    const {states, drivers, degree, pairs, feedback, trait = null} = config, extras = config.extras || [];
+    const key = [g, states.join("+"), drivers.join(","), degree, pairs, feedback, trait,
+                 extras.map((e) => `${e.name}=${e.expr}`).join(";")].join("|");
+    if (stateCache.has(key)) return stateCache.get(key);
+    if (stateCache.size > 4) stateCache.delete(stateCache.keys().next().value);
+    const base = prepare(data, g, drivers, degree, pairs, extras, states[0], trait);
+    const Kw = base.K, S = data.years.length, m = states.length;
+    const series = states.map((n) => stateSeries(data, g, n));
+    const scales = series.map(stateScale);
+    const ss = feedback ? stateSpecs(states, termSpecs(drivers, degree, pairs), degree, pairs) : {specs: [], names: []};
+    const Kt = Kw + ss.specs.length, names = base.names.concat(ss.names);
+    const years = [], z = new Float64Array(m), x = new Float64Array(Kt);
+    const total = {n: 0, sx: new Float64Array(Kt), sxx: new Float64Array(Kt * Kt),
+                   sy: new Float64Array(m), sxy: Array.from({length: m}, () => new Float64Array(Kt)), syy: new Float64Array(m)};
+    for (let y = 0; y < S; y++) {
+      const {rows} = base.years[y], nend = data.nend[g][y];
+      const raw = {n: nend - 1, sx: new Float64Array(Kt), sxx: new Float64Array(Kt * Kt),
+                   sy: new Float64Array(m), sxy: Array.from({length: m}, () => new Float64Array(Kt)), syy: new Float64Array(m)};
+      for (let d = 1; d < nend; d++) {
+        for (let j = 0; j < Kw; j++) x[j] = (rows[d][j] + rows[d + 1][j]) / 2;
+        if (feedback) {
+          for (let k = 0; k < m; k++) z[k] = (series[k][y][d] - scales[k].center) / scales[k].scale;
+          stateRow(ss.specs, z, x, x, Kw);
+        }
+        for (let k = 0; k < m; k++) {
+          const dy = (series[k][y][d + 1] - series[k][y][d - 1]) / 2;
+          raw.sy[k] += dy; raw.syy[k] += dy * dy;
+          for (let j = 0; j < Kt; j++) raw.sxy[k][j] += x[j] * dy;
+        }
+        for (let j = 0; j < Kt; j++) {
+          raw.sx[j] += x[j];
+          for (let i = 0; i <= j; i++) raw.sxx[j * Kt + i] += x[j] * x[i];
+        }
+      }
+      for (let j = 0; j < Kt; j++) for (let i = j + 1; i < Kt; i++) raw.sxx[j * Kt + i] = raw.sxx[i * Kt + j];
+      years.push({rows, raw, nend, Y: series.map((sr) => sr[y])});
+    }
+    const add = (a, b, sign) => {
+      a.n += sign * b.n;
+      for (let j = 0; j < Kt; j++) a.sx[j] += sign * b.sx[j];
+      for (let i = 0; i < Kt * Kt; i++) a.sxx[i] += sign * b.sxx[i];
+      for (let k = 0; k < m; k++) {
+        a.sy[k] += sign * b.sy[k]; a.syy[k] += sign * b.syy[k];
+        for (let j = 0; j < Kt; j++) a.sxy[k][j] += sign * b.sxy[k][j];
+      }
+    };
+    years.forEach((yr) => add(total, yr.raw, 1));
+    const limits = series.map((sr) => 10 * Math.max(...sr.map((rec) => Math.max(...rec.map(Math.abs)))));
+    const out = {names, Kw, Kt, years, total, add, specs: ss.specs, scales, limits};
+    stateCache.set(key, out);
+    return out;
+  }
+
+  // The coupled system over one year; null if the solution blows up.
+  function integrateStates(rows, coefs, design, y0, nend, feedback) {
+    const {Kw, specs, scales, limits} = design, m = coefs.length, D = rows.length;
+    const u = new Float64Array(Kw), full = new Float64Array(Kw + specs.length), z = new Float64Array(m);
+    const rate = (t, y, out) => {
+      const pos = Math.min(Math.max(t + 0.5, 0), D - 1), j = Math.min(Math.floor(pos), D - 2), w = pos - j;
+      const r0 = rows[j], r1 = rows[j + 1];
+      for (let c = 0; c < Kw; c++) full[c] = u[c] = (1 - w) * r0[c] + w * r1[c];
+      if (feedback) {
+        for (let k = 0; k < m; k++) z[k] = (y[k] - scales[k].center) / scales[k].scale;
+        stateRow(specs, z, u, full, Kw);
+      }
+      for (let k = 0; k < m; k++) {
+        let s = coefs[k].b0; const b = coefs[k].b;
+        for (let c = 0; c < full.length; c++) s += b[c] * full[c];
+        out[k] = s;
+      }
+    };
+    const steps = 4, h = 1 / steps;
+    const pred = Array.from({length: m}, () => new Float64Array(nend + 1));
+    let y = Float64Array.from(y0);
+    const k1 = new Float64Array(m), k2 = new Float64Array(m), k3 = new Float64Array(m), k4 = new Float64Array(m), tmp = new Float64Array(m);
+    for (let k = 0; k < m; k++) pred[k][0] = y[k];
+    for (let d = 1; d <= nend; d++) {
+      for (let s = 0; s < steps; s++) {
+        const t = d - 1 + s * h;
+        rate(t, y, k1);
+        for (let k = 0; k < m; k++) tmp[k] = y[k] + 0.5 * h * k1[k];
+        rate(t + 0.5 * h, tmp, k2);
+        for (let k = 0; k < m; k++) tmp[k] = y[k] + 0.5 * h * k2[k];
+        rate(t + 0.5 * h, tmp, k3);
+        for (let k = 0; k < m; k++) tmp[k] = y[k] + h * k3[k];
+        rate(t + h, tmp, k4);
+        for (let k = 0; k < m; k++) y[k] += (h / 6) * (k1[k] + 2 * k2[k] + 2 * k3[k] + k4[k]);
+        for (let k = 0; k < m; k++) if (!(Math.abs(y[k]) <= limits[k])) return null;
+      }
+      for (let k = 0; k < m; k++) pred[k][d] = y[k];
+    }
+    return pred;
+  }
+
+  // Fit to all years, validate leaving one year out, for one or two coupled states.
+  // config: states (["biomass"], ["lai"] or both), feedback, drivers (with the
+  // measured trait, if any), trait, degree, pairs, extras, method, value.
+  function runModel(data, g, config) {
+    const states = config.states, feedback = !!config.feedback;
+    if (states.length === 1 && !feedback) {
+      const r = run(data, g, {...config, target: states[0]});
+      return {equations: [{state: states[0], ...r}], diverged: 0, ms: r.ms, scales: []};
+    }
+    const now = () => (typeof performance !== "undefined" ? performance : Date).now();
+    const t0 = now();
+    const design = prepareStates(data, g, {...config, states, feedback});
+    const {Kt, years, total} = design, m = states.length, S = years.length;
+    const method = methods(Kt)[config.method];
+    const view = (raw, k) => centred({n: raw.n, sx: raw.sx, sxx: raw.sxx, sy: raw.sy[k], sxy: raw.sxy[k], syy: raw.syy[k]}, Kt);
+    const full = states.map((_, k) => method.fit(view(total, k), config.value));
+    const sq = new Float64Array(m), sqEnd = new Float64Array(m), counts = new Float64Array(m);
+    let nEnd = 0, diverged = 0;
+    const predicted = states.map(() => []);
+    for (let v = 0; v < S; v++) {
+      const raw = {n: 0, sx: new Float64Array(Kt), sxx: new Float64Array(Kt * Kt), sy: new Float64Array(m),
+                   sxy: Array.from({length: m}, () => new Float64Array(Kt)), syy: new Float64Array(m)};
+      design.add(raw, total, 1); design.add(raw, years[v].raw, -1);
+      const coefs = states.map((_, k) => method.fit(view(raw, k), config.value, full[k].warm));
+      const y0 = states.map((_, k) => {
+        let s = 0;
+        for (let u = 0; u < S; u++) if (u !== v) s += years[u].Y[k][0];
+        return s / (S - 1);
+      });
+      const {rows, Y, nend} = years[v];
+      const pred = integrateStates(rows, coefs, design, y0, nend, feedback);
+      if (!pred) {
+        diverged++;
+        states.forEach((_, k) => predicted[k].push(null));
+        continue;
+      }
+      nEnd++;
+      states.forEach((_, k) => {
+        predicted[k].push(Array.from(pred[k]));
+        for (let d = 1; d <= nend; d++) { sq[k] += (pred[k][d] - Y[k][d]) ** 2; counts[k]++; }
+        sqEnd[k] += (pred[k][nend] - Y[k][nend]) ** 2;
+      });
+    }
+    const equations = states.map((state, k) => {
+      const st = view(total, k);
+      const sd = Float64Array.from({length: Kt}, (_, j) => Math.sqrt(st.Sxx[j * Kt + j] / (total.n - 1)));
+      const sdy = Math.sqrt(st.Syy / (total.n - 1));
+      return {state, terms: design.names, intercept: full[k].b0, coef: Array.from(full[k].b),
+              scaled: Array.from(full[k].b, (b, j) => (b * sd[j]) / sdy),
+              nterms: full[k].b.filter((b) => b !== 0).length,
+              rmse: Math.sqrt(sq[k] / counts[k]), maturityRmse: Math.sqrt(sqEnd[k] / nEnd),
+              predicted: predicted[k]};
+    });
+    return {equations, diverged, ms: now() - t0,
+            scales: feedback ? states.map((state, k) => ({state, ...design.scales[k]})) : []};
+  }
+
+  return {termSpecs, methods, prepare, run, runModel, stateSpecs, prepareStates, centred, fits, integrate, parseExtras, parseExpression, evaluate, extraColumns, traitSeries};
 })();
 
 if (typeof module !== "undefined") module.exports = Builder;

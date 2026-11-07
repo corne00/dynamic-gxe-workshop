@@ -272,6 +272,141 @@ cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
   P
 }
 
+## ---- State feedback and coupled models --------------------------------------
+## The modelled states enter the library through standardised terms (centre and
+## standard deviation of the observed values of the genotype): powers of each
+## state, and with products = TRUE also products of states and products of a
+## state with the powers 1 and 2 of each driver. trs is a list of trajectory
+## sets from make_trajectories(), one per modelled state, named by state; every
+## state has its own equation, and all are fitted with the same fit(X, dy).
+state_scale <- function(Y) {
+  m <- mean(Y, na.rm = TRUE)
+  c(center = m, scale = sqrt(mean((Y - m)^2, na.rm = TRUE)))
+}
+
+## Library columns that interact with a state: drivers and their squares.
+interacting_terms <- function(Theta, drivers) {
+  want <- unlist(lapply(drivers, function(d) c(d, paste0(d, "^2"))))
+  want[want %in% dimnames(Theta)[[3]]]
+}
+
+## z: rows x states (standardised, named), U: rows x interacting library columns.
+state_terms <- function(z, U, degree = 3, pairs = FALSE) {
+  term <- function(x, p) if (p == 1) x else paste0(x, "^", p)
+  cols <- list(); st <- colnames(z)
+  for (a in st) for (p in seq_len(degree)) cols[[term(a, p)]] <- z[, a]^p
+  if (pairs) {
+    if (length(st) > 1) for (ij in combn(st, 2, simplify = FALSE)) {
+      for (p in 1:2) for (q in 1:2) {
+        cols[[paste0(term(ij[1], p), "*", term(ij[2], q))]] <- z[, ij[1]]^p * z[, ij[2]]^q
+      }
+    }
+    for (a in st) for (u in colnames(U)) for (p in 1:2) {
+      cols[[paste0(term(a, p), "*", u)]] <- z[, a]^p * U[, u]
+    }
+  }
+  do.call(cbind, cols)
+}
+
+## Regression problem of one genotype with state terms: one column of dy per
+## state; the state terms use the state at the observation of each row.
+make_design_states <- function(Theta, trs, genotype, drivers, degree = 3,
+                               pairs = FALSE, feedback = TRUE) {
+  d <- make_design(Theta, trs[[1]], genotype)
+  g <- match(genotype, trs[[1]]$genotypes); n <- trs[[1]]$nend[g, ]
+  dy <- sapply(trs, function(tr) make_design(Theta, tr, genotype)$dy)
+  scales <- sapply(trs, function(tr) state_scale(tr$Y[g, , ]))
+  X <- d$X
+  if (feedback) {
+    z <- sapply(names(trs), function(k) {
+      y <- unlist(lapply(seq_along(n), function(i) trs[[k]]$Y[g, i, 2:n[i]]))
+      (y - scales["center", k]) / scales["scale", k]
+    })
+    U <- d$X[, interacting_terms(Theta, drivers), drop = FALSE]
+    X <- cbind(X, state_terms(matrix(z, ncol = length(trs), dimnames = list(NULL, names(trs))),
+                              U, degree, pairs))
+  }
+  list(X = X, dy = matrix(dy, ncol = length(trs), dimnames = list(NULL, names(trs))),
+       year = d$year, scales = scales)
+}
+
+## Solves the coupled system dy_k/dt = (1, theta(y, u)) coef_k. coef: list of
+## year x (1 + terms) matrices, one per state; y0: year x state. Returns a list
+## of day x year matrices. terms(y, u) is the library, with y the year x state
+## matrix. State terms can make a solution blow up; the years that do are solved
+## one by one and returned as NA (a state beyond limit[k] counts as blown up), so
+## that the others are not lost.
+simulate_states <- function(coef, U, y0, terms = function(y, u) u, method = "lsoda",
+                            limit = rep(1e4, length(coef))) {
+  D <- dim(U)[2]; m <- length(coef)
+  solve_years <- function(idx) {
+    S <- length(idx)
+    days <- lapply(seq_len(D), function(j) matrix(U[idx, j, ], S))
+    B <- lapply(coef, function(b) b[idx, , drop = FALSE])
+    rhs <- function(t, y, parms) {
+      pos <- min(max(t + 0.5, 0), D - 1)
+      j <- min(floor(pos), D - 2)
+      w <- pos - j
+      u <- (1 - w) * days[[j + 1]] + w * days[[j + 2]]
+      Tm <- terms(matrix(y, S, m), u)
+      list(unlist(lapply(seq_len(m), function(k) {
+        B[[k]][, 1] + .rowSums(Tm * B[[k]][, -1, drop = FALSE], S, ncol(Tm))
+      })))
+    }
+    out <- tryCatch(suppressWarnings(deSolve::ode(
+      as.vector(y0[idx, , drop = FALSE]), 0:(D - 1), rhs, NULL, method = method,
+      rtol = 1e-4, atol = 1e-4)[, -1, drop = FALSE]), error = function(e) NULL)
+    if (is.null(out) || nrow(out) < D || any(!is.finite(out))) return(NULL)
+    for (k in seq_len(m)) if (any(abs(out[, (k - 1) * S + seq_len(S)]) > limit[k])) return(NULL)
+    out
+  }
+  S <- dim(U)[1]
+  pack <- function(out, idx) lapply(seq_len(m), function(k) {
+    out[, (k - 1) * length(idx) + seq_along(idx), drop = FALSE]
+  })
+  all <- solve_years(seq_len(S))
+  if (!is.null(all)) return(pack(all, seq_len(S)))
+  res <- lapply(seq_len(m), function(k) matrix(NA_real_, D, S))
+  for (s in seq_len(S)) {
+    one <- solve_years(s)
+    if (is.null(one)) next
+    for (k in seq_len(m)) res[[k]][, s] <- one[, k]
+  }
+  res
+}
+
+## Leave-one-year-out validation of the (coupled) model: a list of P[genotype,
+## year, day], one per state.
+cross_validate_states <- function(Theta, trs, fit, genotypes = trs[[1]]$genotypes,
+                                  drivers, degree = 3, pairs = FALSE,
+                                  feedback = TRUE) {
+  tr <- trs[[1]]; S <- length(tr$years); m <- length(trs)
+  P <- lapply(trs, function(t) array(NA_real_, dim(t$Y))); diverged <- 0
+  inter <- interacting_terms(Theta, drivers)
+  inter_at <- match(inter, dimnames(Theta)[[3]])
+  for (g in match(genotypes, tr$genotypes)) {
+    d <- make_design_states(Theta, trs, tr$genotypes[g], drivers, degree, pairs, feedback)
+    coef <- lapply(seq_len(m), function(k) t(sapply(seq_len(S), function(v) {
+      train <- d$year != v
+      fit(d$X[train, ], d$dy[train, k])
+    })))
+    y0 <- sapply(trs, function(t) (sum(t$Y[g, , 1]) - t$Y[g, , 1]) / (S - 1))
+    terms <- function(y, u) u
+    if (feedback) terms <- function(y, u) {
+      z <- sweep(sweep(y, 2, d$scales["center", ]), 2, d$scales["scale", ], "/")
+      colnames(z) <- names(trs)
+      ui <- u[, inter_at, drop = FALSE]; colnames(ui) <- inter
+      cbind(u, state_terms(z, ui, degree, pairs))
+    }
+    limit <- 10 * sapply(trs, function(t) max(abs(t$Y[g, , ]), na.rm = TRUE))
+    sim <- simulate_states(coef, Theta, matrix(y0, S, m), terms, limit = limit)
+    for (k in seq_len(m)) P[[k]][g, , ] <- t(sim[[k]])
+    diverged <- diverged + sum(is.na(sim[[1]][1, ]))
+  }
+  attr(P, "diverged") <- diverged   # held-out years whose solution blew up (NA)
+  P
+}
+
 ## RMSE over whole trajectories, on a fixed day (array index; 99 is day 113
 ## after sowing) and at maturity. Genotypes that were not predicted are ignored.
 evaluate <- function(P, tr, fixed_day = 99) {

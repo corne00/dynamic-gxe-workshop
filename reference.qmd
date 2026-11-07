@@ -31,6 +31,9 @@ All functions are in `R/functions.R` (R) and `python/dgxe.py` (Python), with the
 | `fit_ols`, `fit_ridge`, `fit_lasso`, `fit_enet`, `fit_subset`, `fit_stlsq` | fitting methods `fit(X, dy)` |
 | `simulate(coef, U, y0)` | solution of the fitted equation with an ODE solver |
 | `cross_validate(Theta, tr, fit)` | leave-one-year-out predictions |
+| `make_design_states(Theta, trs, genotype, drivers, degree, pairs, feedback)` | design with state terms (`state_terms`) and one column of `dy` per modelled state; `trs` is a list of trajectory sets, one per state |
+| `simulate_states(coef, U, y0, terms)` | solution of the coupled system; years that blow up are returned as `NA` |
+| `cross_validate_states(Theta, trs, fit, genotypes, drivers, degree, pairs, feedback)` | leave-one-year-out predictions of the (coupled) model, one `P` per state, and the number of diverged years |
 | `evaluate(P, tr)` | trajectory, fixed-day and maturity RMSE |
 | `ale_curve(rate, Z, j)` | accumulated local effect of driver `j` |
 | `rank_scores(Pd, Yd)` | ranking metrics |

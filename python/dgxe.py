@@ -280,6 +280,150 @@ def cross_validate(Theta, tr, fit, genotypes=None):
     return P
 
 
+# ---- State feedback and coupled models --------------------------------------
+# The modelled states enter the library through standardised terms (centre and
+# standard deviation of the observed values of the genotype): powers of each
+# state, and with pairs=True also products of states and products of a state
+# with the powers 1 and 2 of each driver. trs is a dict of trajectory sets from
+# make_trajectories(), one per modelled state, named by state; every state has
+# its own equation, and all are fitted with the same fit(X, dy).
+def state_scale(Y):
+    m = np.nanmean(Y)
+    return m, np.sqrt(np.nanmean((Y - m) ** 2))
+
+
+# Library columns that interact with a state: drivers and their squares.
+def interacting_terms(Theta, drivers):
+    want = [t for d in drivers for t in (d, f"{d}^2")]
+    return [t for t in want if t in Theta.terms]
+
+
+# z: rows x states (standardised), U: rows x interacting library columns.
+def state_terms(z, states, U, unames, degree=3, pairs=False):
+    def term(x, p):
+        return x if p == 1 else f"{x}^{p}"
+    cols = {}
+    for a, name in enumerate(states):
+        for p in range(1, degree + 1):
+            cols[term(name, p)] = z[:, a] ** p
+    if pairs:
+        for a, b in combinations(range(len(states)), 2):
+            for p in (1, 2):
+                for q in (1, 2):
+                    cols[f"{term(states[a], p)}*{term(states[b], q)}"] = (
+                        z[:, a] ** p * z[:, b] ** q)
+        for a, name in enumerate(states):
+            for j, u in enumerate(unames):
+                for p in (1, 2):
+                    cols[f"{term(name, p)}*{u}"] = z[:, a] ** p * U[:, j]
+    return np.column_stack(list(cols.values()))
+
+
+# Regression problem of one genotype with state terms: dy has one column per
+# state; the state terms use the state at the observation of each row.
+def make_design_states(Theta, trs, genotype, drivers, degree=3, pairs=False,
+                       feedback=True):
+    names = list(trs)
+    first = trs[names[0]]
+    d = make_design(Theta, first, genotype)
+    g = list(first.genotypes).index(genotype)
+    n = first.nend[g]
+    dy = np.column_stack([make_design(Theta, trs[k], genotype).dy
+                          for k in names])
+    scales = [state_scale(trs[k].Y[g]) for k in names]
+    X = d.X
+    if feedback:
+        z = np.column_stack([
+            (np.concatenate([trs[k].Y[g, s, 1:n[s]]
+                             for s in range(len(first.years))]) - c) / sd
+            for k, (c, sd) in zip(names, scales)])
+        inter = interacting_terms(Theta, drivers)
+        at = [Theta.terms.index(t) for t in inter]
+        X = np.column_stack([X, state_terms(z, names, d.X[:, at], inter,
+                                            degree, pairs)])
+    return SimpleNamespace(X=X, dy=dy, year=d.year, scales=scales)
+
+
+# Solves the coupled system dy_k/dt = (1, theta(y, u)) coef_k. coef: list of
+# year x (1 + terms) arrays, one per state; y0: year x state. Returns a list of
+# year x day arrays. terms(y, u) is the library, with y the year x state array.
+# State terms can make a solution blow up; the years that do are solved one by
+# one and returned as NaN (a state beyond limit[k] counts as blown up).
+def simulate_states(coef, U, y0, terms=lambda y, u: u, method="LSODA", limit=None):
+    D = U.shape[1]
+    m = len(coef)
+    limit = np.full(m, 1e4) if limit is None else np.asarray(limit)
+
+    def solve_years(idx):
+        S = len(idx)
+        B = [b[idx] for b in coef]
+
+        def rhs(t, y):
+            pos = min(max(t + 0.5, 0.0), D - 1.0)
+            j = min(int(pos), D - 2)
+            w = pos - j
+            u = (1 - w) * U[idx, j] + w * U[idx, j + 1]
+            T = terms(y.reshape(m, S).T, u)
+            return np.concatenate([B[k][:, 0] + np.einsum("sk,sk->s", T, B[k][:, 1:])
+                                   for k in range(m)])
+
+        with np.errstate(all="ignore"):
+            r = solve_ivp(rhs, (0, D - 1), y0[idx].T.ravel(), method=method,
+                          t_eval=np.arange(D), rtol=1e-4, atol=1e-4)
+        if r.y.shape[1] < D or not np.all(np.isfinite(r.y)):
+            return None
+        out = r.y.reshape(m, S, D)
+        if np.any(np.abs(out).max(axis=(1, 2)) > limit):
+            return None
+        return out
+
+    S = U.shape[0]
+    out = solve_years(np.arange(S))
+    if out is not None:
+        return [out[k] for k in range(m)]
+    res = np.full((m, S, D), np.nan)
+    for s in range(S):
+        one = solve_years(np.array([s]))
+        if one is not None:
+            res[:, s] = one[:, 0]
+    return [res[k] for k in range(m)]
+
+
+# Leave-one-year-out validation of the (coupled) model: a list of P[genotype,
+# year, day], one per state; P.diverged counts the held-out years that blew up.
+def cross_validate_states(Theta, trs, fit, genotypes=None, drivers=(),
+                          degree=3, pairs=False, feedback=True):
+    names = list(trs)
+    first = trs[names[0]]
+    S, m = len(first.years), len(names)
+    P = [np.full(trs[k].Y.shape, np.nan) for k in names]
+    inter = interacting_terms(Theta, drivers)
+    at = [Theta.terms.index(t) for t in inter]
+    diverged = 0
+    for g in (first.genotypes if genotypes is None else genotypes):
+        i = list(first.genotypes).index(g)
+        d = make_design_states(Theta, trs, g, drivers, degree, pairs, feedback)
+        coef = [np.array([fit(d.X[d.year != s], d.dy[d.year != s, k])
+                          for s in range(S)]) for k in range(m)]
+        y0 = np.column_stack([(trs[k].Y[i, :, 0].sum() - trs[k].Y[i, :, 0]) / (S - 1)
+                              for k in names])
+
+        def terms(y, u, d=d):
+            if not feedback:
+                return u
+            z = np.column_stack([(y[:, a] - c) / sd
+                                 for a, (c, sd) in enumerate(d.scales)])
+            return np.column_stack([u, state_terms(z, names, u[:, at], inter,
+                                                   degree, pairs)])
+
+        limit = [10 * np.nanmax(np.abs(trs[k].Y[i])) for k in names]
+        sim = simulate_states(coef, Theta.array, y0, terms, limit=limit)
+        for k in range(m):
+            P[k][i] = sim[k]
+        diverged += int(np.isnan(sim[0][:, 0]).sum())
+    return SimpleNamespace(P=P, diverged=diverged)
+
+
 # RMSE over whole trajectories, on a fixed day (days after sowing) and at
 # maturity. Genotypes that were not predicted are ignored.
 def evaluate(P, tr, fixed_day=113):
