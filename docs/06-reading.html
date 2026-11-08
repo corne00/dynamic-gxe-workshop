@@ -420,12 +420,12 @@ window.Quarto = {
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>PALETTE <span class="op">=</span> [<span class="st">"#014E81"</span>, <span class="st">"#00A6D6"</span>, <span class="st">"#8B1E3F"</span>, <span class="st">"#469C2A"</span>, <span class="st">"#6F1D77"</span>, <span class="st">"#EF60A3"</span>, <span class="st">"#00A390"</span>, <span class="st">"#9CA3AF"</span>, <span class="st">"#1F2937"</span>]</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> <span class="bu">list</span>(tr.years).index(<span class="dv">1998</span>)</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> tr.nend[np.searchsorted(tr.genotypes, <span class="st">"g114"</span>), s] <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>year <span class="op">=</span> <span class="bu">list</span>(tr.years).index(<span class="dv">1998</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>n <span class="op">=</span> tr.nend[np.searchsorted(tr.genotypes, <span class="st">"g114"</span>), year] <span class="op">+</span> <span class="dv">1</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>parts <span class="op">=</span> {}</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name <span class="kw">in</span> drv.drivers:</span>
 <span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    cols <span class="op">=</span> [i <span class="cf">for</span> i, t <span class="kw">in</span> <span class="bu">enumerate</span>(Theta.terms) <span class="cf">if</span> t.startswith(name)]</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    parts[name] <span class="op">=</span> Theta.array[s, :n][:, cols] <span class="op">@</span> b[<span class="dv">1</span> <span class="op">+</span> np.array(cols)]</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    parts[name] <span class="op">=</span> Theta.array[year, :n][:, cols] <span class="op">@</span> b[<span class="dv">1</span> <span class="op">+</span> np.array(cols)]</span>
 <span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>parts[<span class="st">"total"</span>] <span class="op">=</span> b[<span class="dv">0</span>] <span class="op">+</span> <span class="bu">sum</span>(parts.values())</span>
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>das <span class="op">=</span> np.arange(n) <span class="op">+</span> tr.das0</span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
@@ -533,13 +533,13 @@ window.Quarto = {
 <div class="tab-content" data-group="language">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>Z <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">observed_points</span>(drv, tr))</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cor</span>(Z), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">observed_points</span>(drv, tr))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cor</span>(observed), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>Z <span class="op">=</span> observed_points(drv, tr)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(Z.corr().<span class="bu">round</span>(<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>observed <span class="op">=</span> observed_points(drv, tr)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(observed.corr().<span class="bu">round</span>(<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -568,10 +568,10 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>predictor <span class="ot">&lt;-</span> <span class="cf">function</span>(coef, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  rate <span class="ot">&lt;-</span> <span class="cf">function</span>(model, newdata) {</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    L <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(<span class="fu">as.matrix</span>(newdata), <span class="at">pairs =</span> pairs)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.vector</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, L) <span class="sc">%*%</span> model)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    Theta_new <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(<span class="fu">as.matrix</span>(newdata), <span class="at">pairs =</span> pairs)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.vector</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, Theta_new) <span class="sc">%*%</span> model)</span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  Predictor<span class="sc">$</span><span class="fu">new</span>(coef, <span class="at">data =</span> Z, <span class="at">predict.function =</span> rate)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  Predictor<span class="sc">$</span><span class="fu">new</span>(coef, <span class="at">data =</span> observed, <span class="at">predict.function =</span> rate)</span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>natural <span class="ot">&lt;-</span> <span class="cf">function</span>(z, j) z <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j]</span>
@@ -581,9 +581,9 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">genotype =</span> g, <span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers),</span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">x =</span> <span class="fu">natural</span>(effect[[drv<span class="sc">$</span>drivers[j]]], j), <span class="at">effect =</span> effect<span class="sc">$</span>.value)</span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>cells <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">g =</span> tr<span class="sc">$</span>genotypes, <span class="at">j =</span> <span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers),</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>grid_cells <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">g =</span> tr<span class="sc">$</span>genotypes, <span class="at">j =</span> <span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers),</span>
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>                     <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">Map</span>(ale_genotype, cells<span class="sc">$</span>g, cells<span class="sc">$</span>j))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">Map</span>(ale_genotype, grid_cells<span class="sc">$</span>g, grid_cells<span class="sc">$</span>j))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
@@ -598,7 +598,7 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ale_genotype(g, j):</span>
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    rate <span class="op">=</span> GrowthRate(coefs[g].to_numpy())</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    effect <span class="op">=</span> ale(Z, rate, [drv.drivers[j]], grid_size<span class="op">=</span><span class="dv">24</span>,</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    effect <span class="op">=</span> ale(observed, rate, [drv.drivers[j]], grid_size<span class="op">=</span><span class="dv">24</span>,</span>
 <span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                 include_CI<span class="op">=</span><span class="va">False</span>, plot<span class="op">=</span><span class="va">False</span>)</span>
 <span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame({<span class="st">"genotype"</span>: g, <span class="st">"driver"</span>: drv.drivers[j],</span>
 <span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"x"</span>: natural(effect.index.to_numpy(), j),</span>
@@ -616,8 +616,8 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>highlighted <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>)  <span class="co"># lowest, median, highest final biomass</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j) {</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers), <span class="at">x =</span> <span class="fu">natural</span>(Z[, j], j))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>rug <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j) {</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers), <span class="at">x =</span> <span class="fu">natural</span>(observed[, j], j))</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>}))</span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(x, effect, <span class="at">group =</span> genotype)) <span class="sc">+</span></span>
@@ -625,7 +625,7 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
 <span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="at">data =</span> curves[curves<span class="sc">$</span>genotype <span class="sc">%in%</span> highlighted, ],</span>
 <span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>            <span class="fu">aes</span>(<span class="at">colour =</span> genotype), <span class="at">linewidth =</span> <span class="fl">0.8</span>) <span class="sc">+</span></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rug</span>(<span class="at">data =</span> observed, <span class="fu">aes</span>(<span class="at">x =</span> x), <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>, <span class="at">sides =</span> <span class="st">"b"</span>,</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_rug</span>(<span class="at">data =</span> rug, <span class="fu">aes</span>(<span class="at">x =</span> x), <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>, <span class="at">sides =</span> <span class="st">"b"</span>,</span>
 <span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>           <span class="at">alpha =</span> <span class="fl">0.03</span>) <span class="sc">+</span></span>
 <span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
 <span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"cyan"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
@@ -645,7 +645,7 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g, colour <span class="kw">in</span> <span class="bu">zip</span>(highlighted, [BURGUNDY, CYAN, BLUE]):</span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        c <span class="op">=</span> sub[sub[<span class="st">"genotype"</span>] <span class="op">==</span> g]</span>
 <span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        ax.plot(c[<span class="st">"x"</span>], c[<span class="st">"effect"</span>], color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">1.2</span>, label<span class="op">=</span>g)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    ax.plot(natural(Z[name], j), np.full(<span class="bu">len</span>(Z), ax.get_ylim()[<span class="dv">0</span>]), <span class="st">"|"</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    ax.plot(natural(observed[name], j), np.full(<span class="bu">len</span>(observed), ax.get_ylim()[<span class="dv">0</span>]), <span class="st">"|"</span>,</span>
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>            color<span class="op">=</span><span class="st">"k"</span>, alpha<span class="op">=</span><span class="fl">0.03</span>)</span>
 <span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    ax.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">"#9CA3AF"</span>, lw<span class="op">=</span><span class="fl">0.5</span>)</span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    ax.set_title(name, loc<span class="op">=</span><span class="st">"left"</span>)</span>
@@ -749,9 +749,9 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> effects(feature):</span>
 <span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    j <span class="op">=</span> drv.drivers.index(feature)</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> ale(Z, rate2, [feature], grid_size<span class="op">=</span><span class="dv">24</span>, include_CI<span class="op">=</span><span class="va">False</span>, plot<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    grid <span class="op">=</span> np.linspace(Z[feature].<span class="bu">min</span>(), Z[feature].<span class="bu">max</span>(), <span class="dv">24</span>)</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    pdp <span class="op">=</span> np.array([rate2.predict(Z.assign(<span class="op">**</span>{feature: v})).mean()</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> ale(observed, rate2, [feature], grid_size<span class="op">=</span><span class="dv">24</span>, include_CI<span class="op">=</span><span class="va">False</span>, plot<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    grid <span class="op">=</span> np.linspace(observed[feature].<span class="bu">min</span>(), observed[feature].<span class="bu">max</span>(), <span class="dv">24</span>)</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    pdp <span class="op">=</span> np.array([rate2.predict(observed.assign(<span class="op">**</span>{feature: v})).mean()</span>
 <span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">for</span> v <span class="kw">in</span> grid])</span>
 <span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (natural(grid, j), pdp <span class="op">-</span> pdp.mean(),</span>
 <span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>            natural(a.index.to_numpy(), j), a[<span class="st">"eff"</span>].to_numpy())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>

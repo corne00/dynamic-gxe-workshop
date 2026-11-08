@@ -145,14 +145,14 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 4.6
 vars <- c("Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW")
-w <- data.frame(
+weather <- data.frame(
     year = wx$year, das = wx$das,
     variable = factor(rep(vars, each = nrow(wx)), vars),
     value = unlist(wx[vars])
 )
-shown <- w[w$year %in% c(1984, 1998, 2008), ]
+shown <- weather[weather$year %in% c(1984, 1998, 2008), ]
 
-ggplot(w, aes(das, value, group = year)) +
+ggplot(weather, aes(das, value, group = year)) +
     geom_line(colour = "#D1D5DB", linewidth = 0.25) +
     geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.7) +
     facet_wrap(~variable, scales = "free_y", nrow = 2) +
@@ -183,9 +183,9 @@ from matplotlib.colors import LinearSegmentedColormap
 from scipy.stats import gaussian_kde
 
 colours = LinearSegmentedColormap.from_list("dgxe", [BURGUNDY, "white", BLUE])
-z = (wx[VARS] - wx[VARS].mean()) / wx[VARS].std()
-corr = z.corr()
-sample = z.sample(600, random_state=1)
+standardised = (wx[VARS] - wx[VARS].mean()) / wx[VARS].std()
+corr = standardised.corr()
+sample = standardised.sample(600, random_state=1)
 grid = np.linspace(-3.5, 3.5, 200)
 
 fig, axes = plt.subplots(8, 8, figsize=(5.6, 5.6))
@@ -199,13 +199,13 @@ for i in range(8):
             ax.scatter(sample[VARS[j]], sample[VARS[i]], s=1.5, alpha=0.4,
                        color=BLUE, linewidths=0)
         elif i == j:
-            density = gaussian_kde(z[VARS[i]])(grid)
+            density = gaussian_kde(standardised[VARS[i]])(grid)
             ax.fill_between(grid, -3.5, -3.5 + 6 * density / density.max(),
                             color=BLUE, alpha=0.5, linewidth=0)
         else:
-            r = corr.iloc[i, j]
-            ax.set_facecolor(colours((r + 1) / 2))
-            ax.text(0, 0, f"{r:.2f}", ha="center", va="center", fontsize=7)
+            rho = corr.iloc[i, j]
+            ax.set_facecolor(colours((rho + 1) / 2))
+            ax.text(0, 0, f"{rho:.2f}", ha="center", va="center", fontsize=7)
         if i == 0:
             ax.set_title(VARS[j], fontsize=9, pad=3)
         if j == 0:
@@ -222,12 +222,12 @@ fig.subplots_adjust(wspace=0.04, hspace=0.04)
 #| fig-height: 5.6
 #| fig-width: 5.6
 #| warning: false
-z <- as.data.frame(scale(wx[vars]))
-r <- cor(wx[vars])
+standardised <- as.data.frame(scale(wx[vars]))
+corr <- cor(wx[vars])
 panel <- expand.grid(row = seq_along(vars), col = seq_along(vars))
 label <- function(i) factor(vars[i], vars)
 set.seed(1)
-sample_days <- z[sample(nrow(z), 600), ]
+sample_days <- standardised[sample(nrow(standardised), 600), ]
 
 upper <- panel[panel$row < panel$col, ]
 upper <- do.call(rbind, lapply(seq_len(nrow(upper)), function(k) {
@@ -236,18 +236,18 @@ upper <- do.call(rbind, lapply(seq_len(nrow(upper)), function(k) {
                x = sample_days[[j]], y = sample_days[[i]])
 }))
 diagonal <- do.call(rbind, lapply(seq_along(vars), function(i) {
-    d <- density(z[[i]], from = -3.5, to = 3.5, n = 200)
+    d <- density(standardised[[i]], from = -3.5, to = 3.5, n = 200)
     data.frame(row = label(i), col = label(i), x = d$x,
                ymax = -3.5 + 6 * d$y / max(d$y))
 }))
 lower <- panel[panel$row > panel$col, ]
 lower <- data.frame(row = label(lower$row), col = label(lower$col),
-                    r = r[cbind(lower$row, lower$col)])
+                    rho = corr[cbind(lower$row, lower$col)])
 
 ggplot() +
-    geom_rect(data = lower, aes(fill = r), xmin = -Inf, xmax = Inf,
+    geom_rect(data = lower, aes(fill = rho), xmin = -Inf, xmax = Inf,
               ymin = -Inf, ymax = Inf) +
-    geom_text(data = lower, aes(label = sprintf("%.2f", r)), x = 0, y = 0,
+    geom_text(data = lower, aes(label = sprintf("%.2f", rho)), x = 0, y = 0,
               size = 2.6) +
     geom_point(data = upper, aes(x, y), size = 0.15, alpha = 0.4,
                colour = dgxe[["blue"]]) +
@@ -294,10 +294,10 @@ days = np.arange(tr.Y.shape[2]) + tr.das0
 
 fig, axes = plt.subplots(1, 4, sharey=True, figsize=(10, 2.8))
 for ax, year in zip(axes, [1984, 1990, 1998, 2008]):
-    s = list(tr.years).index(year)
-    ax.plot(days, tr.Y[:, s].T, color=GREY, lw=0.2)
+    i = list(tr.years).index(year)
+    ax.plot(days, tr.Y[:, i].T, color=GREY, lw=0.2)
     for g, colour in zip(highlighted, [BURGUNDY, CYAN, BLUE]):
-        ax.plot(days, tr.Y[np.searchsorted(tr.genotypes, g), s],
+        ax.plot(days, tr.Y[np.searchsorted(tr.genotypes, g), i],
                 color=colour, lw=0.9, label=g)
     ax.set_title(year, loc="left")
 axes[0].legend(frameon=False)

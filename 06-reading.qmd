@@ -133,12 +133,12 @@ For this additive library the rate is a sum of one function per driver, so its c
 
 ```python
 PALETTE = ["#014E81", "#00A6D6", "#8B1E3F", "#469C2A", "#6F1D77", "#EF60A3", "#00A390", "#9CA3AF", "#1F2937"]
-s = list(tr.years).index(1998)
-n = tr.nend[np.searchsorted(tr.genotypes, "g114"), s] + 1
+year = list(tr.years).index(1998)
+n = tr.nend[np.searchsorted(tr.genotypes, "g114"), year] + 1
 parts = {}
 for name in drv.drivers:
     cols = [i for i, t in enumerate(Theta.terms) if t.startswith(name)]
-    parts[name] = Theta.array[s, :n][:, cols] @ b[1 + np.array(cols)]
+    parts[name] = Theta.array[year, :n][:, cols] @ b[1 + np.array(cols)]
 parts["total"] = b[0] + sum(parts.values())
 das = np.arange(n) + tr.das0
 
@@ -241,8 +241,8 @@ The effect of one driver cannot be read by varying it alone while the others are
 ## Python
 
 ```python
-Z = observed_points(drv, tr)
-print(Z.corr().round(2))
+observed = observed_points(drv, tr)
+print(observed.corr().round(2))
 ```
 
 :::
@@ -250,8 +250,8 @@ print(Z.corr().round(2))
 ```{r}
 #| label: 06-4-run
 #| echo: false
-Z <- as.data.frame(observed_points(drv, tr))
-round(cor(Z), 2)
+observed <- as.data.frame(observed_points(drv, tr))
+round(cor(observed), 2)
 ```
 
 Accumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the growth rate. For the fitted growth rate $f(\mathbf{u}) = \boldsymbol{\theta}(\mathbf{u})^\top \hat{\boldsymbol{\xi}}$ and driver $j$,
@@ -286,7 +286,7 @@ def natural(z, j):
 
 def ale_genotype(g, j):
     rate = GrowthRate(coefs[g].to_numpy())
-    effect = ale(Z, rate, [drv.drivers[j]], grid_size=24,
+    effect = ale(observed, rate, [drv.drivers[j]], grid_size=24,
                  include_CI=False, plot=False)
     return pd.DataFrame({"genotype": g, "driver": drv.drivers[j],
                          "x": natural(effect.index.to_numpy(), j),
@@ -303,10 +303,10 @@ curves = pd.concat(ale_genotype(g, j)
 #| echo: false
 predictor <- function(coef, pairs = FALSE) {
   rate <- function(model, newdata) {
-    L <- library_matrix(as.matrix(newdata), pairs = pairs)
-    as.vector(cbind(1, L) %*% model)
+    Theta_new <- library_matrix(as.matrix(newdata), pairs = pairs)
+    as.vector(cbind(1, Theta_new) %*% model)
   }
-  Predictor$new(coef, data = Z, predict.function = rate)
+  Predictor$new(coef, data = observed, predict.function = rate)
 }
 
 natural <- function(z, j) z * drv$scale[j] + drv$center[j]
@@ -316,7 +316,7 @@ ale_genotype <- function(g, j) {
   data.frame(genotype = g, driver = factor(drv$drivers[j], drv$drivers),
              x = natural(effect[[drv$drivers[j]]], j), effect = effect$.value)
 }
-cells <- expand.grid(g = tr$genotypes, j = seq_along(drv$drivers),
+grid_cells <- expand.grid(g = tr$genotypes, j = seq_along(drv$drivers),
                      stringsAsFactors = FALSE)
 ```
 
@@ -324,13 +324,13 @@ cells <- expand.grid(g = tr$genotypes, j = seq_along(drv$drivers),
 #| label: 06-5-show
 #| eval: false
 #| include: false
-curves <- do.call(rbind, Map(ale_genotype, cells$g, cells$j))
+curves <- do.call(rbind, Map(ale_genotype, grid_cells$g, grid_cells$j))
 ```
 
 ```{r}
 #| label: 06-5-exec
 #| echo: false
-curves <- cached("ale_genotypes.rds", do.call(rbind, Map(ale_genotype, cells$g, cells$j)))
+curves <- cached("ale_genotypes.rds", do.call(rbind, Map(ale_genotype, grid_cells$g, grid_cells$j)))
 ```
 
 The ALE curve of each driver for every genotype (grey), and for the genotypes with the lowest, median and highest final biomass:
@@ -357,7 +357,7 @@ for j, (ax, name) in enumerate(zip(axes.flat, drv.drivers)):
     for g, colour in zip(highlighted, [BURGUNDY, CYAN, BLUE]):
         c = sub[sub["genotype"] == g]
         ax.plot(c["x"], c["effect"], color=colour, lw=1.2, label=g)
-    ax.plot(natural(Z[name], j), np.full(len(Z), ax.get_ylim()[0]), "|",
+    ax.plot(natural(observed[name], j), np.full(len(observed), ax.get_ylim()[0]), "|",
             color="k", alpha=0.03)
     ax.axhline(0, color="#9CA3AF", lw=0.5)
     ax.set_title(name, loc="left")
@@ -374,8 +374,8 @@ fig.tight_layout()
 #| fig-height: 9
 #| fig-width: 7.2
 highlighted <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
-observed <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
-  data.frame(driver = factor(drv$drivers[j], drv$drivers), x = natural(Z[, j], j))
+rug <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
+  data.frame(driver = factor(drv$drivers[j], drv$drivers), x = natural(observed[, j], j))
 }))
 
 ggplot(curves, aes(x, effect, group = genotype)) +
@@ -383,7 +383,7 @@ ggplot(curves, aes(x, effect, group = genotype)) +
   geom_line(colour = "#D1D5DB", linewidth = 0.25) +
   geom_line(data = curves[curves$genotype %in% highlighted, ],
             aes(colour = genotype), linewidth = 0.8) +
-  geom_rug(data = observed, aes(x = x), inherit.aes = FALSE, sides = "b",
+  geom_rug(data = rug, aes(x = x), inherit.aes = FALSE, sides = "b",
            alpha = 0.03) +
   facet_wrap(~driver, ncol = 2, scales = "free_x") +
   scale_colour_dgxe("burgundy", "cyan", "blue") +
@@ -446,9 +446,9 @@ rate2 = GrowthRate(fit_subset(design2.Theta, design2.dy, k=20, method="backward"
 
 def effects(feature):
     j = drv.drivers.index(feature)
-    a = ale(Z, rate2, [feature], grid_size=24, include_CI=False, plot=False)
-    grid = np.linspace(Z[feature].min(), Z[feature].max(), 24)
-    pdp = np.array([rate2.predict(Z.assign(**{feature: v})).mean()
+    a = ale(observed, rate2, [feature], grid_size=24, include_CI=False, plot=False)
+    grid = np.linspace(observed[feature].min(), observed[feature].max(), 24)
+    pdp = np.array([rate2.predict(observed.assign(**{feature: v})).mean()
                     for v in grid])
     return (natural(grid, j), pdp - pdp.mean(),
             natural(a.index.to_numpy(), j), a["eff"].to_numpy())

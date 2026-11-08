@@ -195,11 +195,11 @@ fig.tight_layout()
 #| label: 07-4-run
 #| echo: false
 #| fig-height: 2.8
-long <- rbind(
+scores_long <- rbind(
   data.frame(das = ranking$das, metric = "Spearman correlation", score = ranking$rho),
   data.frame(das = ranking$das, metric = "top-10% overlap", score = ranking$top10))
 
-ggplot(long, aes(das, score)) +
+ggplot(scores_long, aes(das, score)) +
   geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
   geom_point(colour = dgxe[["blue"]], size = 1.8) +
   facet_wrap(~metric, scales = "free_y") +

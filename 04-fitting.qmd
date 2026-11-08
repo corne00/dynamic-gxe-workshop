@@ -285,13 +285,13 @@ fig.tight_layout()
 #| out-width: 600px
 size <- apply(design$Theta, 2, sd) / sd(design$dy)
 effect <- fits[-1, ] * size
-long <- data.frame(term = factor(rownames(effect), rownames(effect)),
+effects <- data.frame(term = factor(rownames(effect), rownames(effect)),
                    method = factor(rep(colnames(effect), each = nrow(effect)),
                                    colnames(effect)),
                    effect = as.vector(effect))
-long <- long[long$effect != 0, ]
+effects <- effects[effects$effect != 0, ]
 
-ggplot(long, aes(term, effect, fill = effect > 0)) +
+ggplot(effects, aes(term, effect, fill = effect > 0)) +
   geom_col(width = 0.7) +
   geom_hline(yintercept = 0, linewidth = 0.3) +
   scale_fill_manual(values = c(`TRUE` = dgxe[["blue"]],
