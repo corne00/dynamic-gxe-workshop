@@ -391,64 +391,198 @@ window.Quarto = {
       <line x1="0" y1="47" x2="100%" y2="66"></line><line x1="0" y1="91" x2="100%" y2="66"></line>
       <line x1="0" y1="47" x2="100%" y2="162"></line><line x1="0" y1="91" x2="100%" y2="162"></line>
       <line x1="0" y1="135" x2="100%" y2="162"></line><line x1="0" y1="179" x2="100%" y2="162"></line>
-      <line x1="0" y1="223" x2="100%" y2="162"></line>
+      <line x1="0" y1="223" x2="100%" y2="162"></line><line x1="0" y1="267" x2="100%" y2="162"></line>
     </g>
   </svg>
   <div class="covmap-new" style="top:30px"><b>TT</b> thermal time<br>\(\sum_{s \le t} \max\left(\tfrac{T_{\min,s} + T_{\max,s}}{2}, 0\right)\)</div>
-  <div class="covmap-new" style="top:126px"><b>RAW</b> relative available water<br>\(W_t / W_{\max}\) from a soil-water balance</div>
+  <div class="covmap-new" style="top:126px"><b>RAW</b> relative available water<br>\(W_t / W_{\max}\), bucket of rain and \(\mathrm{ET}_0\)</div>
 </div>
 <p>Thermal time measures the development of the crop. It is the cumulative sum of the thermal time of each day, the mean temperature truncated at zero:</p>
 <p><span class="math display">\[
 \mathrm{TT}_t = \sum_{s \le t} \max\left(\frac{T_{\min,s} + T_{\max,s}}{2},\, 0\right).
 \]</span></p>
 <p>The sum starts at sowing, so <code>TT</code> on the first day in the table (day 15) already contains the first 14 days.</p>
-<p>Relative available water describes the water status of the soil. In a soil-water balance, rainfall <span class="math inline">\(P_t\)</span> adds water and the evaporative demand <span class="math inline">\(E_t\)</span> removes it, up to the capacity <span class="math inline">\(W_{\max}\)</span> of the soil:</p>
+<p>Relative available water describes the water status of the soil. It is the filling of a soil-water bucket: rainfall <span class="math inline">\(P_t\)</span> adds water, evaporative demand removes it, and the bucket has a capacity <span class="math inline">\(W_{\max}\)</span>,</p>
 <p><span class="math display">\[
-W_t = \min\bigl(\max(W_{t-1} + P_t - E_t,\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
+W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 \]</span></p>
-<p>The evaporative demand <span class="math inline">\(E_t\)</span> and the capacity <span class="math inline">\(W_{\max}\)</span> are not part of the data: <code>RAW</code> is taken from the simulations as given. Unlike the other variables, it depends on the weather of the preceding days. Other constructions are possible, for example the vapour pressure deficit from <code>Tmax</code>, <code>Tmin</code> and <code>VP</code>.</p>
+<p>The table contains <code>RAW</code> but neither the loss term nor the capacity. We identified them from the table itself. <code>RAW</code> is the same for all genotypes, so it cannot come from the crop simulation, and on every dry day it decreases by an amount that follows radiation, temperature and humidity. The one-step change <span class="math inline">\(\mathrm{RAW}_t - \mathrm{RAW}_{t-1}\)</span> on days without clipping (4034 days) is explained by <span class="math inline">\(P_t/W_{\max} - k\,\mathrm{ET}_{0,t}/W_{\max}\)</span>, where <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith reference evapotranspiration (mm d⁻¹) computed from the weather variables of the table:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Water loss <span class="math inline">\(\mathrm{ET}_0\)</span></th>
+<th>RMSE of <span class="math inline">\(\mathrm{RAW}_t - \mathrm{RAW}_{t-1}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>linear in <code>RAD</code>, mean temperature and vapour pressure deficit</td>
+<td>0.0006</td>
+</tr>
+<tr class="even">
+<td>Hargreaves</td>
+<td>0.0014</td>
+</tr>
+<tr class="odd">
+<td>Priestley–Taylor</td>
+<td>0.0015</td>
+</tr>
+<tr class="even">
+<td>FAO-56 Penman–Monteith</td>
+<td>0.0001</td>
+</tr>
+</tbody>
+</table>
+<p>The error of the last row is at the rounding of <code>RAW</code> (four decimals). The two constants were fitted to these one-step changes: <span class="math inline">\(k = 0.796\)</span> and <span class="math inline">\(W_{\max} = 217.2\)</span> mm. Wind is not in the table, so the FAO-56 default <span class="math inline">\(u_2 = 2\)</span> m s⁻¹ is used; fitting <span class="math inline">\(u_2\)</span> as well gives 2.04 m s⁻¹. The reference evapotranspiration is, with <span class="math inline">\(T = (T_{\min} + T_{\max})/2\)</span>,</p>
+<p><span class="math display">\[
+\mathrm{ET}_0 = \frac{0.408\,\Delta\,R_n + \gamma\,\dfrac{900}{T + 273}\,u_2\,(e_s - e_a)}{\Delta + \gamma\,(1 + 0.34\,u_2)}.
+\]</span></p>
+<p>Its ingredients are computed from the table as follows (temperatures in °C, pressures in kPa, radiation in MJ m⁻² d⁻¹). The vapour pressure of the air is <span class="math inline">\(e_a = \mathrm{VP}/10\)</span> and the saturation vapour pressure is <span class="math inline">\(e^\circ(\tau) = 0.6108\exp\bigl(17.27\,\tau/(\tau + 237.3)\bigr)\)</span>, so that</p>
+<p><span class="math display">\[
+e_s = \frac{e^\circ(T_{\max}) + e^\circ(T_{\min})}{2}, \qquad
+\Delta = \frac{4098\,e^\circ(T)}{(T + 237.3)^2}, \qquad
+\gamma = 0.000665 \cdot 101.3\left(\frac{293 - 0.0065\,z}{293}\right)^{5.26}.
+\]</span></p>
+<p>The net radiation is the absorbed shortwave radiation minus the outgoing longwave radiation,</p>
+<p><span class="math display">\[
+R_n = (1 - 0.23)\,\mathrm{RAD} - R_{nl}, \qquad
+R_{nl} = \sigma\,\frac{(T_{\max} + 273.16)^4 + (T_{\min} + 273.16)^4}{2}\,\bigl(0.34 - 0.14\sqrt{e_a}\bigr)\left(1.35\,\min\Bigl(\frac{\mathrm{RAD}}{R_{so}}, 1\Bigr) - 0.35\right),
+\]</span></p>
+<p>with <span class="math inline">\(\sigma = 4.903\cdot 10^{-9}\)</span> MJ K⁻⁴ m⁻² d⁻¹ and the elevation <span class="math inline">\(z\)</span> in metres. The clear-sky radiation <span class="math inline">\(R_{so} = (0.75 + 2\cdot 10^{-5} z)\,R_a\)</span> follows from the extraterrestrial radiation <span class="math inline">\(R_a\)</span>, which needs only the day length <code>DL</code> and the latitude <span class="math inline">\(\varphi = -30.32^\circ\)</span> of Narrabri: with the sunset hour angle <span class="math inline">\(\omega_s = \pi\,\mathrm{DL}/24\)</span> and the solar declination <span class="math inline">\(\delta\)</span> given by <span class="math inline">\(\tan\delta = -\cos\omega_s/\tan\varphi\)</span>,</p>
+<p><span class="math display">\[
+R_a = \frac{24 \cdot 60}{\pi}\,0.0820\,\bigl(\omega_s \sin\varphi \sin\delta + \cos\varphi \cos\delta \sin\omega_s\bigr).
+\]</span></p>
+<p>The latitude and the elevation <span class="math inline">\(z = 230\)</span> m are approximate values for Narrabri (assumed, not fitted), the albedo 0.23 is the FAO-56 value of the reference grass surface, and the Earth–Sun distance factor of <span class="math inline">\(R_a\)</span> is omitted. Starting from the given value of the first day of each year, this construction reproduces <code>RAW</code> over the whole season with an RMSE of 0.0018 (largest error 0.007, about 1.5 mm of water). The first day of the table (day 15) is not an initial condition we can reconstruct, because the weather before it is not in the table; its value is nearly the same in every year (0.80 ± 0.01).</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content" data-group="language">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>reference_et <span class="ot">&lt;-</span> <span class="cf">function</span>(wx, <span class="at">lat =</span> <span class="sc">-</span><span class="fl">30.32</span>, <span class="at">elev =</span> <span class="dv">230</span>, <span class="at">albedo =</span> <span class="fl">0.23</span>, <span class="at">u2 =</span> <span class="dv">2</span>) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    sat <span class="ot">&lt;-</span> <span class="cf">function</span>(T) <span class="fl">0.6108</span> <span class="sc">*</span> <span class="fu">exp</span>(<span class="fl">17.27</span> <span class="sc">*</span> T <span class="sc">/</span> (T <span class="sc">+</span> <span class="fl">237.3</span>))</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    Tm <span class="ot">&lt;-</span> (wx<span class="sc">$</span>Tmin <span class="sc">+</span> wx<span class="sc">$</span>Tmax) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    ea <span class="ot">&lt;-</span> wx<span class="sc">$</span>VP <span class="sc">/</span> <span class="dv">10</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    es <span class="ot">&lt;-</span> (<span class="fu">sat</span>(wx<span class="sc">$</span>Tmax) <span class="sc">+</span> <span class="fu">sat</span>(wx<span class="sc">$</span>Tmin)) <span class="sc">/</span> <span class="dv">2</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    slope <span class="ot">&lt;-</span> <span class="dv">4098</span> <span class="sc">*</span> <span class="fu">sat</span>(Tm) <span class="sc">/</span> (Tm <span class="sc">+</span> <span class="fl">237.3</span>)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    gamma <span class="ot">&lt;-</span> <span class="fl">0.000665</span> <span class="sc">*</span> <span class="fl">101.3</span> <span class="sc">*</span> ((<span class="dv">293</span> <span class="sc">-</span> <span class="fl">0.0065</span> <span class="sc">*</span> elev) <span class="sc">/</span> <span class="dv">293</span>)<span class="sc">^</span><span class="fl">5.26</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    phi <span class="ot">&lt;-</span> lat <span class="sc">*</span> pi <span class="sc">/</span> <span class="dv">180</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    ws <span class="ot">&lt;-</span> wx<span class="sc">$</span>DL <span class="sc">*</span> pi <span class="sc">/</span> <span class="dv">24</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    dec <span class="ot">&lt;-</span> <span class="fu">atan</span>(<span class="sc">-</span><span class="fu">cos</span>(ws) <span class="sc">/</span> <span class="fu">tan</span>(phi))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    Ra <span class="ot">&lt;-</span> <span class="dv">24</span> <span class="sc">*</span> <span class="dv">60</span> <span class="sc">/</span> pi <span class="sc">*</span> <span class="fl">0.082</span> <span class="sc">*</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>        (ws <span class="sc">*</span> <span class="fu">sin</span>(phi) <span class="sc">*</span> <span class="fu">sin</span>(dec) <span class="sc">+</span> <span class="fu">cos</span>(phi) <span class="sc">*</span> <span class="fu">cos</span>(dec) <span class="sc">*</span> <span class="fu">sin</span>(ws))</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    Rso <span class="ot">&lt;-</span> (<span class="fl">0.75</span> <span class="sc">+</span> <span class="fl">2e-5</span> <span class="sc">*</span> elev) <span class="sc">*</span> Ra</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    Rnl <span class="ot">&lt;-</span> <span class="fl">4.903e-9</span> <span class="sc">*</span> ((wx<span class="sc">$</span>Tmax <span class="sc">+</span> <span class="fl">273.16</span>)<span class="sc">^</span><span class="dv">4</span> <span class="sc">+</span> (wx<span class="sc">$</span>Tmin <span class="sc">+</span> <span class="fl">273.16</span>)<span class="sc">^</span><span class="dv">4</span>) <span class="sc">/</span> <span class="dv">2</span> <span class="sc">*</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>        (<span class="fl">0.34</span> <span class="sc">-</span> <span class="fl">0.14</span> <span class="sc">*</span> <span class="fu">sqrt</span>(ea)) <span class="sc">*</span> (<span class="fl">1.35</span> <span class="sc">*</span> <span class="fu">pmin</span>(wx<span class="sc">$</span>RAD <span class="sc">/</span> Rso, <span class="dv">1</span>) <span class="sc">-</span> <span class="fl">0.35</span>)</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    Rn <span class="ot">&lt;-</span> (<span class="dv">1</span> <span class="sc">-</span> albedo) <span class="sc">*</span> wx<span class="sc">$</span>RAD <span class="sc">-</span> Rnl</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">0.408</span> <span class="sc">*</span> slope <span class="sc">*</span> Rn <span class="sc">+</span> gamma <span class="sc">*</span> <span class="dv">900</span> <span class="sc">/</span> (Tm <span class="sc">+</span> <span class="dv">273</span>) <span class="sc">*</span> u2 <span class="sc">*</span> (es <span class="sc">-</span> ea)) <span class="sc">/</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        (slope <span class="sc">+</span> gamma <span class="sc">*</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fl">0.34</span> <span class="sc">*</span> u2))</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>reconstruct_raw <span class="ot">&lt;-</span> <span class="cf">function</span>(wx, <span class="at">k =</span> <span class="fl">0.796</span>, <span class="at">Wmax =</span> <span class="fl">217.2</span>) {</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    loss <span class="ot">&lt;-</span> k <span class="sc">*</span> <span class="fu">reference_et</span>(wx)</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    raw <span class="ot">&lt;-</span> wx<span class="sc">$</span>RAW                       <span class="co"># each year starts from its given value</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(wx))[<span class="sc">-</span><span class="dv">1</span>]) {</span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (wx<span class="sc">$</span>year[j] <span class="sc">==</span> wx<span class="sc">$</span>year[j <span class="sc">-</span> <span class="dv">1</span>]) {</span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>            raw[j] <span class="ot">&lt;-</span> <span class="fu">min</span>(<span class="fu">max</span>(raw[j <span class="sc">-</span> <span class="dv">1</span>] <span class="sc">+</span> (wx<span class="sc">$</span>Rain[j] <span class="sc">-</span> loss[j]) <span class="sc">/</span> Wmax, <span class="dv">0</span>), <span class="dv">1</span>)</span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    raw</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>wx <span class="ot">&lt;-</span> wx[<span class="fu">order</span>(wx<span class="sc">$</span>year, wx<span class="sc">$</span>das), ]</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>err <span class="ot">&lt;-</span> <span class="fu">reconstruct_raw</span>(wx) <span class="sc">-</span> wx<span class="sc">$</span>RAW</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">sprintf</span>(<span class="st">"RMSE %.4f, largest %.4f</span><span class="sc">\n</span><span class="st">"</span>, <span class="fu">sqrt</span>(<span class="fu">mean</span>(err<span class="sc">^</span><span class="dv">2</span>)), <span class="fu">max</span>(<span class="fu">abs</span>(err))))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> reference_et(wx, lat<span class="op">=-</span><span class="fl">30.32</span>, elev<span class="op">=</span><span class="fl">230.0</span>, albedo<span class="op">=</span><span class="fl">0.23</span>, u2<span class="op">=</span><span class="fl">2.0</span>):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    sat <span class="op">=</span> <span class="kw">lambda</span> T: <span class="fl">0.6108</span> <span class="op">*</span> np.exp(<span class="fl">17.27</span> <span class="op">*</span> T <span class="op">/</span> (T <span class="op">+</span> <span class="fl">237.3</span>))</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    Tm <span class="op">=</span> (wx.Tmin <span class="op">+</span> wx.Tmax) <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    ea <span class="op">=</span> wx.VP <span class="op">/</span> <span class="dv">10</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    es <span class="op">=</span> (sat(wx.Tmax) <span class="op">+</span> sat(wx.Tmin)) <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    slope <span class="op">=</span> <span class="dv">4098</span> <span class="op">*</span> sat(Tm) <span class="op">/</span> (Tm <span class="op">+</span> <span class="fl">237.3</span>) <span class="op">**</span> <span class="dv">2</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    gamma <span class="op">=</span> <span class="fl">0.000665</span> <span class="op">*</span> <span class="fl">101.3</span> <span class="op">*</span> ((<span class="dv">293</span> <span class="op">-</span> <span class="fl">0.0065</span> <span class="op">*</span> elev) <span class="op">/</span> <span class="dv">293</span>) <span class="op">**</span> <span class="fl">5.26</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    phi <span class="op">=</span> np.radians(lat)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    ws <span class="op">=</span> wx.DL <span class="op">*</span> np.pi <span class="op">/</span> <span class="dv">24</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    dec <span class="op">=</span> np.arctan(<span class="op">-</span>np.cos(ws) <span class="op">/</span> np.tan(phi))</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    Ra <span class="op">=</span> <span class="dv">24</span> <span class="op">*</span> <span class="dv">60</span> <span class="op">/</span> np.pi <span class="op">*</span> <span class="fl">0.082</span> <span class="op">*</span> (ws <span class="op">*</span> np.sin(phi) <span class="op">*</span> np.sin(dec)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>                                    <span class="op">+</span> np.cos(phi) <span class="op">*</span> np.cos(dec) <span class="op">*</span> np.sin(ws))</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    Rso <span class="op">=</span> (<span class="fl">0.75</span> <span class="op">+</span> <span class="fl">2e-5</span> <span class="op">*</span> elev) <span class="op">*</span> Ra</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    Rnl <span class="op">=</span> (<span class="fl">4.903e-9</span> <span class="op">*</span> ((wx.Tmax <span class="op">+</span> <span class="fl">273.16</span>) <span class="op">**</span> <span class="dv">4</span> <span class="op">+</span> (wx.Tmin <span class="op">+</span> <span class="fl">273.16</span>) <span class="op">**</span> <span class="dv">4</span>) <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>           <span class="op">*</span> (<span class="fl">0.34</span> <span class="op">-</span> <span class="fl">0.14</span> <span class="op">*</span> np.sqrt(ea))</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>           <span class="op">*</span> (<span class="fl">1.35</span> <span class="op">*</span> np.minimum(wx.RAD <span class="op">/</span> Rso, <span class="dv">1</span>) <span class="op">-</span> <span class="fl">0.35</span>))</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    Rn <span class="op">=</span> (<span class="dv">1</span> <span class="op">-</span> albedo) <span class="op">*</span> wx.RAD <span class="op">-</span> Rnl</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ((<span class="fl">0.408</span> <span class="op">*</span> slope <span class="op">*</span> Rn <span class="op">+</span> gamma <span class="op">*</span> <span class="dv">900</span> <span class="op">/</span> (Tm <span class="op">+</span> <span class="dv">273</span>) <span class="op">*</span> u2 <span class="op">*</span> (es <span class="op">-</span> ea))</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>            <span class="op">/</span> (slope <span class="op">+</span> gamma <span class="op">*</span> (<span class="dv">1</span> <span class="op">+</span> <span class="fl">0.34</span> <span class="op">*</span> u2)))</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> reconstruct_raw(wx, k<span class="op">=</span><span class="fl">0.796</span>, Wmax<span class="op">=</span><span class="fl">217.2</span>):</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> (k <span class="op">*</span> reference_et(wx)).to_numpy()</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    raw <span class="op">=</span> wx.RAW.to_numpy().copy()      <span class="co"># each year starts from its given value</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    year, rain <span class="op">=</span> wx.year.to_numpy(), wx.Rain.to_numpy()</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="bu">len</span>(wx)):</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> year[j] <span class="op">==</span> year[j <span class="op">-</span> <span class="dv">1</span>]:</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>            raw[j] <span class="op">=</span> <span class="bu">min</span>(<span class="bu">max</span>(raw[j <span class="op">-</span> <span class="dv">1</span>] <span class="op">+</span> (rain[j] <span class="op">-</span> loss[j]) <span class="op">/</span> Wmax, <span class="fl">0.0</span>), <span class="fl">1.0</span>)</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> raw</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>wx <span class="op">=</span> wx.sort_values([<span class="st">"year"</span>, <span class="st">"das"</span>])</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>err <span class="op">=</span> reconstruct_raw(wx) <span class="op">-</span> wx.RAW.to_numpy()</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"RMSE </span><span class="sc">{</span>np<span class="sc">.</span>sqrt((err<span class="op">**</span><span class="dv">2</span>).mean())<span class="sc">:.4f}</span><span class="ss">, largest </span><span class="sc">{</span>np<span class="sc">.</span><span class="bu">abs</span>(err)<span class="sc">.</span><span class="bu">max</span>()<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>RMSE 0.0018, largest 0.0069</code></pre>
+</div>
+</div>
 <p>In total there are eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.</p>
 </section>
 <section id="variables-over-the-years" class="level2">
 <h2 class="anchored" data-anchor-id="variables-over-the-years">Variables over the years</h2>
 <p>All eight variables, for all years (grey) and three selected years:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
-<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Tmin"</span>, <span class="st">"Tmax"</span>, <span class="st">"Rain"</span>, <span class="st">"RAD"</span>, <span class="st">"VP"</span>, <span class="st">"DL"</span>, <span class="st">"TT"</span>, <span class="st">"RAW"</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> wx<span class="sc">$</span>year, <span class="at">das =</span> wx<span class="sc">$</span>das,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">variable =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="at">each =</span> <span class="fu">nrow</span>(wx)), vars),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="fu">unlist</span>(wx[vars])</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>shown <span class="ot">&lt;-</span> w[w<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(w, <span class="fu">aes</span>(das, value, <span class="at">group =</span> year)) <span class="sc">+</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> shown, <span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">factor</span>(year)), <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">scales =</span> <span class="st">"free_y"</span>, <span class="at">nrow =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_dgxe</span>(<span class="st">"blue"</span>, <span class="st">"cyan"</span>, <span class="st">"burgundy"</span>) <span class="sc">+</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Tmin"</span>, <span class="st">"Tmax"</span>, <span class="st">"Rain"</span>, <span class="st">"RAD"</span>, <span class="st">"VP"</span>, <span class="st">"DL"</span>, <span class="st">"TT"</span>, <span class="st">"RAW"</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>w <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> wx<span class="sc">$</span>year, <span class="at">das =</span> wx<span class="sc">$</span>das,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">variable =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="at">each =</span> <span class="fu">nrow</span>(wx)), vars),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="fu">unlist</span>(wx[vars])</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>shown <span class="ot">&lt;-</span> w[w<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(w, <span class="fu">aes</span>(das, value, <span class="at">group =</span> year)) <span class="sc">+</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> shown, <span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">factor</span>(year)), <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">scales =</span> <span class="st">"free_y"</span>, <span class="at">nrow =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_dgxe</span>(<span class="st">"blue"</span>, <span class="st">"cyan"</span>, <span class="st">"burgundy"</span>) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
-<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>VARS <span class="op">=</span> [<span class="st">"Tmin"</span>, <span class="st">"Tmax"</span>, <span class="st">"Rain"</span>, <span class="st">"RAD"</span>, <span class="st">"VP"</span>, <span class="st">"DL"</span>, <span class="st">"TT"</span>, <span class="st">"RAW"</span>]</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>years <span class="op">=</span> [<span class="dv">1984</span>, <span class="dv">1998</span>, <span class="dv">2008</span>]</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">4.5</span>), sharex<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, name <span class="kw">in</span> <span class="bu">zip</span>(axes.flat, VARS):</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> year, g <span class="kw">in</span> wx.groupby(<span class="st">"year"</span>):</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        ax.plot(g[<span class="st">"das"</span>], g[name], color<span class="op">=</span>GREY, lw<span class="op">=</span><span class="fl">0.25</span>)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> year, colour <span class="kw">in</span> <span class="bu">zip</span>(years, [BLUE, CYAN, BURGUNDY]):</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        g <span class="op">=</span> wx[wx[<span class="st">"year"</span>] <span class="op">==</span> year]</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        ax.plot(g[<span class="st">"das"</span>], g[name], color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">0.9</span>, label<span class="op">=</span>year)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    ax.set_title(name, loc<span class="op">=</span><span class="st">"left"</span>)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>, <span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>fig.supxlabel(<span class="st">"days after sowing"</span>)</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>VARS <span class="op">=</span> [<span class="st">"Tmin"</span>, <span class="st">"Tmax"</span>, <span class="st">"Rain"</span>, <span class="st">"RAD"</span>, <span class="st">"VP"</span>, <span class="st">"DL"</span>, <span class="st">"TT"</span>, <span class="st">"RAW"</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>years <span class="op">=</span> [<span class="dv">1984</span>, <span class="dv">1998</span>, <span class="dv">2008</span>]</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">4.5</span>), sharex<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, name <span class="kw">in</span> <span class="bu">zip</span>(axes.flat, VARS):</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> year, g <span class="kw">in</span> wx.groupby(<span class="st">"year"</span>):</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        ax.plot(g[<span class="st">"das"</span>], g[name], color<span class="op">=</span>GREY, lw<span class="op">=</span><span class="fl">0.25</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> year, colour <span class="kw">in</span> <span class="bu">zip</span>(years, [BLUE, CYAN, BURGUNDY]):</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>        g <span class="op">=</span> wx[wx[<span class="st">"year"</span>] <span class="op">==</span> year]</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        ax.plot(g[<span class="st">"das"</span>], g[name], color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">0.9</span>, label<span class="op">=</span>year)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    ax.set_title(name, loc<span class="op">=</span><span class="st">"left"</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>, <span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>fig.supxlabel(<span class="st">"days after sowing"</span>)</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -466,40 +600,40 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - E_t,\, 0),\, W_{\max}\bigr), \qquad \mathrm
 <h2 class="anchored" data-anchor-id="correlation">Correlation</h2>
 <p>Correlation of the eight variables over all days and years:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
-<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">cor</span>(wx[vars])</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>long <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">a =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="at">each =</span> <span class="dv">8</span>), vars),</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">b =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="dv">8</span>), <span class="fu">rev</span>(vars)), <span class="at">r =</span> <span class="fu">as.vector</span>(r))</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(long, <span class="fu">aes</span>(a, b, <span class="at">fill =</span> r)) <span class="sc">+</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_tile</span>(<span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, r)), <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> dgxe[[<span class="st">"burgundy"</span>]], <span class="at">mid =</span> <span class="st">"white"</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">high =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="st">"correlation"</span>) <span class="sc">+</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.line =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.position =</span> <span class="st">"right"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">cor</span>(wx[vars])</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>long <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">a =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="at">each =</span> <span class="dv">8</span>), vars),</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">b =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="dv">8</span>), <span class="fu">rev</span>(vars)), <span class="at">r =</span> <span class="fu">as.vector</span>(r))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(long, <span class="fu">aes</span>(a, b, <span class="at">fill =</span> r)) <span class="sc">+</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_tile</span>(<span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, r)), <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> dgxe[[<span class="st">"burgundy"</span>]], <span class="at">mid =</span> <span class="st">"white"</span>,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">high =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="st">"correlation"</span>) <span class="sc">+</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.line =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.position =</span> <span class="st">"right"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
-<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.colors <span class="im">import</span> LinearSegmentedColormap</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>colours <span class="op">=</span> LinearSegmentedColormap.from_list(<span class="st">"dgxe"</span>, [BURGUNDY, <span class="st">"white"</span>, BLUE])</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>corr <span class="op">=</span> wx[VARS].corr()</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="fl">4.2</span>))</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> ax.imshow(corr, cmap<span class="op">=</span>colours, vmin<span class="op">=-</span><span class="dv">1</span>, vmax<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>ax.set_xticks(<span class="bu">range</span>(<span class="dv">8</span>), VARS, rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">"right"</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>ax.set_yticks(<span class="bu">range</span>(<span class="dv">8</span>), VARS)</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        ax.text(j, i, <span class="ss">f"</span><span class="sc">{</span>corr<span class="sc">.</span>iloc[i, j]<span class="sc">:.2f}</span><span class="ss">"</span>, ha<span class="op">=</span><span class="st">"center"</span>, va<span class="op">=</span><span class="st">"center"</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>                fontsize<span class="op">=</span><span class="dv">7</span>)</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>fig.colorbar(image, label<span class="op">=</span><span class="st">"correlation"</span>)</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.colors <span class="im">import</span> LinearSegmentedColormap</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>colours <span class="op">=</span> LinearSegmentedColormap.from_list(<span class="st">"dgxe"</span>, [BURGUNDY, <span class="st">"white"</span>, BLUE])</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>corr <span class="op">=</span> wx[VARS].corr()</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="fl">4.2</span>))</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> ax.imshow(corr, cmap<span class="op">=</span>colours, vmin<span class="op">=-</span><span class="dv">1</span>, vmax<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>ax.set_xticks(<span class="bu">range</span>(<span class="dv">8</span>), VARS, rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">"right"</span>)</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>ax.set_yticks(<span class="bu">range</span>(<span class="dv">8</span>), VARS)</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>        ax.text(j, i, <span class="ss">f"</span><span class="sc">{</span>corr<span class="sc">.</span>iloc[i, j]<span class="sc">:.2f}</span><span class="ss">"</span>, ha<span class="op">=</span><span class="st">"center"</span>, va<span class="op">=</span><span class="st">"center"</span>,</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>                fontsize<span class="op">=</span><span class="dv">7</span>)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>fig.colorbar(image, label<span class="op">=</span><span class="st">"correlation"</span>)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -518,46 +652,46 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - E_t,\, 0),\, W_{\max}\bigr), \qquad \mathrm
 <h2 class="anchored" data-anchor-id="response">Response</h2>
 <p>The response is the biomass (t/ha) of each genotype. Each panel is one year: all 199 genotypes in grey and three genotypes with the lowest, median and highest final biomass in colour.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
-<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">spread_genotypes</span>(tr)</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> traj[traj<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(years, <span class="fu">aes</span>(das, biomass, <span class="at">group =</span> genotype)) <span class="sc">+</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> years[years<span class="sc">$</span>genotype <span class="sc">%in%</span> three, ],</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">aes</span>(<span class="at">colour =</span> genotype), <span class="at">linewidth =</span> <span class="fl">0.7</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>year, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"cyan"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"biomass (t/ha)"</span>) <span class="sc">+</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">spread_genotypes</span>(tr)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> traj[traj<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(years, <span class="fu">aes</span>(das, biomass, <span class="at">group =</span> genotype)) <span class="sc">+</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> years[years<span class="sc">$</span>genotype <span class="sc">%in%</span> three, ],</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">aes</span>(<span class="at">colour =</span> genotype), <span class="at">linewidth =</span> <span class="fl">0.7</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>year, <span class="at">nrow =</span> <span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"cyan"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"days after sowing"</span>, <span class="at">y =</span> <span class="st">"biomass (t/ha)"</span>) <span class="sc">+</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
-<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(wx)</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tr <span class="op">=</span> make_trajectories(traj, drv)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> spread_genotypes(tr)</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>days <span class="op">=</span> np.arange(tr.Y.shape[<span class="dv">2</span>]) <span class="op">+</span> tr.das0</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">4</span>, sharey<span class="op">=</span><span class="va">True</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">2.8</span>))</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, year <span class="kw">in</span> <span class="bu">zip</span>(axes, [<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>]):</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> <span class="bu">list</span>(tr.years).index(year)</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    ax.plot(days, tr.Y[:, s].T, color<span class="op">=</span>GREY, lw<span class="op">=</span><span class="fl">0.2</span>)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g, colour <span class="kw">in</span> <span class="bu">zip</span>(three, [BURGUNDY, CYAN, BLUE]):</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>        ax.plot(days, tr.Y[np.searchsorted(tr.genotypes, g), s],</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>                color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">0.9</span>, label<span class="op">=</span>g)</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    ax.set_title(year, loc<span class="op">=</span><span class="st">"left"</span>)</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"biomass (t/ha)"</span>)</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>fig.supxlabel(<span class="st">"days after sowing"</span>)</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(wx)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>tr <span class="op">=</span> make_trajectories(traj, drv)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> spread_genotypes(tr)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>days <span class="op">=</span> np.arange(tr.Y.shape[<span class="dv">2</span>]) <span class="op">+</span> tr.das0</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">4</span>, sharey<span class="op">=</span><span class="va">True</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">2.8</span>))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, year <span class="kw">in</span> <span class="bu">zip</span>(axes, [<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>]):</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    s <span class="op">=</span> <span class="bu">list</span>(tr.years).index(year)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    ax.plot(days, tr.Y[:, s].T, color<span class="op">=</span>GREY, lw<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g, colour <span class="kw">in</span> <span class="bu">zip</span>(three, [BURGUNDY, CYAN, BLUE]):</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        ax.plot(days, tr.Y[np.searchsorted(tr.genotypes, g), s],</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>                color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">0.9</span>, label<span class="op">=</span>g)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    ax.set_title(year, loc<span class="op">=</span><span class="st">"left"</span>)</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"biomass (t/ha)"</span>)</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>fig.supxlabel(<span class="st">"days after sowing"</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
