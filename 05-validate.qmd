@@ -46,7 +46,7 @@ Each genotype has trajectories in the years $E$. A year $e$ is predicted by a mo
 $$
 \begin{array}{ll}
 \textbf{for each genotype } g, \textbf{ for each year } e \in E: & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\mathbf{X}^{(-e)},\, \dot{\mathbf{y}}^{(-e)}\bigr) & \text{fit on the other years} \\[2pt]
+\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\boldsymbol{\Theta}^{(-e)},\, \dot{\mathbf{y}}^{(-e)}\bigr) & \text{fit on the other years} \\[2pt]
 \quad \bar{y}_0^{(-e)} \leftarrow \tfrac{1}{|E|-1} \textstyle\sum_{e' \ne e} y_0^{(e')} & \text{mean initial biomass} \\[2pt]
 \quad \dfrac{d\hat y}{dt} = \boldsymbol{\theta}\bigl(\mathbf{u}^{(e)}(t)\bigr)^\top \hat{\boldsymbol{\xi}}^{(-e)}, \quad \hat y(t_0) = \bar{y}_0^{(-e)} & \text{predict year } e \text{ from its drivers}
 \end{array}
@@ -250,8 +250,8 @@ genotypes = tr.genotypes[::20]
 ks = [4, 8, 12, 16, 24, 36, 60, 108]
 
 def rmse_for(k):
-    def fit(X, dy):
-        return fit_subset(X, dy, k, "backward")
+    def fit(Theta, dy):
+        return fit_subset(Theta, dy, k, "backward")
     return evaluate(cross_validate(Theta2, tr, fit, genotypes),
                     tr)["trajectory_rmse"]
 
@@ -268,7 +268,7 @@ genotypes <- tr$genotypes[seq(1, 199, by = 20)]
 ks <- c(4, 8, 12, 16, 24, 36, 60, 108)
 
 by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k) {
-  fit <- function(X, dy) fit_subset(X, dy, k, "backward")
+  fit <- function(Theta, dy) fit_subset(Theta, dy, k, "backward")
   evaluate(cross_validate(Theta2, tr, fit, genotypes), tr)[[1]]
 })))
 ```

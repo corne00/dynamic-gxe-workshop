@@ -116,9 +116,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108f"></script>
-<script src="js/builder.js?v=20261108f"></script>
-<script src="js/equation.js?v=20261108f"></script>
+<script src="js/controls.js?v=20261108g"></script>
+<script src="js/builder.js?v=20261108g"></script>
+<script src="js/equation.js?v=20261108g"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -444,20 +444,20 @@ window.Quarto = {
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be the observation at the end of day <span class="math inline">\(i\)</span>, with time step <span class="math inline">\(\Delta t\)</span> (one day). The weather of day <span class="math inline">\(i\)</span> acts during that day, so its growth rate belongs to the middle of the day, <span class="math inline">\(t_{i-1/2} = t_i - \Delta t/2\)</span>. The centered difference over the two records enclosing that point gives</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be the observation at the end of day <span class="math inline">\(i\)</span>, with time step <span class="math inline">\(\Delta t\)</span> (one day). The weather of day <span class="math inline">\(i\)</span> acts during that day, so its growth rate belongs to the middle of the day, <span class="math inline">\(t_{i-1/2} = t_i - \Delta t/2\)</span>. It is estimated from the two records enclosing the day,</p>
 <p><span class="math display">\[
-\dot y_i := \frac{dy}{dt}(t_{i-1/2}) = \frac{y_i - y_{i-1}}{\Delta t} + \mathcal{O}(\Delta t^2).
+\dot y_i := \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t}.
 \]</span></p>
-<p>The expansion of <span class="math inline">\(y(t_{i-1/2} \pm \Delta t/2)\)</span> about <span class="math inline">\(t_{i-1/2}\)</span> shows that the odd-order terms cancel, so the error is <span class="math inline">\(\tfrac{1}{24}\Delta t^2\, y^{(3)}(t_{i-1/2})\)</span>. The same difference used as an estimate at <span class="math inline">\(t_i\)</span> or <span class="math inline">\(t_{i-1}\)</span> would be only first order, <span class="math inline">\(\mathcal{O}(\Delta t)\)</span>. The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (<code>numpy.diff</code> in Python, <code>diff</code> in R).</p>
+<p>The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (<code>numpy.diff</code> in Python, <code>diff</code> in R).</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_derivative.png" class="img-fluid figure-img" style="width:100.0%"></p>
 <figcaption>Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations at the start and end of day <span class="math inline">\(i\)</span> estimates <span class="math inline">\(\dot y_i\)</span>, the growth rate in the middle of the day. The growth rates of the whole year are shown in (c); the regression is performed on these.</figcaption>
 </figure>
 </div>
-<p>Collecting all the growth rates in a vector <span class="math inline">\(\dot{\mathbf{y}}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
+<p>Collecting all the growth rates in a vector <span class="math inline">\(\dot{\mathbf{y}}\)</span> and the library values in a matrix <span class="math inline">\(\boldsymbol{\Theta}\)</span> with entries <span class="math inline">\(\Theta_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>
 <p><span class="math display">\[
-\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}.
+\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 \]</span></p>
 <p>The state <span class="math inline">\(\mathbf{y}_i\)</span> in the library is the observed state on day <span class="math inline">\(t_i\)</span>. If data are collected in several environments and for several genotypes, the growth rates and library values are stacked. With <span class="math inline">\(\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})\)</span> for genotype <span class="math inline">\(g\)</span> in environment <span class="math inline">\(e\)</span> on day <span class="math inline">\(i\)</span>:</p>
 <p><span class="math display">\[
@@ -478,9 +478,9 @@ window.Quarto = {
 \end{pmatrix}
 }
 \]</span></p>
-<p>The coefficients enter linearly (recall <span class="math inline">\(\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}\)</span>), so we just need to solve a linear regression problem to estimate them, for example by least squares:</p>
+<p>The coefficients enter linearly (recall <span class="math inline">\(\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}\)</span>), so we just need to solve a linear regression problem to estimate them, for example by least squares:</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 .
 \]</span></p>
 <p>However, any regression method can be used. We will compare several methods in the workshop.</p>
 </section>
@@ -502,7 +502,7 @@ window.Quarto = {
 <h2 class="anchored" data-anchor-id="dealing-with-multiple-genotypes">Dealing with multiple genotypes</h2>
 <p>Differences between genotypes are captured by a separate regression for each genotype <span class="math inline">\(g = 1, \dots, G\)</span>, on its own growth rates and library values (stacked over the environments),</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}}^{(g)} - \mathbf{X}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}}^{(g)} - \boldsymbol{\Theta}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
 \]</span></p>
 <p>The environments and the library are shared, so the columns of <span class="math inline">\(\hat{\boldsymbol{\Xi}} = \bigl(\hat{\boldsymbol{\xi}}^{(1)}, \dots, \hat{\boldsymbol{\xi}}^{(G)}\bigr)\)</span> are directly comparable: each column is the growth equation of one genotype, and the differences between columns describe how genotypes differ in their response to the drivers.</p>
 </section>
@@ -521,7 +521,7 @@ window.Quarto = {
 <p>The following steps each have a defined input and output.</p>
 <div class="flow">
   <a href="02-data.html"><span class="num">2</span><span class="title">Data</span><span class="io">weather and biomass tables</span></a>
-  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">θ(y, u), X and ẏ</span></a>
+  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">θ(y, u), Θ and ẏ</span></a>
   <a href="04-fitting.html"><span class="num">4</span><span class="title">Fitting</span><span class="io">estimate of ξ</span></a>
   <a href="05-validate.html"><span class="num">5</span><span class="title">Validation</span><span class="io">solution and cross-validation</span></a>
   <a href="06-reading.html"><span class="num">6</span><span class="title">Interpretation</span><span class="io">response curves</span></a>

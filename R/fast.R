@@ -105,7 +105,7 @@ cv_rmse_path <- function(Theta, tr, path, values, genotypes,
       d <- make_design(Theta, tr, tr$genotypes[g])
       folds <- lapply(seq_len(S), function(v) {
         train <- d$year != v
-        path(d$X[train, ], d$dy[train], values)
+        path(d$Theta[train, ], d$dy[train], values)
       })
       y0 <- (sum(tr$Y[g, , 1]) - tr$Y[g, , 1]) / (S - 1)
       for (i in seq_along(values)) {
@@ -135,11 +135,11 @@ cv_moments <- function(Theta, tr, mpath, values, genotypes = tr$genotypes,
       d <- make_design(Theta, tr, tr$genotypes[g])
       by_year <- lapply(seq_len(S), function(v) {
         i <- d$year == v
-        crossprod(cbind(1, d$X[i, , drop = FALSE], d$dy[i]))
+        crossprod(cbind(1, d$Theta[i, , drop = FALSE], d$dy[i]))
       })
       total <- Reduce(`+`, by_year)
       folds <- lapply(by_year, function(Gv) {
-        G <- total - Gv; attr(G, "names_x") <- colnames(d$X)
+        G <- total - Gv; attr(G, "names_x") <- colnames(d$Theta)
         mpath(G, values)
       })
       y0 <- (sum(tr$Y[g, , 1]) - tr$Y[g, , 1]) / (S - 1)

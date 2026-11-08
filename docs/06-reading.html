@@ -116,9 +116,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108f"></script>
-<script src="js/builder.js?v=20261108f"></script>
-<script src="js/equation.js?v=20261108f"></script>
+<script src="js/controls.js?v=20261108g"></script>
+<script src="js/builder.js?v=20261108g"></script>
+<script src="js/equation.js?v=20261108g"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -287,7 +287,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fit_genotype <span class="ot">&lt;-</span> <span class="cf">function</span>(g) {</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, g)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_stlsq</span>(d<span class="sc">$</span>X, d<span class="sc">$</span>dy)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_stlsq</span>(d<span class="sc">$</span>Theta, d<span class="sc">$</span>dy)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> <span class="fu">sapply</span>(tr<span class="sc">$</span>genotypes, fit_genotype)</span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(coefs[, <span class="st">"g114"</span>], <span class="dv">4</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -296,7 +296,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_genotype(g):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> make_design(Theta, tr, g)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_stlsq(d.X, d.dy)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_stlsq(d.Theta, d.dy)</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>coefs <span class="op">=</span> pd.DataFrame({g: fit_genotype(g) <span class="cf">for</span> g <span class="kw">in</span> tr.genotypes},</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                     index<span class="op">=</span>[<span class="st">"1"</span>] <span class="op">+</span> Theta.terms)</span>
@@ -589,7 +589,7 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <div class="tab-content" data-group="language">
 <div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">spread_genotypes</span>(tr)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>)  <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j) {</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers), <span class="at">x =</span> <span class="fu">natural</span>(Z[, j], j))</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>}))</span>
@@ -610,7 +610,7 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 </div>
 </div>
 <div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> spread_genotypes(tr)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> [<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>]    <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">4.4</span>))</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j, (ax, name) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(axes.flat, drv.drivers)):</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">=</span> curves[curves[<span class="st">"driver"</span>] <span class="op">==</span> name]</span>
@@ -698,7 +698,7 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv, <span class="at">pairs =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>d2 <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta2, tr, <span class="st">"g114"</span>)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pred2 <span class="ot">&lt;-</span> <span class="fu">predictor</span>(<span class="fu">fit_subset</span>(d2<span class="sc">$</span>X, d2<span class="sc">$</span>dy, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">method =</span> <span class="st">"backward"</span>), <span class="cn">TRUE</span>)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>pred2 <span class="ot">&lt;-</span> <span class="fu">predictor</span>(<span class="fu">fit_subset</span>(d2<span class="sc">$</span>Theta, d2<span class="sc">$</span>dy, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">method =</span> <span class="st">"backward"</span>), <span class="cn">TRUE</span>)</span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>effects <span class="ot">&lt;-</span> <span class="cf">function</span>(j) {</span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  feature <span class="ot">&lt;-</span> drv<span class="sc">$</span>drivers[j]</span>
@@ -719,7 +719,7 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="op">=</span> make_library(drv, pairs<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>d2 <span class="op">=</span> make_design(Theta2, tr, <span class="st">"g114"</span>)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>rate2 <span class="op">=</span> GrowthRate(fit_subset(d2.X, d2.dy, k<span class="op">=</span><span class="dv">20</span>, method<span class="op">=</span><span class="st">"backward"</span>), pairs<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>rate2 <span class="op">=</span> GrowthRate(fit_subset(d2.Theta, d2.dy, k<span class="op">=</span><span class="dv">20</span>, method<span class="op">=</span><span class="st">"backward"</span>), pairs<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> effects(feature):</span>
 <span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    j <span class="op">=</span> drv.drivers.index(feature)</span>

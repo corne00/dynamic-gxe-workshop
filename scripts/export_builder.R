@@ -3,6 +3,7 @@
 ## genotypes.
 library(jsonlite)
 source("R/pipeline.R")
+source("scripts/helpers.R")
 
 genotypes <- spread_genotypes(tr, 8)
 trl <- make_trajectories(traj, drv, "lai")

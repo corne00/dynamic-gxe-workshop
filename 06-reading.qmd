@@ -47,7 +47,7 @@ For interpretation, the sparse model (STLSQ) of every genotype is fitted to all 
 ```python
 def fit_genotype(g):
     d = make_design(Theta, tr, g)
-    return fit_stlsq(d.X, d.dy)
+    return fit_stlsq(d.Theta, d.dy)
 
 coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
                      index=["1"] + Theta.terms)
@@ -61,7 +61,7 @@ print(coefs["g114"].round(4))
 #| echo: false
 fit_genotype <- function(g) {
   d <- make_design(Theta, tr, g)
-  fit_stlsq(d$X, d$dy)
+  fit_stlsq(d$Theta, d$dy)
 }
 coefs <- sapply(tr$genotypes, fit_genotype)
 round(coefs[, "g114"], 4)
@@ -336,7 +336,7 @@ The ALE curve of each driver for every genotype (grey), and for the genotypes wi
 ## Python
 
 ```python
-three = spread_genotypes(tr)
+three = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
 fig, axes = plt.subplots(2, 4, figsize=(9, 4.4))
 for j, (ax, name) in enumerate(zip(axes.flat, drv.drivers)):
     sub = curves[curves["driver"] == name]
@@ -361,7 +361,7 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 4.4
 #| fig-width: 9
-three <- spread_genotypes(tr)
+three <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
 observed <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
   data.frame(driver = factor(drv$drivers[j], drv$drivers), x = natural(Z[, j], j))
 }))
@@ -430,7 +430,7 @@ The library of powers is additive in the drivers: the effect of one driver does 
 ```python
 Theta2 = make_library(drv, pairs=True)
 d2 = make_design(Theta2, tr, "g114")
-rate2 = GrowthRate(fit_subset(d2.X, d2.dy, k=20, method="backward"), pairs=True)
+rate2 = GrowthRate(fit_subset(d2.Theta, d2.dy, k=20, method="backward"), pairs=True)
 
 def effects(feature):
     j = drv.drivers.index(feature)
@@ -449,7 +449,7 @@ def effects(feature):
 #| echo: false
 Theta2 <- make_library(drv, pairs = TRUE)
 d2 <- make_design(Theta2, tr, "g114")
-pred2 <- predictor(fit_subset(d2$X, d2$dy, k = 20, method = "backward"), TRUE)
+pred2 <- predictor(fit_subset(d2$Theta, d2$dy, k = 20, method = "backward"), TRUE)
 
 effects <- function(j) {
   feature <- drv$drivers[j]

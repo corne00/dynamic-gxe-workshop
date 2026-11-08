@@ -116,9 +116,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108f"></script>
-<script src="js/builder.js?v=20261108f"></script>
-<script src="js/equation.js?v=20261108f"></script>
+<script src="js/controls.js?v=20261108g"></script>
+<script src="js/builder.js?v=20261108g"></script>
+<script src="js/equation.js?v=20261108g"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -286,7 +286,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>fit_genotype <span class="ot">&lt;-</span> <span class="cf">function</span>(g) {</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, g)</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_stlsq</span>(d<span class="sc">$</span>X, d<span class="sc">$</span>dy)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_stlsq</span>(d<span class="sc">$</span>Theta, d<span class="sc">$</span>dy)</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>}</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>coefs <span class="ot">&lt;-</span> <span class="fu">sapply</span>(tr<span class="sc">$</span>genotypes, fit_genotype)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -294,7 +294,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_genotype(g):</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> make_design(Theta, tr, g)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_stlsq(d.X, d.dy)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fit_stlsq(d.Theta, d.dy)</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>coefs <span class="op">=</span> pd.DataFrame({g: fit_genotype(g) <span class="cf">for</span> g <span class="kw">in</span> tr.genotypes},</span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                     index<span class="op">=</span>[<span class="st">"1"</span>] <span class="op">+</span> Theta.terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -306,7 +306,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="tab-content" data-group="language">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">spread_genotypes</span>(tr)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>)  <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>mean_path <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="dv">1</span>, <span class="fu">apply</span>(Theta, <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>), mean))</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>das <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(mean_path) <span class="sc">+</span> tr<span class="sc">$</span>das0 <span class="sc">-</span> <span class="dv">1</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">das =</span> <span class="fu">rep</span>(das, <span class="fu">ncol</span>(coefs)),</span>
@@ -325,7 +325,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> spread_genotypes(tr)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> [<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>]    <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>mean_path <span class="op">=</span> Theta.array.mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> coefs.to_numpy()</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>rate <span class="op">=</span> pd.DataFrame(b[<span class="dv">0</span>] <span class="op">+</span> mean_path <span class="op">@</span> b[<span class="dv">1</span>:], columns<span class="op">=</span>coefs.columns)</span>

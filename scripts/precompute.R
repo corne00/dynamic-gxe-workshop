@@ -33,7 +33,7 @@ store("rmse_vs_k.rds", data.frame(k = ks, rmse = cv_rmse_path(
 ## ALE curves of every genotype and driver (step 6)
 coefs <- sapply(tr$genotypes, function(g) {
   d <- make_design(Theta, tr, g)
-  fit_stlsq(d$X, d$dy)
+  fit_stlsq(d$Theta, d$dy)
 })
 Z <- as.data.frame(observed_points(drv, tr))
 predictor <- function(coef, pairs = FALSE) {

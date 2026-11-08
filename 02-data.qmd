@@ -102,7 +102,7 @@ $$
 W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 $$
 
-The capacity is the plant-available water capacity of the soil at Narrabri, $W_{\max} = 217.5$ mm (a grey vertosol), and the bucket starts each season with the plant-available water at sowing, $W_0 = 175$ mm, so that $\mathrm{RAW}_0 = 0.80$ (Bustos-Korts et al., 2019, Table 1). $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and $k = 0.8$. With these values the bucket reproduces `RAW` over the whole season with an RMSE of 0.004.
+The capacity is the plant-available water capacity of the soil at Narrabri, $W_{\max} = 217.5$ mm (a grey vertosol), and the bucket starts each season with the plant-available water at sowing, $W_0 = 175$ mm, so that $\mathrm{RAW}_0 = 0.80$ (Bustos-Korts et al., 2019, Table 1). $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and $k = 0.8$.
 
 In total there are eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.
 
@@ -164,7 +164,7 @@ ggplot(w, aes(das, value, group = year)) +
 
 ## Correlation
 
-Correlation of the eight variables over all days and years:
+The eight variables over all days and years, standardised. Above the diagonal: scatter plots of a random sample of 600 days. On the diagonal: the distribution of each variable (kernel density estimate). Below the diagonal: the correlation coefficient.
 
 ::: {.panel-tabset group="language"}
 
@@ -180,19 +180,38 @@ Correlation of the eight variables over all days and years:
 
 ```python
 from matplotlib.colors import LinearSegmentedColormap
+from scipy.stats import gaussian_kde
 
 colours = LinearSegmentedColormap.from_list("dgxe", [BURGUNDY, "white", BLUE])
-corr = wx[VARS].corr()
-fig, ax = plt.subplots(figsize=(5, 4.2))
-image = ax.imshow(corr, cmap=colours, vmin=-1, vmax=1)
-ax.set_xticks(range(8), VARS, rotation=45, ha="right")
-ax.set_yticks(range(8), VARS)
+z = (wx[VARS] - wx[VARS].mean()) / wx[VARS].std()
+corr = z.corr()
+sample = z.sample(600, random_state=1)
+grid = np.linspace(-3.5, 3.5, 200)
+
+fig, axes = plt.subplots(8, 8, figsize=(7.2, 7.2))
 for i in range(8):
     for j in range(8):
-        ax.text(j, i, f"{corr.iloc[i, j]:.2f}", ha="center", va="center",
-                fontsize=7)
-fig.colorbar(image, label="correlation")
-fig.tight_layout()
+        ax = axes[i, j]
+        ax.set(xlim=(-3.5, 3.5), ylim=(-3.5, 3.5), xticks=[], yticks=[])
+        for spine in ax.spines.values():
+            spine.set(color=GREY, linewidth=0.5)
+        if i < j:
+            ax.scatter(sample[VARS[j]], sample[VARS[i]], s=1.5, alpha=0.4,
+                       color=BLUE, linewidths=0)
+        elif i == j:
+            density = gaussian_kde(z[VARS[i]])(grid)
+            ax.fill_between(grid, -3.5, -3.5 + 6 * density / density.max(),
+                            color=BLUE, alpha=0.5, linewidth=0)
+        else:
+            r = corr.iloc[i, j]
+            ax.set_facecolor(colours((r + 1) / 2))
+            ax.text(0, 0, f"{r:.2f}", ha="center", va="center", fontsize=7)
+        if i == 0:
+            ax.set_title(VARS[j], fontsize=8)
+        if j == 0:
+            ax.set_ylabel(VARS[i], rotation=0, ha="right", va="center",
+                          fontsize=8)
+fig.subplots_adjust(wspace=0.04, hspace=0.04)
 ```
 
 :::
@@ -200,20 +219,52 @@ fig.tight_layout()
 ```{r}
 #| label: 02-5-run
 #| echo: false
-#| fig-height: 4
+#| fig-height: 7
+#| fig-width: 7
+#| warning: false
+z <- as.data.frame(scale(wx[vars]))
 r <- cor(wx[vars])
-long <- data.frame(a = factor(rep(vars, each = 8), vars),
-                   b = factor(rep(vars, 8), rev(vars)), r = as.vector(r))
+panel <- expand.grid(row = seq_along(vars), col = seq_along(vars))
+label <- function(i) factor(vars[i], vars)
+set.seed(1)
+sample_days <- z[sample(nrow(z), 600), ]
 
-ggplot(long, aes(a, b, fill = r)) +
-    geom_tile(colour = "white") +
-    geom_text(aes(label = sprintf("%.2f", r)), size = 3) +
+upper <- panel[panel$row < panel$col, ]
+upper <- do.call(rbind, lapply(seq_len(nrow(upper)), function(k) {
+    i <- upper$row[k]; j <- upper$col[k]
+    data.frame(row = label(i), col = label(j),
+               x = sample_days[[j]], y = sample_days[[i]])
+}))
+diagonal <- do.call(rbind, lapply(seq_along(vars), function(i) {
+    d <- density(z[[i]], from = -3.5, to = 3.5, n = 200)
+    data.frame(row = label(i), col = label(i), x = d$x,
+               ymax = -3.5 + 6 * d$y / max(d$y))
+}))
+lower <- panel[panel$row > panel$col, ]
+lower <- data.frame(row = label(lower$row), col = label(lower$col),
+                    r = r[cbind(lower$row, lower$col)])
+
+ggplot() +
+    geom_rect(data = lower, aes(fill = r), xmin = -Inf, xmax = Inf,
+              ymin = -Inf, ymax = Inf) +
+    geom_text(data = lower, aes(label = sprintf("%.2f", r)), x = 0, y = 0,
+              size = 2.6) +
+    geom_point(data = upper, aes(x, y), size = 0.15, alpha = 0.4,
+               colour = dgxe[["blue"]]) +
+    geom_ribbon(data = diagonal, aes(x, ymin = -3.5, ymax = ymax),
+                fill = dgxe[["blue"]], alpha = 0.5) +
+    facet_grid(row ~ col, switch = "y") +
     scale_fill_gradient2(low = dgxe[["burgundy"]], mid = "white",
                          high = dgxe[["blue"]], limits = c(-1, 1)) +
-    labs(x = NULL, y = NULL, fill = "correlation") +
+    coord_cartesian(xlim = c(-3.5, 3.5), ylim = c(-3.5, 3.5), expand = FALSE) +
+    labs(x = NULL, y = NULL) +
     theme_dgxe() +
     theme(axis.line = element_blank(), axis.ticks = element_blank(),
-          legend.position = "right")
+          axis.text = element_blank(), aspect.ratio = 1,
+          panel.spacing = unit(2, "pt"), strip.placement = "outside",
+          strip.text.y.left = element_text(angle = 0, hjust = 1),
+          panel.border = element_rect(colour = "#D1D5DB", fill = NA,
+                                      linewidth = 0.3))
 ```
 
 Thermal time and day length are almost collinear (0.97), since both increase through the year. Radiation and the maximum temperature follow the same yearly pattern (0.74 with day length, 0.66 between each other), `RAW` falls as the year progresses (−0.68 with day length), and `Tmin` and `VP` are strongly correlated (0.79). Rain is nearly uncorrelated with the other variables. Strongly correlated variables carry overlapping information, which is a first indication that a library does not need all eight.
@@ -237,7 +288,7 @@ The response is the biomass (t/ha) of each genotype. Each panel is one year: all
 ```python
 drv = make_drivers(wx)
 tr = make_trajectories(traj, drv)
-three = spread_genotypes(tr)
+three = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
 days = np.arange(tr.Y.shape[2]) + tr.das0
 
 fig, axes = plt.subplots(1, 4, sharey=True, figsize=(10, 2.8))
@@ -263,7 +314,7 @@ fig.tight_layout()
 #| warning: false
 drv <- make_drivers(wx)
 tr <- make_trajectories(traj, drv)
-three <- spread_genotypes(tr)
+three <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
 years <- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]
 
 ggplot(years, aes(das, biomass, group = genotype)) +

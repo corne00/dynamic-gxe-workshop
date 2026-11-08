@@ -3,8 +3,8 @@
 ##
 ##    weather --make_drivers--> drv --make_library--> Theta   (candidate terms)
 ##    biomass --make_trajectories--> tr
-##    Theta, tr --make_design--> X, dy                (growth rate by one-day differences)
-##    fit_*(X, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
+##    Theta[year, day, term], tr --make_design--> Theta (rows = days), dy
+##    fit_*(Theta, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
 ##
 ##  Base R, except for glmnet and leaps (fitting).
 ## =============================================================================
@@ -143,67 +143,66 @@ make_trajectories <- function(traj, drv, var = "biomass") {
 ## ---- Regression problem for one genotype ------------------------------------
 ## Rows: days 2, ..., n + 1 of every year (all days with a record before them).
 ## Biomass is recorded at the end of a day, so day i drives the change from
-## observation i - 1 to i. dy: the difference over that day, y_i - y_(i-1), the
-## growth rate at the middle of day i (centered difference with a half-day
-## step). X: library of day i.
+## observation i - 1 to i. Row i of the returned matrix Theta is the library of
+## day i, and dy[i] = y_i - y_(i-1) is the growth rate at the middle of day i.
 make_design <- function(Theta, tr, genotype) {
   g <- match(genotype, tr$genotypes)
   n <- tr$nend[g, ]
   years <- seq_along(tr$years)
-  X <- lapply(years, function(y) Theta[y, 2:(n[y] + 1), ])
+  rows <- lapply(years, function(y) Theta[y, 2:(n[y] + 1), ])
   dy <- lapply(years, function(y) diff(tr$Y[g, y, 1:(n[y] + 1)]))
-  X <- do.call(rbind, X)
-  colnames(X) <- dimnames(Theta)[[3]]
-  list(X = X, dy = unlist(dy), year = rep(years, n))
+  rows <- do.call(rbind, rows)
+  colnames(rows) <- dimnames(Theta)[[3]]
+  list(Theta = rows, dy = unlist(dy), year = rep(years, n))
 }
 
-## ---- Fitting methods: fit(X, dy) -> coefficients (intercept first) ----------
-named <- function(b, X) setNames(unname(b), c("1", colnames(X)))
+## ---- Fitting methods: fit(Theta, dy) -> coefficients (intercept first) ----------
+named <- function(b, Theta) setNames(unname(b), c("1", colnames(Theta)))
 
-col_sd <- function(X) {
-  n <- nrow(X)
-  sqrt((colSums(X^2) - n * colMeans(X)^2) / (n - 1))
+col_sd <- function(Theta) {
+  n <- nrow(Theta)
+  sqrt((colSums(Theta^2) - n * colMeans(Theta)^2) / (n - 1))
 }
 
-fit_ols <- function(X, dy) {
-  Z <- cbind(`1` = 1, X)
+fit_ols <- function(Theta, dy) {
+  Z <- cbind(`1` = 1, Theta)
   drop(solve(crossprod(Z), crossprod(Z, dy)))
 }
 
 ## Ridge in closed form, with the penalty scaling of glmnet.
-fit_ridge <- function(X, dy, lambda = 1e-3) {
-  n <- nrow(X); mx <- colMeans(X)
-  var_x <- col_sd(X)^2 * (n - 1) / n
+fit_ridge <- function(Theta, dy, lambda = 1e-3) {
+  n <- nrow(Theta); mx <- colMeans(Theta)
+  var_x <- col_sd(Theta)^2 * (n - 1) / n
   sy <- sd(dy) * sqrt((n - 1) / n)
-  b <- solve(crossprod(X) / n - tcrossprod(mx) + diag(lambda / sy * var_x),
-             crossprod(X, dy) / n - mx * mean(dy))
-  c(`1` = mean(dy) - sum(mx * b), setNames(drop(b), colnames(X)))
+  b <- solve(crossprod(Theta) / n - tcrossprod(mx) + diag(lambda / sy * var_x),
+             crossprod(Theta, dy) / n - mx * mean(dy))
+  c(`1` = mean(dy) - sum(mx * b), setNames(drop(b), colnames(Theta)))
 }
 
 ## Lasso and elastic net by glmnet.
-fit_glmnet <- function(X, dy, alpha, lambda) {
-  fit <- glmnet::glmnet(X, dy, alpha = alpha, lambda = lambda,
+fit_glmnet <- function(Theta, dy, alpha, lambda) {
+  fit <- glmnet::glmnet(Theta, dy, alpha = alpha, lambda = lambda,
                         type.gaussian = "covariance")
-  named(as.vector(coef(fit)), X)
+  named(as.vector(coef(fit)), Theta)
 }
-fit_lasso <- function(X, dy, lambda = 3e-4) fit_glmnet(X, dy, 1, lambda)
-fit_enet <- function(X, dy, lambda = 6e-4) fit_glmnet(X, dy, 0.5, lambda)
+fit_lasso <- function(Theta, dy, lambda = 3e-4) fit_glmnet(Theta, dy, 1, lambda)
+fit_enet <- function(Theta, dy, lambda = 6e-4) fit_glmnet(Theta, dy, 0.5, lambda)
 
 ## Best subset or backward elimination with k terms.
-fit_subset <- function(X, dy, k = 8, method = "exhaustive") {
-  b <- coef(leaps::regsubsets(X, dy, nvmax = k, method = method), k)
-  full <- setNames(numeric(ncol(X) + 1), c("1", colnames(X)))
+fit_subset <- function(Theta, dy, k = 8, method = "exhaustive") {
+  b <- coef(leaps::regsubsets(Theta, dy, nvmax = k, method = method), k)
+  full <- setNames(numeric(ncol(Theta) + 1), c("1", colnames(Theta)))
   full[c("1", names(b)[-1])] <- b
   full
 }
 
 ## Sequential thresholded least squares: refit, drop terms below the threshold.
-fit_stlsq <- function(X, dy, threshold = 0.05) {
-  Z <- cbind(`1` = 1, X)
+fit_stlsq <- function(Theta, dy, threshold = 0.05) {
+  Z <- cbind(`1` = 1, Theta)
   G <- crossprod(Z)
   rhs <- drop(crossprod(Z, dy))
-  size <- col_sd(X) / sd(dy)
-  active <- colnames(X)
+  size <- col_sd(Theta) / sd(dy)
+  active <- colnames(Theta)
   repeat {
     i <- c("1", active)
     b <- drop(solve(G[i, i], rhs[i]))
@@ -211,7 +210,7 @@ fit_stlsq <- function(X, dy, threshold = 0.05) {
     if (all(keep) || !any(keep)) break
     active <- active[keep]
   }
-  full <- setNames(numeric(ncol(X) + 1), c("1", colnames(X)))
+  full <- setNames(numeric(ncol(Theta) + 1), c("1", colnames(Theta)))
   full[names(b)] <- b
   full
 }
@@ -222,8 +221,8 @@ fit_methods <- list(
   ridge = fit_ridge,
   lasso = fit_lasso,
   `elastic net` = fit_enet,
-  `best subset (k = 8)` = function(X, dy) fit_subset(X, dy, k = 8),
-  `backward (k = 8)` = function(X, dy) fit_subset(X, dy, 8, "backward"),
+  `best subset (k = 8)` = function(Theta, dy) fit_subset(Theta, dy, k = 8),
+  `backward (k = 8)` = function(Theta, dy) fit_subset(Theta, dy, 8, "backward"),
   STLSQ = fit_stlsq)
 
 ## ---- Simulation -------------------------------------------------------------
@@ -244,15 +243,6 @@ simulate <- function(coef, U, y0, terms = function(y, u) u, method = "lsoda") {
                atol = 1e-4)[, -1, drop = FALSE]
 }
 
-## n genotypes spread evenly over the ranking of mean final biomass.
-spread_genotypes <- function(tr, n = 3) {
-  last <- cbind(as.vector(row(tr$nend)), as.vector(col(tr$nend)),
-                as.vector(tr$nend) + 1)
-  final <- matrix(tr$Y[last], nrow(tr$nend), dimnames = dimnames(tr$nend))
-  ranked <- names(sort(rowMeans(final)))
-  ranked[round(seq(1, length(ranked), length.out = n))]
-}
-
 ## ---- Validation: leave-one-year-out ---------------------------------------
 ## Each year is predicted by a model fitted to the other years of the same
 ## genotype, starting from the mean initial biomass of those years.
@@ -264,7 +254,7 @@ cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
     d <- make_design(Theta, tr, tr$genotypes[g])
     coef <- t(sapply(seq_len(S), function(v) {
       train <- d$year != v
-      fit(d$X[train, ], d$dy[train])
+      fit(d$Theta[train, ], d$dy[train])
     }))
     y0 <- (sum(tr$Y[g, , 1]) - tr$Y[g, , 1]) / (S - 1)
     P[g, , ] <- t(simulate(coef, Theta, y0))
@@ -278,7 +268,7 @@ cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
 ## state, and with products = TRUE also products of states and products of a
 ## state with the powers 1 and 2 of each driver. trs is a list of trajectory
 ## sets from make_trajectories(), one per modelled state, named by state; every
-## state has its own equation, and all are fitted with the same fit(X, dy). The
+## state has its own equation, and all are fitted with the same fit(Theta, dy). The
 ## state terms of a row use the mean of the records on either side of the day.
 state_scale <- function(Y) {
   m <- mean(Y, na.rm = TRUE)
@@ -319,7 +309,7 @@ make_design_states <- function(Theta, trs, genotype, drivers, degree = 3,
   g <- match(genotype, trs[[1]]$genotypes); n <- trs[[1]]$nend[g, ]
   dy <- sapply(trs, function(tr) make_design(Theta, tr, genotype)$dy)
   scales <- sapply(trs, function(tr) state_scale(tr$Y[g, , ]))
-  X <- d$X
+  full <- d$Theta
   if (feedback) {
     z <- sapply(names(trs), function(k) {
       y <- unlist(lapply(seq_along(n), function(i) {   # state in the middle of the day
@@ -328,11 +318,11 @@ make_design_states <- function(Theta, trs, genotype, drivers, degree = 3,
       }))
       (y - scales["center", k]) / scales["scale", k]
     })
-    U <- d$X[, interacting_terms(Theta, drivers), drop = FALSE]
-    X <- cbind(X, state_terms(matrix(z, ncol = length(trs), dimnames = list(NULL, names(trs))),
-                              U, degree, pairs))
+    U <- d$Theta[, interacting_terms(Theta, drivers), drop = FALSE]
+    full <- cbind(full, state_terms(matrix(z, ncol = length(trs), dimnames = list(NULL, names(trs))),
+                                    U, degree, pairs))
   }
-  list(X = X, dy = matrix(dy, ncol = length(trs), dimnames = list(NULL, names(trs))),
+  list(Theta = full, dy = matrix(dy, ncol = length(trs), dimnames = list(NULL, names(trs))),
        year = d$year, scales = scales)
 }
 
@@ -394,7 +384,7 @@ cross_validate_states <- function(Theta, trs, fit, genotypes = trs[[1]]$genotype
     d <- make_design_states(Theta, trs, tr$genotypes[g], drivers, degree, pairs, feedback)
     coef <- lapply(seq_len(m), function(k) t(sapply(seq_len(S), function(v) {
       train <- d$year != v
-      fit(d$X[train, ], d$dy[train, k])
+      fit(d$Theta[train, ], d$dy[train, k])
     })))
     y0 <- sapply(trs, function(t) (sum(t$Y[g, , 1]) - t$Y[g, , 1]) / (S - 1))
     terms <- function(y, u) u

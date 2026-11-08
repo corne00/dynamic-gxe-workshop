@@ -83,7 +83,21 @@ $$
 \frac{dy}{dt} \approx \xi_0 + \sum_{k=1}^{8} \bigl( \xi_{k1}\, u_k + \xi_{k2}\, u_k^2 + \xi_{k3}\, u_k^3 \bigr),
 $$
 
-a cubic polynomial in each driver, added over the drivers. Sparsity means that most of these 25 coefficients are zero. The argument `degree` changes the powers, and `pairs = TRUE` adds products of pairs of drivers whose exponents add up to at most `degree`. Evaluating the library on every day of every year gives the array `Theta[year, day, term]`:
+a cubic polynomial in each driver, added over the drivers. Sparsity means that most of these 25 coefficients are zero. The argument `degree` changes the powers, and `pairs = TRUE` adds products of pairs of drivers whose exponents add up to at most `degree`.
+
+Evaluating the library on the days $t_1, \dots, t_N$ gives the matrix $\boldsymbol{\Theta}$ of step 1, with one row per day and one column per term,
+
+$$
+\boldsymbol{\Theta} =
+\begin{pmatrix}
+u_1(t_1) & u_1^2(t_1) & u_1^3(t_1) & \cdots & u_8(t_1) & u_8^2(t_1) & u_8^3(t_1) \\
+u_1(t_2) & u_1^2(t_2) & u_1^3(t_2) & \cdots & u_8(t_2) & u_8^2(t_2) & u_8^3(t_2) \\
+\vdots & \vdots & \vdots & & \vdots & \vdots & \vdots \\
+u_1(t_N) & u_1^2(t_N) & u_1^3(t_N) & \cdots & u_8(t_N) & u_8^2(t_N) & u_8^3(t_N)
+\end{pmatrix} \in \mathbb{R}^{N \times K},
+$$
+
+so that the model reads $\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$. In code the library of all days is stored as the array `Theta[year, day, term]`; the next section selects the rows that belong to the regression:
 
 ```{r}
 #| echo: false
@@ -157,15 +171,15 @@ dim(tr$Y)
 
 ## Design matrix
 
-For one genotype, the rows of $\mathbf{X}$ are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$. The vector $\dot{\mathbf{y}}$ holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (`numpy.diff` in Python, `diff` in R),
+For one genotype, the rows of $\boldsymbol{\Theta}$ are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$. The vector $\dot{\mathbf{y}}$ holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (`numpy.diff` in Python, `diff` in R),
 
 $$
-\dot y_i = \frac{dy}{dt}(t_{i-1/2}) = \frac{y_i - y_{i-1}}{\Delta t} + \mathcal{O}(\Delta t^2),
+\dot y_i = \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t},
 $$
 
-and row $i$ of $\mathbf{X}$ is the library of day $i$.
+and row $i$ of $\boldsymbol{\Theta}$ is the library of day $i$.
 
-![The regression problem for genotype `g114` as a table: three days from the middle of each of the years 1, 2 and 31. The highlighted row is one equation, $\dot y_i = \sum_j X_{ij}\xi_j$. The columns of $\mathbf{X}$ are standardised; the coefficients $\boldsymbol{\xi}$ are unknown and are estimated in step 4.](images/concept_design.png){width=100%}
+![The regression problem for genotype `g114` as a table: the first three rows of each of the years 1, 2 and 31 (1983, 1984 and 2013). The highlighted row is one equation, $\dot y_i = \sum_j \Theta_{ij}\xi_j$. The columns of $\boldsymbol{\Theta}$ are standardised; the coefficients $\boldsymbol{\xi}$ are unknown and are estimated in step 4.](images/concept_design.png){width=100%}
 
 ```{r}
 #| echo: false
@@ -187,8 +201,8 @@ show_fun("make_design")
 
 ```python
 d = make_design(Theta, tr, "g114")
-print(d.X.shape)
-print(d.X[:3].round(2))
+print(d.Theta.shape)
+print(d.Theta[:3].round(2))
 print(d.dy[:6])
 ```
 
@@ -198,7 +212,7 @@ print(d.dy[:6])
 #| label: 03-4-run
 #| echo: false
 d <- make_design(Theta, tr, "g114")
-dim(d$X)
-round(head(d$X, 3), 2)
+dim(d$Theta)
+round(head(d$Theta, 3), 2)
 head(d$dy)
 ```

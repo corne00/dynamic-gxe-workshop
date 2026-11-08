@@ -149,7 +149,7 @@ corr.error ? html`<p class="interactive-note">${corr.error}</p>` : html`<p class
 
 ## Step 3 · Design matrix
 
-Each day of each year gives one equation $\dot y_i = \sum_j X_{ij}\,\xi_j$. The target $\dot y_i = y_i - y_{i-1}$ is the biomass (or LAI) gained during day $i$; row $i$ of $\mathbf{X}$ is the library of the weather of day $i$. The table shows three consecutive days of one year (the middle row is day $i$), the first six columns, and the growth rate.
+Each day of each year gives one equation $\dot y_i = \sum_j \Theta_{ij}\,\xi_j$. The target $\dot y_i = y_i - y_{i-1}$ is the biomass (or LAI) gained during day $i$; row $i$ of $\boldsymbol{\Theta}$ is the library of the weather of day $i$. The table shows three consecutive days of one year (the middle row is day $i$), the first six columns, and the growth rate.
 
 ```{ojs}
 //| echo: false
@@ -170,7 +170,7 @@ viewof designDay = slider("Day i", d3.range(2, 138), 70, v => `${v}`)
   return html`<div style="overflow-x:auto"><table class="dgxe-table">
     <thead><tr><th>day</th><th>y<sub>i−1</sub></th><th>y<sub>i</sub></th><th>ẏ<sub>i</sub> (${unit}/day)</th>${t.names.slice(0, shown).map(c => html`<th>${c}</th>`)}${t.names.length > shown ? html`<th>…</th>` : ""}</tr></thead>
     <tbody>${t.rows.map(r => html`<tr class=${r.day === day ? "active" : ""}><td>${r.day}</td><td>${f(r.y0)}</td><td>${f(r.y1)}</td><td>${r.dy.toFixed(3)}</td>${r.x.slice(0, shown).map(v => html`<td>${f(v)}</td>`)}${t.names.length > shown ? html`<td>…</td>` : ""}</tr>`)}</tbody></table></div>
-    <p class="interactive-note">Genotype ${genotype}, year ${builder.years[designYear]}. For the genotype, <b>X</b> has ${n} rows (all days of ${S} years except the first record of each year) and ${K} columns${stateList.length > 1 || feedback ? "; the table shows the weather terms of the first state's equation" : ""}.</p>`;
+    <p class="interactive-note">Genotype ${genotype}, year ${builder.years[designYear]}. For the genotype, <b>Θ</b> has ${n} rows (all days of ${S} years except the first record of each year) and ${K} columns${stateList.length > 1 || feedback ? "; the table shows the weather terms of the first state's equation" : ""}.</p>`;
 }
 ```
 
@@ -208,7 +208,7 @@ viewof termChoice = corr.error ? Object.assign(html`<div></div>`, {value: null})
 
 ## Step 4 · Fit
 
-The coefficients $\boldsymbol{\xi}$ are estimated by regression of $\dot{\mathbf{y}}$ on $\mathbf{X}$. The methods differ in how they limit the freedom of the fit: ridge shrinks all coefficients, lasso and STLSQ remove terms, backward elimination and best subset keep a fixed number of terms. Choose a method and its parameter.
+The coefficients $\boldsymbol{\xi}$ are estimated by regression of $\dot{\mathbf{y}}$ on $\boldsymbol{\Theta}$. The methods differ in how they limit the freedom of the fit: ridge shrinks all coefficients, lasso and STLSQ remove terms, backward elimination and best subset keep a fixed number of terms. Choose a method and its parameter.
 
 ```{ojs}
 //| echo: false
@@ -421,10 +421,10 @@ Theta = bind_terms(Theta, extra)` : "";
 drv <- make_drivers(${W}, drivers)
 Theta <- make_library(drv, degree = ${degree}, pairs = ${P})${rExtra}
 ${rTrs}
-fit <- function(X, dy) ${call[0]}(X, dy${rArgs})
+fit <- function(Theta, dy) ${call[0]}(Theta, dy${rArgs})
 
 d <- make_design_states(Theta, trs, "${genotype}", drivers, ${degree}, ${P}, ${F})
-coef <- lapply(seq_along(trs), function(k) fit(d$X, d$dy[, k]))
+coef <- lapply(seq_along(trs), function(k) fit(d$Theta, d$dy[, k]))
 P <- cross_validate_states(Theta, trs, fit, "${genotype}", drivers, ${degree}, ${P}, ${F})
 lapply(seq_along(trs), function(k) evaluate(P[[k]], trs[[k]]))
 attr(P, "diverged")   # held-out years whose solution blew up`,
@@ -433,32 +433,32 @@ drv = make_drivers(${W}, drivers)
 Theta = make_library(drv, degree=${degree}, pairs=${PP})${pyExtra}
 ${pyTrs}
 
-def fit(X, dy):
-    return ${call[0]}(X, dy${pyArgs})
+def fit(Theta, dy):
+    return ${call[0]}(Theta, dy${pyArgs})
 
 d = make_design_states(Theta, trs, "${genotype}", drivers, ${degree}, ${PP}, ${PF})
-coef = [fit(d.X, d.dy[:, k]) for k in range(len(trs))]
+coef = [fit(d.Theta, d.dy[:, k]) for k in range(len(trs))]
 res = cross_validate_states(Theta, trs, fit, ["${genotype}"], drivers, ${degree}, ${PP}, ${PF})
 print([evaluate(res.P[k], tr) for k, tr in enumerate(trs.values())], res.diverged)`};
   return {
     r: `${rLoad}drv <- make_drivers(${W}, ${rDrivers})
 Theta <- make_library(drv, degree = ${degree}, pairs = ${pairs ? "TRUE" : "FALSE"})${rExtra}
 tr <- make_trajectories(traj, drv${rTarget})
-fit <- function(X, dy) ${call[0]}(X, dy${rArgs})
+fit <- function(Theta, dy) ${call[0]}(Theta, dy${rArgs})
 
 d <- make_design(Theta, tr, "${genotype}")
-coef <- fit(d$X, d$dy)
+coef <- fit(d$Theta, d$dy)
 P <- cross_validate(Theta, tr, fit, "${genotype}")
 evaluate(P, tr)`,
     py: `${pyLoad}drv = make_drivers(${W}, ${pyDrivers})
 Theta = make_library(drv, degree=${degree}, pairs=${pairs ? "True" : "False"})${pyExtra}
 tr = make_trajectories(traj, drv${pyTarget})
 
-def fit(X, dy):
-    return ${call[0]}(X, dy${pyArgs})
+def fit(Theta, dy):
+    return ${call[0]}(Theta, dy${pyArgs})
 
 d = make_design(Theta, tr, "${genotype}")
-coef = fit(d.X, d.dy)
+coef = fit(d.Theta, d.dy)
 P = cross_validate(Theta, tr, fit, ["${genotype}"])
 print(evaluate(P, tr))`};
 }

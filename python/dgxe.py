@@ -2,14 +2,14 @@
 
   weather --make_drivers--> drv --make_library--> Theta   (candidate terms)
   biomass --make_trajectories--> tr
-  Theta, tr --make_design--> X, dy                (growth rate by one-day differences)
-  fit_*(X, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
+  Theta[year, day, term], tr --make_design--> Theta (rows = days), dy
+  fit_*(Theta, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
 
 numpy, pandas, scipy and scikit-learn. Indices are 0-based; days are given
 as days after sowing (das).
 """
 from itertools import combinations
-from types import SimpleNamespace
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,52 @@ from sklearn.linear_model import ElasticNet
 
 DRIVERS = ["Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW"]
 GREY, BLUE, CYAN, BURGUNDY = "#D1D5DB", "#014E81", "#00A6D6", "#8B1E3F"
+
+
+# ---- Containers returned by the functions below ---------------------------
+@dataclass
+class Drivers:
+    """Standardised drivers U[year, day, driver] of all years."""
+    U: np.ndarray
+    years: np.ndarray
+    das0: int
+    drivers: list
+    center: np.ndarray
+    scale: np.ndarray
+
+
+@dataclass
+class Library:
+    """Library evaluated on every day: array[year, day, term] and term names."""
+    array: np.ndarray
+    terms: list
+
+
+@dataclass
+class Trajectories:
+    """States Y[genotype, year, day] (NaN after maturity); nend = last step."""
+    Y: np.ndarray
+    nend: np.ndarray
+    genotypes: np.ndarray
+    years: np.ndarray
+    das0: int
+
+
+@dataclass
+class Design:
+    """Regression problem of one genotype: dy ~ Theta @ xi (rows = days)."""
+    Theta: np.ndarray
+    dy: np.ndarray
+    year: np.ndarray
+    terms: list = None
+    scales: list = None
+
+
+@dataclass
+class CrossValidation:
+    """Held-out predictions P and the number of diverged years."""
+    P: object
+    diverged: int
 
 
 # ---- Drivers: array U[year, day, driver], standardised -------------------
@@ -33,7 +79,7 @@ def make_drivers(wx, drivers=DRIVERS):
             u[np.isnan(u)] = u[~np.isnan(u)][-1]
     center = U.mean(axis=(0, 1))
     scale = U.std(axis=(0, 1))
-    return SimpleNamespace(U=(U - center) / scale, years=years, das0=das0,
+    return Drivers(U=(U - center) / scale, years=years, das0=das0,
                            drivers=list(drivers), center=center, scale=scale)
 
 
@@ -63,7 +109,7 @@ def make_library(drv, degree=3, pairs=False):
     n_year, n_day, n_driver = drv.U.shape
     Z = drv.U.reshape(-1, n_driver)
     L, terms = library_matrix(Z, drv.drivers, degree, pairs)
-    return SimpleNamespace(array=L.reshape(n_year, n_day, -1), terms=terms)
+    return Library(array=L.reshape(n_year, n_day, -1), terms=terms)
 
 
 # ---- Extra terms: functions of the raw weather, standardised like the drivers
@@ -99,12 +145,12 @@ def extra_terms(wx, exprs, years=None):
             X[s, :, j] = eval(expr.replace("^", "**"), {"__builtins__": {}},
                               {**funs, **v})
     X = (X - X.mean(axis=(0, 1))) / X.std(axis=(0, 1))
-    return SimpleNamespace(array=X, terms=list(exprs))
+    return Library(array=X, terms=list(exprs))
 
 
 # Appends extra terms to a library.
 def bind_terms(Theta, extra):
-    return SimpleNamespace(array=np.concatenate([Theta.array, extra.array], axis=2),
+    return Library(array=np.concatenate([Theta.array, extra.array], axis=2),
                            terms=Theta.terms + extra.terms)
 
 
@@ -136,7 +182,7 @@ def make_trajectories(traj, drv, var="biomass"):
     g = np.searchsorted(genotypes, traj["genotype"])
     s = np.searchsorted(drv.years, traj["year"])
     Y[g, s, traj["das"] - drv.das0] = traj[var]
-    return SimpleNamespace(Y=Y, nend=(~np.isnan(Y)).sum(axis=2) - 1,
+    return Trajectories(Y=Y, nend=(~np.isnan(Y)).sum(axis=2) - 1,
                            genotypes=genotypes, years=drv.years,
                            das0=drv.das0)
 
@@ -144,85 +190,84 @@ def make_trajectories(traj, drv, var="biomass"):
 # ---- Regression problem for one genotype -----------------------------------
 # Rows: days 2, ..., n + 1 of every year (all days with a record before them).
 # Biomass is recorded at the end of a day, so day i drives the change from
-# observation i - 1 to i. dy: the difference over that day, y_i - y_(i-1), the
-# growth rate at the middle of day i (centered difference with a half-day
-# step). X: library of day i.
+# observation i - 1 to i. Row i of the returned matrix Theta is the library of
+# day i, and dy[i] = y_i - y_(i-1) is the growth rate at the middle of day i.
 def make_design(Theta, tr, genotype):
     g = list(tr.genotypes).index(genotype)
     n = tr.nend[g]
     years = range(len(tr.years))
     A = Theta.array
-    X = np.vstack([A[s, 1:n[s] + 1, :] for s in years])
+    rows = np.vstack([A[s, 1:n[s] + 1, :] for s in years])
     dy = np.concatenate([np.diff(tr.Y[g, s, :n[s] + 1]) for s in years])
     year = np.repeat(np.arange(len(tr.years)), n)
-    return SimpleNamespace(X=X, dy=dy, year=year, terms=Theta.terms)
+    return Design(Theta=rows, dy=dy, year=year, terms=Theta.terms)
 
 
-# ---- Fitting methods: fit(X, dy) -> coefficients (intercept first) ---------
-def fit_ols(X, dy):
-    return np.linalg.lstsq(np.column_stack([np.ones(len(dy)), X]), dy,
+# ---- Fitting methods: fit(Theta, dy) -> coefficients (intercept first) ---------
+def fit_ols(Theta, dy):
+    return np.linalg.lstsq(np.column_stack([np.ones(len(dy)), Theta]), dy,
                            rcond=None)[0]
 
 
 # Lasso and elastic net, with the penalty scaling of glmnet.
-def fit_glmnet(X, dy, alpha, lam):
-    sx = X.std(axis=0)
+def fit_glmnet(Theta, dy, alpha, lam):
+    sx = Theta.std(axis=0)
     l1, l2 = lam * alpha, lam * (1 - alpha) / dy.std()
     model = ElasticNet(alpha=l1 + l2, l1_ratio=l1 / (l1 + l2), tol=1e-12,
                        max_iter=100000, precompute=True)
-    model.fit((X - X.mean(axis=0)) / sx, dy - dy.mean())
+    model.fit((Theta - Theta.mean(axis=0)) / sx, dy - dy.mean())
     b = model.coef_ / sx
-    return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
+    return np.concatenate([[dy.mean() - Theta.mean(axis=0) @ b], b])
 
 
 # Ridge: closed form, same scaling.
-def fit_ridge(X, dy, lam=1e-3):
-    sx = X.std(axis=0)
-    Z = (X - X.mean(axis=0)) / sx
-    A = Z.T @ Z / len(dy) + lam / dy.std() * np.eye(X.shape[1])
+def fit_ridge(Theta, dy, lam=1e-3):
+    sx = Theta.std(axis=0)
+    Z = (Theta - Theta.mean(axis=0)) / sx
+    A = Z.T @ Z / len(dy) + lam / dy.std() * np.eye(Theta.shape[1])
     b = np.linalg.solve(A, Z.T @ (dy - dy.mean()) / len(dy)) / sx
-    return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
+    return np.concatenate([[dy.mean() - Theta.mean(axis=0) @ b], b])
 
 
-def fit_lasso(X, dy, lam=3e-4):
-    return fit_glmnet(X, dy, 1, lam)
+def fit_lasso(Theta, dy, lam=3e-4):
+    return fit_glmnet(Theta, dy, 1, lam)
 
 
-def fit_enet(X, dy, lam=6e-4):
-    return fit_glmnet(X, dy, 0.5, lam)
+def fit_enet(Theta, dy, lam=6e-4):
+    return fit_glmnet(Theta, dy, 0.5, lam)
 
 
 # Best subset or backward elimination with k terms, from the Gram matrix.
-def fit_subset(X, dy, k=8, method="exhaustive"):
-    Xc, yc = X - X.mean(axis=0), dy - dy.mean()
-    G, c = Xc.T @ Xc, Xc.T @ yc
+def fit_subset(Theta, dy, k=8, method="exhaustive"):
+    Tc, yc = Theta - Theta.mean(axis=0), dy - dy.mean()
+    G, c = Tc.T @ Tc, Tc.T @ yc
     if method == "exhaustive":
-        subsets = np.array(list(combinations(range(X.shape[1]), k)))
+        subsets = np.array(list(combinations(range(Theta.shape[1]), k)))
         blocks = G[subsets[:, :, None], subsets[:, None, :]]
         b = np.linalg.solve(blocks, c[subsets][..., None])[..., 0]
         keep = subsets[np.argmax((b * c[subsets]).sum(axis=1))]
     else:
-        keep = np.arange(X.shape[1])
+        keep = np.arange(Theta.shape[1])
         while len(keep) > k:
             inv = np.linalg.inv(G[np.ix_(keep, keep)])
             increase = (inv @ c[keep]) ** 2 / np.diag(inv)
             keep = np.delete(keep, np.argmin(increase))
-    b = np.zeros(X.shape[1])
+    b = np.zeros(Theta.shape[1])
     b[keep] = np.linalg.solve(G[np.ix_(keep, keep)], c[keep])
-    return np.concatenate([[dy.mean() - X.mean(axis=0) @ b], b])
+    return np.concatenate([[dy.mean() - Theta.mean(axis=0) @ b], b])
 
 
 # Sequential thresholded least squares: refit, drop terms below the threshold.
-def fit_stlsq(X, dy, threshold=0.05):
-    size = X.std(axis=0, ddof=1) / dy.std(ddof=1)
-    active = np.arange(X.shape[1])
+def fit_stlsq(Theta, dy, threshold=0.05):
+    size = Theta.std(axis=0, ddof=1) / dy.std(ddof=1)
+    active = np.arange(Theta.shape[1])
     while True:
-        b = fit_ols(X[:, active], dy)
+        b = fit_ols(Theta[:, active], dy)
         keep = np.abs(b[1:]) * size[active] >= threshold
         if keep.all() or not keep.any():
             break
         active = active[keep]
-    full = np.zeros(X.shape[1] + 1)
+    full = np.zeros(Theta.shape[1] + 1)
     full[0], full[1 + active] = b[0], b[1:]
     return full
 
@@ -234,7 +279,7 @@ fit_methods = {
     "lasso": fit_lasso,
     "elastic net": fit_enet,
     # "best subset (k = 8)": exhaustive search, about a second per fit
-    "backward (k = 8)": lambda X, dy: fit_subset(X, dy, 8, "backward"),
+    "backward (k = 8)": lambda Theta, dy: fit_subset(Theta, dy, 8, "backward"),
     "STLSQ": fit_stlsq,
 }
 
@@ -257,13 +302,6 @@ def simulate(coef, U, y0, terms=lambda y, u: u, method="LSODA"):
 
 
 # n genotypes spread evenly over the ranking of mean final biomass.
-def spread_genotypes(tr, n=3):
-    g, s = np.indices(tr.nend.shape)
-    final = tr.Y[g, s, tr.nend].mean(axis=1)
-    ranked = tr.genotypes[np.argsort(final)]
-    return ranked[np.round(np.linspace(0, len(ranked) - 1, n)).astype(int)]
-
-
 # ---- Validation: leave-one-year-out --------------------------------------
 # Each year is predicted by a model fitted to the other years of the same
 # genotype, starting from the mean initial biomass of those years.
@@ -274,7 +312,7 @@ def cross_validate(Theta, tr, fit, genotypes=None):
     for g in (tr.genotypes if genotypes is None else genotypes):
         i = list(tr.genotypes).index(g)
         d = make_design(Theta, tr, g)
-        coef = np.array([fit(d.X[d.year != s], d.dy[d.year != s])
+        coef = np.array([fit(d.Theta[d.year != s], d.dy[d.year != s])
                          for s in range(S)])
         y0 = (tr.Y[i, :, 0].sum() - tr.Y[i, :, 0]) / (S - 1)
         P[i] = simulate(coef, Theta.array, y0)
@@ -287,7 +325,7 @@ def cross_validate(Theta, tr, fit, genotypes=None):
 # state, and with pairs=True also products of states and products of a state
 # with powers of each driver (total exponent at most degree). trs is a dict of trajectory sets from
 # make_trajectories(), one per modelled state, named by state; every state has
-# its own equation, and all are fitted with the same fit(X, dy). The state terms
+# its own equation, and all are fitted with the same fit(Theta, dy). The state terms
 # of a row use the mean of the records on either side of the day.
 def state_scale(Y):
     m = np.nanmean(Y)
@@ -334,7 +372,7 @@ def make_design_states(Theta, trs, genotype, drivers, degree=3, pairs=False,
     dy = np.column_stack([make_design(Theta, trs[k], genotype).dy
                           for k in names])
     scales = [state_scale(trs[k].Y[g]) for k in names]
-    X = d.X
+    full = d.Theta
     if feedback:
         z = np.column_stack([
             (np.concatenate([(trs[k].Y[g, s, :n[s]] + trs[k].Y[g, s, 1:n[s] + 1]) / 2
@@ -342,9 +380,9 @@ def make_design_states(Theta, trs, genotype, drivers, degree=3, pairs=False,
             for k, (c, sd) in zip(names, scales)])
         inter = interacting_terms(Theta, drivers)
         at = [Theta.terms.index(t) for t in inter]
-        X = np.column_stack([X, state_terms(z, names, d.X[:, at], inter,
-                                            degree, pairs)])
-    return SimpleNamespace(X=X, dy=dy, year=d.year, scales=scales)
+        full = np.column_stack([full, state_terms(z, names, d.Theta[:, at],
+                                                  inter, degree, pairs)])
+    return Design(Theta=full, dy=dy, year=d.year, scales=scales)
 
 
 # Solves the coupled system dy_k/dt = (1, theta(y, u)) coef_k. coef: list of
@@ -406,7 +444,7 @@ def cross_validate_states(Theta, trs, fit, genotypes=None, drivers=(),
     for g in (first.genotypes if genotypes is None else genotypes):
         i = list(first.genotypes).index(g)
         d = make_design_states(Theta, trs, g, drivers, degree, pairs, feedback)
-        coef = [np.array([fit(d.X[d.year != s], d.dy[d.year != s, k])
+        coef = [np.array([fit(d.Theta[d.year != s], d.dy[d.year != s, k])
                           for s in range(S)]) for k in range(m)]
         y0 = np.column_stack([(trs[k].Y[i, :, 0].sum() - trs[k].Y[i, :, 0]) / (S - 1)
                               for k in names])
@@ -424,7 +462,7 @@ def cross_validate_states(Theta, trs, fit, genotypes=None, drivers=(),
         for k in range(m):
             P[k][i] = sim[k]
         diverged += int(np.isnan(sim[0][:, 0]).sum())
-    return SimpleNamespace(P=P, diverged=diverged)
+    return CrossValidation(P=P, diverged=diverged)
 
 
 # RMSE over whole trajectories, on a fixed day (days after sowing) and at

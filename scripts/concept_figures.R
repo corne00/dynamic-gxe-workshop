@@ -135,10 +135,10 @@ pv <- ggplot() +
         axis.line = element_blank(), axis.ticks = element_blank())
 save(pv, "concept_validation.png", 6.5, 2.7)
 
-## 4. Regression on the library: dy/dt = X xi (genotype g114, as a table) -------
+## 4. Regression on the library: dy/dt = Theta xi (genotype g114, as a table) -------
 dd <- make_design(Theta, tr, "g114")
 first <- cumsum(c(1, table(factor(dd$year))))[c(1, 2, 31)]  # first row of years 1, 2, 31
-blocks <- lapply(1:3, function(s) first[s] + 70 + 0:2)   # mid-year days
+blocks <- lapply(1:3, function(s) first[s] + 0:2)   # first three rows of the year
 ypos <- unlist(lapply(1:3, function(s) (s - 1) * 4 + 1:3))
 rows <- unlist(blocks)
 show <- c(1:6, 19:24)                  # Tmin, Tmax, TT, RAW; the rest is indicated
@@ -146,7 +146,7 @@ k <- length(show)
 xcol <- 2.4 + rep(0:3, each = 3) * 3.35 + rep(0:2, 4) * 1.05
 cells <- data.frame(
   x = rep(xcol, each = length(rows)), y = rep(ypos, k),
-  label = sub("^-(0\\.0+)$", "\\1", sprintf("%.2f", as.vector(dd$X[rows, show]))))
+  label = sub("^-(0\\.0+)$", "\\1", sprintf("%.2f", as.vector(dd$Theta[rows, show]))))
 dycells <- data.frame(x = 0, y = ypos, label = sprintf("%.2f", dd$dy[rows]))
 xicells <- data.frame(x = 2.4 + 4 * 3.35 + 0.9, y = (seq_len(k) - 0.5) * 11 / k + 0.5,
                       label = sprintf("xi[%d]", show))
@@ -156,7 +156,7 @@ box <- function(x, y, w, h, fill = "#E8EEF4", colour = "white", lw = 0.6) {
             xmax = x + w / 2, ymin = y - h / 2, ymax = y + h / 2),
             fill = fill, colour = colour, linewidth = lw)
 }
-heads <- data.frame(x = xcol, label = colnames(dd$X)[show])
+heads <- data.frame(x = xcol, label = colnames(dd$Theta)[show])
 groups <- data.frame(x = 2.4 + (0:3) * 3.35 + 1.05, label = c("TT", "DL", "RAW", "RAD"))
 gap <- data.frame(x = 2.4 + 2 * 3.35 - 0.62, y = ypos)
 dots <- function(x, y) {                          # three vertical dots
@@ -190,14 +190,14 @@ pd <- ggplot() +
   geom_text(data = heads, aes(x, -0.1, label = label), parse = TRUE,
             size = 2.8, colour = "#374151") +
   annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -1.6,
-           parse = TRUE, label = c("dot(bold(y))", "bold(X)", "bold(xi)"),
+           parse = TRUE, label = c("dot(bold(y))", "bold(Theta)", "bold(xi)"),
            size = 4.4) +
   annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -2.7,
            size = 3, colour = "#6B7280",
            label = c("growth rates", "library terms (standardised)",
                      "coefficients")) +
   annotate("text", x = 2.4 + 1.5 * 3.35 + 1.05, y = 12.3,
-           label = "'row i:'~dot(y)[i] == sum(X[ij]*xi[j], j == 1, K)",
+           label = "'row i:'~dot(y)[i] == sum(Theta[ij]*xi[j], j == 1, K)",
            parse = TRUE, size = 3.3, colour = bur) +
   scale_y_reverse() +
   coord_cartesian(clip = "off", ylim = c(12.8, -3.2), xlim = c(-1.6, 17.6)) +

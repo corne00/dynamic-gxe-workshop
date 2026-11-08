@@ -78,9 +78,9 @@ ul.task-list li input[type="checkbox"] {
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108f"></script>
-<script src="js/builder.js?v=20261108f"></script>
-<script src="js/equation.js?v=20261108f"></script>
+<script src="js/controls.js?v=20261108g"></script>
+<script src="js/builder.js?v=20261108g"></script>
+<script src="js/equation.js?v=20261108g"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -296,8 +296,8 @@ window.Quarto = {
 <td>growth rate of day <span class="math inline">\(i\)</span> by the one-day difference (centered at the middle of the day), and the vector of growth rates</td>
 </tr>
 <tr class="odd">
-<td><span class="math inline">\(\mathbf{X}\)</span></td>
-<td>library evaluated on all days (rows)</td>
+<td><span class="math inline">\(\boldsymbol{\Theta}\)</span>, <span class="math inline">\(\Theta_{ij}\)</span></td>
+<td>matrix of the library evaluated on the days used (rows), <span class="math inline">\(\Theta_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span>; the design matrix</td>
 </tr>
 <tr class="even">
 <td><span class="math inline">\(K\)</span></td>
@@ -343,11 +343,11 @@ window.Quarto = {
 </tr>
 <tr class="even">
 <td><code>make_design(Theta, tr, genotype)</code></td>
-<td>design matrix <code>X</code> and growth rates <code>dy</code> (one-day differences)</td>
+<td>design matrix <code>Theta</code> (library of the days used) and growth rates <code>dy</code> (one-day differences)</td>
 </tr>
 <tr class="odd">
 <td><code>fit_ols</code>, <code>fit_ridge</code>, <code>fit_lasso</code>, <code>fit_enet</code>, <code>fit_subset</code>, <code>fit_stlsq</code></td>
-<td>fitting methods <code>fit(X, dy)</code></td>
+<td>fitting methods <code>fit(Theta, dy)</code></td>
 </tr>
 <tr class="even">
 <td><code>simulate(coef, U, y0)</code></td>

@@ -116,9 +116,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108f"></script>
-<script src="js/builder.js?v=20261108f"></script>
-<script src="js/equation.js?v=20261108f"></script>
+<script src="js/controls.js?v=20261108g"></script>
+<script src="js/builder.js?v=20261108g"></script>
+<script src="js/equation.js?v=20261108g"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -358,7 +358,7 @@ window.Quarto = {
 <p><span class="math display">\[
 \begin{array}{ll}
 \textbf{for each genotype } g, \textbf{ for each year } e \in E: &amp; \\[2pt]
-\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\mathbf{X}^{(-e)},\, \dot{\mathbf{y}}^{(-e)}\bigr) &amp; \text{fit on the other years} \\[2pt]
+\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\boldsymbol{\Theta}^{(-e)},\, \dot{\mathbf{y}}^{(-e)}\bigr) &amp; \text{fit on the other years} \\[2pt]
 \quad \bar{y}_0^{(-e)} \leftarrow \tfrac{1}{|E|-1} \textstyle\sum_{e' \ne e} y_0^{(e')} &amp; \text{mean initial biomass} \\[2pt]
 \quad \dfrac{d\hat y}{dt} = \boldsymbol{\theta}\bigl(\mathbf{u}^{(e)}(t)\bigr)^\top \hat{\boldsymbol{\xi}}^{(-e)}, \quad \hat y(t_0) = \bar{y}_0^{(-e)} &amp; \text{predict year } e \text{ from its drivers}
 \end{array}
@@ -378,7 +378,7 @@ window.Quarto = {
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, tr<span class="sc">$</span>genotypes[g])</span>
 <span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    coef <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">sapply</span>(<span class="fu">seq_len</span>(S), <span class="cf">function</span>(v) {</span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      train <span class="ot">&lt;-</span> d<span class="sc">$</span>year <span class="sc">!=</span> v</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">fit</span>(d<span class="sc">$</span>X[train, ], d<span class="sc">$</span>dy[train])</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">fit</span>(d<span class="sc">$</span>Theta[train, ], d<span class="sc">$</span>dy[train])</span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    }))</span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    y0 <span class="ot">&lt;-</span> (<span class="fu">sum</span>(tr<span class="sc">$</span>Y[g, , <span class="dv">1</span>]) <span class="sc">-</span> tr<span class="sc">$</span>Y[g, , <span class="dv">1</span>]) <span class="sc">/</span> (S <span class="sc">-</span> <span class="dv">1</span>)</span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    P[g, , ] <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">simulate</span>(coef, Theta, y0))</span>
@@ -408,7 +408,7 @@ window.Quarto = {
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g <span class="kw">in</span> (tr.genotypes <span class="cf">if</span> genotypes <span class="kw">is</span> <span class="va">None</span> <span class="cf">else</span> genotypes):</span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        i <span class="op">=</span> <span class="bu">list</span>(tr.genotypes).index(g)</span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        d <span class="op">=</span> make_design(Theta, tr, g)</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        coef <span class="op">=</span> np.array([fit(d.X[d.year <span class="op">!=</span> s], d.dy[d.year <span class="op">!=</span> s])</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        coef <span class="op">=</span> np.array([fit(d.Theta[d.year <span class="op">!=</span> s], d.dy[d.year <span class="op">!=</span> s])</span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>                         <span class="cf">for</span> s <span class="kw">in</span> <span class="bu">range</span>(S)])</span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        y0 <span class="op">=</span> (tr.Y[i, :, <span class="dv">0</span>].<span class="bu">sum</span>() <span class="op">-</span> tr.Y[i, :, <span class="dv">0</span>]) <span class="op">/</span> (S <span class="op">-</span> <span class="dv">1</span>)</span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        P[i] <span class="op">=</span> simulate(coef, Theta.array, y0)</span>
@@ -646,7 +646,7 @@ STLSQ                         0.450          0.564         0.687</code></pre>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>ks <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">8</span>, <span class="dv">12</span>, <span class="dv">16</span>, <span class="dv">24</span>, <span class="dv">36</span>, <span class="dv">60</span>, <span class="dv">108</span>)</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>by_k <span class="ot">&lt;-</span> <span class="fu">cached</span>(<span class="st">"rmse_vs_k.rds"</span>, <span class="fu">data.frame</span>(<span class="at">k =</span> ks, <span class="at">rmse =</span> <span class="fu">sapply</span>(ks, <span class="cf">function</span>(k) {</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="cf">function</span>(X, dy) <span class="fu">fit_subset</span>(X, dy, k, <span class="st">"backward"</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  fit <span class="ot">&lt;-</span> <span class="cf">function</span>(Theta, dy) <span class="fu">fit_subset</span>(Theta, dy, k, <span class="st">"backward"</span>)</span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">evaluate</span>(<span class="fu">cross_validate</span>(Theta2, tr, fit, genotypes), tr)[[<span class="dv">1</span>]]</span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>})))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
@@ -657,8 +657,8 @@ STLSQ                         0.450          0.564         0.687</code></pre>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>ks <span class="op">=</span> [<span class="dv">4</span>, <span class="dv">8</span>, <span class="dv">12</span>, <span class="dv">16</span>, <span class="dv">24</span>, <span class="dv">36</span>, <span class="dv">60</span>, <span class="dv">108</span>]</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> rmse_for(k):</span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fit(X, dy):</span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fit_subset(X, dy, k, <span class="st">"backward"</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> fit(Theta, dy):</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> fit_subset(Theta, dy, k, <span class="st">"backward"</span>)</span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> evaluate(cross_validate(Theta2, tr, fit, genotypes),</span>
 <span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>                    tr)[<span class="st">"trajectory_rmse"</span>]</span>
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a></span>

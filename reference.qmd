@@ -13,7 +13,7 @@ subtitle: "Symbols, functions, data, and sources"
 | $\boldsymbol{\theta}$ | vector of all candidate functions |
 | $\boldsymbol{\xi}$ | coefficient vector |
 | $\dot y_i \approx (y_i - y_{i-1}) / \Delta t$, $\dot{\mathbf{y}}$ | growth rate of day $i$ by the one-day difference (centered at the middle of the day), and the vector of growth rates |
-| $\mathbf{X}$ | library evaluated on all days (rows) |
+| $\boldsymbol{\Theta}$, $\Theta_{ij}$ | matrix of the library evaluated on the days used (rows), $\Theta_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$; the design matrix |
 | $K$ | number of candidate functions |
 
 ## Functions
@@ -27,8 +27,8 @@ All functions are in `R/functions.R` (R) and `python/dgxe.py` (Python), with the
 | `extra_terms(wx, exprs)`, `bind_terms(Theta, extra)` | extra library terms from expressions of the raw weather |
 | `with_traits(wx, traj, genotype, vars)` | adds measured states (`"lai"`, `"biomass"`) to the weather as day series, so they can be drivers or appear in expressions |
 | `make_trajectories(traj, drv, var)` | response `Y[genotype, year, day]` |
-| `make_design(Theta, tr, genotype)` | design matrix `X` and growth rates `dy` (one-day differences) |
-| `fit_ols`, `fit_ridge`, `fit_lasso`, `fit_enet`, `fit_subset`, `fit_stlsq` | fitting methods `fit(X, dy)` |
+| `make_design(Theta, tr, genotype)` | design matrix `Theta` (library of the days used) and growth rates `dy` (one-day differences) |
+| `fit_ols`, `fit_ridge`, `fit_lasso`, `fit_enet`, `fit_subset`, `fit_stlsq` | fitting methods `fit(Theta, dy)` |
 | `simulate(coef, U, y0)` | solution of the fitted equation with an ODE solver |
 | `cross_validate(Theta, tr, fit)` | leave-one-year-out predictions |
 | `make_design_states(Theta, trs, genotype, drivers, degree, pairs, feedback)` | design with state terms (`state_terms`) and one column of `dy` per modelled state; `trs` is a list of trajectory sets, one per state |

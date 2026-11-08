@@ -2,6 +2,7 @@
 ## data/interactive/*.json). Run from the repository root; takes a few minutes.
 library(jsonlite)
 source("R/pipeline.R")
+source("scripts/helpers.R")
 source("R/fast.R")
 
 out <- function(x, name, digits = 4) {
@@ -17,7 +18,7 @@ some <- union(three, tr$genotypes[seq(1, 199, by = 5)])
 ## for one genotype at a time, and the terms kept differ between genotypes.
 cv_genotypes <- tr$genotypes[seq(1, 199, by = 10)]
 designs <- lapply(cv_genotypes, function(g) make_design(Theta, tr, g))
-sd_x <- lapply(designs, function(d) apply(d$X, 2, sd))
+sd_x <- lapply(designs, function(d) apply(d$Theta, 2, sd))
 sd_y <- sapply(designs, function(d) sd(d$dy))
 grid <- list(
   STLSQ = list(param = "threshold", path = path_stlsq, mpath = mpath_stlsq,
@@ -33,7 +34,7 @@ grid <- list(
   backward = list(param = "terms", path = path_subset("backward"),
                   values = 1:24))
 methods <- lapply(grid, function(m) {
-  fits <- lapply(designs, function(d) m$path(d$X, d$dy, m$values))
+  fits <- lapply(designs, function(d) m$path(d$Theta, d$dy, m$values))
   i_val <- seq_along(m$values); i_gen <- seq_along(designs)
   list(param = m$param, values = m$values,
        effect = lapply(i_val, function(i) lapply(i_gen, function(g) {
@@ -51,7 +52,7 @@ methods <- lapply(grid, function(m) {
        rmse = if (is.null(m$mpath)) cv_rmse_path(Theta, tr, m$path, m$values, cv_genotypes)
                else cv_moments(Theta, tr, m$mpath, m$values, cv_genotypes))
 })
-out(list(terms = colnames(designs[[1]]$X), genotypes = cv_genotypes,
+out(list(terms = colnames(designs[[1]]$Theta), genotypes = cv_genotypes,
          methods = methods), "hyper.json", 5)
 
 ## 2. Held-out trajectories of the sparse model -------------------------------
@@ -80,7 +81,7 @@ out(list(drivers = names(ale_list), curves = ale_list, three = three),
 ## 4. Library and coefficients (the page computes the contributions) ----------
 coefs <- sapply(tr$genotypes, function(g) {
   dd <- make_design(Theta, tr, g)
-  fit_stlsq(dd$X, dd$dy)
+  fit_stlsq(dd$Theta, dd$dy)
 })
 colnames(coefs) <- tr$genotypes
 out(list(terms = dimnames(Theta)[[3]], drivers = drv$drivers, years = tr$years,

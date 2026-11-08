@@ -46,7 +46,7 @@ Each genotype has its own equation, with coefficients estimated from the 31 traj
 ```python
 def fit_genotype(g):
     d = make_design(Theta, tr, g)
-    return fit_stlsq(d.X, d.dy)
+    return fit_stlsq(d.Theta, d.dy)
 
 coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
                      index=["1"] + Theta.terms)
@@ -59,7 +59,7 @@ coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
 #| echo: false
 fit_genotype <- function(g) {
   d <- make_design(Theta, tr, g)
-  fit_stlsq(d$X, d$dy)
+  fit_stlsq(d$Theta, d$dy)
 }
 coefs <- sapply(tr$genotypes, fit_genotype)
 ```
@@ -77,7 +77,7 @@ coefs <- sapply(tr$genotypes, fit_genotype)
 ## Python
 
 ```python
-three = spread_genotypes(tr)
+three = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
 mean_path = Theta.array.mean(axis=0)
 b = coefs.to_numpy()
 rate = pd.DataFrame(b[0] + mean_path @ b[1:], columns=coefs.columns)
@@ -100,7 +100,7 @@ fig.tight_layout()
 #| label: 07-2-run
 #| echo: false
 #| fig-height: 2.8
-three <- spread_genotypes(tr)
+three <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
 mean_path <- cbind(1, apply(Theta, c(2, 3), mean))
 das <- 1:nrow(mean_path) + tr$das0 - 1
 d <- data.frame(das = rep(das, ncol(coefs)),

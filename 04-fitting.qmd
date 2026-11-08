@@ -27,13 +27,13 @@ from pipeline import *
 :::
 
 
-For one genotype, the data are the growth rates $\dot{\mathbf{y}}$ and the library values $\mathbf{X}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
+For one genotype, the data are the growth rates $\dot{\mathbf{y}}$ and the library values $\boldsymbol{\Theta}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
 
 $$
-\dot{\mathbf{y}} \approx \mathbf{X}\boldsymbol{\xi}.
+\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 $$
 
-Every method maps $(\mathbf{X}, \dot{\mathbf{y}})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(X, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
+Every method maps $(\boldsymbol{\Theta}, \dot{\mathbf{y}})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(Theta, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
 
 ::: {.panel-tabset group="language"}
 
@@ -68,7 +68,7 @@ d <- make_design(Theta, tr, "g001")
 The reference: all terms are used, so there is no sparsity.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters: none.
@@ -86,7 +86,7 @@ show_fun("fit_ols", level = 3)
 Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters:
@@ -106,7 +106,7 @@ show_fun("fit_ridge", level = 3)
 The $\ell_1$ penalty sets coefficients exactly to zero, which gives a sparse equation.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
 $$
 
 Hyperparameters:
@@ -126,7 +126,7 @@ show_fun("fit_glmnet", "fit_lasso", level = 3)
 A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
 $$
 
 Hyperparameters:
@@ -147,7 +147,7 @@ show_fun("fit_glmnet", "fit_enet", level = 3)
 The best model with exactly $k$ terms, found by searching all subsets.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \mathbf{X}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters:
@@ -187,7 +187,7 @@ show_fun("fit_subset", level = 3)
 Sequential thresholded least squares, the algorithm of the original SINDy method.
 
 $$
-\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \mathbf{X}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\mathbf{X}_j)}{\mathrm{sd}(\dot{\mathbf{y}})}
+\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\boldsymbol{\Theta}_j)}{\mathrm{sd}(\dot{\mathbf{y}})}
 $$
 
 Hyperparameters:
@@ -221,7 +221,7 @@ The methods fitted to the same data:
 ## Python
 
 ```python
-fits = pd.DataFrame({name: fit(d.X, d.dy)
+fits = pd.DataFrame({name: fit(d.Theta, d.dy)
                      for name, fit in fit_methods.items()},
                     index=["1"] + d.terms)
 print(fits.round(3))
@@ -232,7 +232,7 @@ print(fits.round(3))
 ```{r}
 #| label: 04-2-run
 #| echo: false
-fits <- sapply(fit_methods, function(fit) fit(d$X, d$dy))
+fits <- sapply(fit_methods, function(fit) fit(d$Theta, d$dy))
 round(fits, 3)
 ```
 
@@ -251,7 +251,7 @@ Each bar is a coefficient, scaled to a common size (coefficient times the standa
 ## Python
 
 ```python
-size = d.X.std(axis=0, ddof=1) / d.dy.std(ddof=1)
+size = d.Theta.std(axis=0, ddof=1) / d.dy.std(ddof=1)
 effect = fits.iloc[1:].mul(size, axis=0)
 
 fig, axes = plt.subplots(1, effect.shape[1], sharey=True, sharex=True,
@@ -273,7 +273,7 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 5.6
 #| fig-width: 9
-size <- apply(d$X, 2, sd) / sd(d$dy)
+size <- apply(d$Theta, 2, sd) / sd(d$dy)
 effect <- fits[-1, ] * size
 long <- data.frame(term = factor(rownames(effect), rev(rownames(effect))),
                    method = factor(rep(colnames(effect), each = nrow(effect)),

@@ -78,7 +78,7 @@ out <- lapply(configs, function(cf) {
     tr <- make_trajectories(traj, drv, target)
     f <- fitter(cf$method, cf$value)
     P <- cross_validate(Theta, tr, f, gg)
-    d <- make_design(Theta, tr, gg); b <- f(d$X, d$dy)
+    d <- make_design(Theta, tr, gg); b <- f(d$Theta, d$dy)
     list(genotype = gg, rmse = unname(evaluate(P, tr)["trajectory_rmse"]),
          maturity = unname(evaluate(P, tr)["maturity_rmse"]), nterms = sum(b[-1] != 0))
   })

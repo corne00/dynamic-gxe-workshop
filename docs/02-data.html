@@ -114,9 +114,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108f"></script>
-<script src="js/builder.js?v=20261108f"></script>
-<script src="js/equation.js?v=20261108f"></script>
+<script src="js/controls.js?v=20261108g"></script>
+<script src="js/builder.js?v=20261108g"></script>
+<script src="js/equation.js?v=20261108g"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -406,7 +406,7 @@ window.Quarto = {
 <p><span class="math display">\[
 W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 \]</span></p>
-<p>The capacity is the plant-available water capacity of the soil at Narrabri, <span class="math inline">\(W_{\max} = 217.5\)</span> mm (a grey vertosol), and the bucket starts each season with the plant-available water at sowing, <span class="math inline">\(W_0 = 175\)</span> mm, so that <span class="math inline">\(\mathrm{RAW}_0 = 0.80\)</span> (Bustos-Korts et al., 2019, Table 1). <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and <span class="math inline">\(k = 0.8\)</span>. With these values the bucket reproduces <code>RAW</code> over the whole season with an RMSE of 0.004.</p>
+<p>The capacity is the plant-available water capacity of the soil at Narrabri, <span class="math inline">\(W_{\max} = 217.5\)</span> mm (a grey vertosol), and the bucket starts each season with the plant-available water at sowing, <span class="math inline">\(W_0 = 175\)</span> mm, so that <span class="math inline">\(\mathrm{RAW}_0 = 0.80\)</span> (Bustos-Korts et al., 2019, Table 1). <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and <span class="math inline">\(k = 0.8\)</span>.</p>
 <p>In total there are eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.</p>
 </section>
 <section id="variables-over-the-years" class="level2">
@@ -464,42 +464,91 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 </section>
 <section id="correlation" class="level2">
 <h2 class="anchored" data-anchor-id="correlation">Correlation</h2>
-<p>Correlation of the eight variables over all days and years:</p>
+<p>The eight variables over all days and years, standardised. Above the diagonal: scatter plots of a random sample of 600 days. On the diagonal: the distribution of each variable (kernel density estimate). Below the diagonal: the correlation coefficient.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">cor</span>(wx[vars])</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>long <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">a =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="at">each =</span> <span class="dv">8</span>), vars),</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>                   <span class="at">b =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="dv">8</span>), <span class="fu">rev</span>(vars)), <span class="at">r =</span> <span class="fu">as.vector</span>(r))</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(long, <span class="fu">aes</span>(a, b, <span class="at">fill =</span> r)) <span class="sc">+</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_tile</span>(<span class="at">colour =</span> <span class="st">"white"</span>) <span class="sc">+</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, r)), <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> dgxe[[<span class="st">"burgundy"</span>]], <span class="at">mid =</span> <span class="st">"white"</span>,</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">high =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>, <span class="at">fill =</span> <span class="st">"correlation"</span>) <span class="sc">+</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.line =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>(),</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">legend.position =</span> <span class="st">"right"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>z <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">scale</span>(wx[vars]))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> <span class="fu">cor</span>(wx[vars])</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>panel <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">row =</span> <span class="fu">seq_along</span>(vars), <span class="at">col =</span> <span class="fu">seq_along</span>(vars))</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>label <span class="ot">&lt;-</span> <span class="cf">function</span>(i) <span class="fu">factor</span>(vars[i], vars)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>sample_days <span class="ot">&lt;-</span> z[<span class="fu">sample</span>(<span class="fu">nrow</span>(z), <span class="dv">600</span>), ]</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>upper <span class="ot">&lt;-</span> panel[panel<span class="sc">$</span>row <span class="sc">&lt;</span> panel<span class="sc">$</span>col, ]</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>upper <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(upper)), <span class="cf">function</span>(k) {</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    i <span class="ot">&lt;-</span> upper<span class="sc">$</span>row[k]; j <span class="ot">&lt;-</span> upper<span class="sc">$</span>col[k]</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">row =</span> <span class="fu">label</span>(i), <span class="at">col =</span> <span class="fu">label</span>(j),</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>               <span class="at">x =</span> sample_days[[j]], <span class="at">y =</span> sample_days[[i]])</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>}))</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>diagonal <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(vars), <span class="cf">function</span>(i) {</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    d <span class="ot">&lt;-</span> <span class="fu">density</span>(z[[i]], <span class="at">from =</span> <span class="sc">-</span><span class="fl">3.5</span>, <span class="at">to =</span> <span class="fl">3.5</span>, <span class="at">n =</span> <span class="dv">200</span>)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">row =</span> <span class="fu">label</span>(i), <span class="at">col =</span> <span class="fu">label</span>(i), <span class="at">x =</span> d<span class="sc">$</span>x,</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>               <span class="at">ymax =</span> <span class="sc">-</span><span class="fl">3.5</span> <span class="sc">+</span> <span class="dv">6</span> <span class="sc">*</span> d<span class="sc">$</span>y <span class="sc">/</span> <span class="fu">max</span>(d<span class="sc">$</span>y))</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>}))</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>lower <span class="ot">&lt;-</span> panel[panel<span class="sc">$</span>row <span class="sc">&gt;</span> panel<span class="sc">$</span>col, ]</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>lower <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">row =</span> <span class="fu">label</span>(lower<span class="sc">$</span>row), <span class="at">col =</span> <span class="fu">label</span>(lower<span class="sc">$</span>col),</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>                    <span class="at">r =</span> r[<span class="fu">cbind</span>(lower<span class="sc">$</span>row, lower<span class="sc">$</span>col)])</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_rect</span>(<span class="at">data =</span> lower, <span class="fu">aes</span>(<span class="at">fill =</span> r), <span class="at">xmin =</span> <span class="sc">-</span><span class="cn">Inf</span>, <span class="at">xmax =</span> <span class="cn">Inf</span>,</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>              <span class="at">ymin =</span> <span class="sc">-</span><span class="cn">Inf</span>, <span class="at">ymax =</span> <span class="cn">Inf</span>) <span class="sc">+</span></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_text</span>(<span class="at">data =</span> lower, <span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, r)), <span class="at">x =</span> <span class="dv">0</span>, <span class="at">y =</span> <span class="dv">0</span>,</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>              <span class="at">size =</span> <span class="fl">2.6</span>) <span class="sc">+</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(<span class="at">data =</span> upper, <span class="fu">aes</span>(x, y), <span class="at">size =</span> <span class="fl">0.15</span>, <span class="at">alpha =</span> <span class="fl">0.4</span>,</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>               <span class="at">colour =</span> dgxe[[<span class="st">"blue"</span>]]) <span class="sc">+</span></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_ribbon</span>(<span class="at">data =</span> diagonal, <span class="fu">aes</span>(x, <span class="at">ymin =</span> <span class="sc">-</span><span class="fl">3.5</span>, <span class="at">ymax =</span> ymax),</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>                <span class="at">fill =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">alpha =</span> <span class="fl">0.5</span>) <span class="sc">+</span></span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_grid</span>(row <span class="sc">~</span> col, <span class="at">switch =</span> <span class="st">"y"</span>) <span class="sc">+</span></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> dgxe[[<span class="st">"burgundy"</span>]], <span class="at">mid =</span> <span class="st">"white"</span>,</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>                         <span class="at">high =</span> dgxe[[<span class="st">"blue"</span>]], <span class="at">limits =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">coord_cartesian</span>(<span class="at">xlim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>), <span class="at">expand =</span> <span class="cn">FALSE</span>) <span class="sc">+</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">axis.line =</span> <span class="fu">element_blank</span>(), <span class="at">axis.ticks =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text =</span> <span class="fu">element_blank</span>(), <span class="at">aspect.ratio =</span> <span class="dv">1</span>,</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>          <span class="at">panel.spacing =</span> <span class="fu">unit</span>(<span class="dv">2</span>, <span class="st">"pt"</span>), <span class="at">strip.placement =</span> <span class="st">"outside"</span>,</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>          <span class="at">strip.text.y.left =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">0</span>, <span class="at">hjust =</span> <span class="dv">1</span>),</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>          <span class="at">panel.border =</span> <span class="fu">element_rect</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">fill =</span> <span class="cn">NA</span>,</span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">linewidth =</span> <span class="fl">0.3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> matplotlib.colors <span class="im">import</span> LinearSegmentedColormap</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>colours <span class="op">=</span> LinearSegmentedColormap.from_list(<span class="st">"dgxe"</span>, [BURGUNDY, <span class="st">"white"</span>, BLUE])</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>corr <span class="op">=</span> wx[VARS].corr()</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="fl">4.2</span>))</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> ax.imshow(corr, cmap<span class="op">=</span>colours, vmin<span class="op">=-</span><span class="dv">1</span>, vmax<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>ax.set_xticks(<span class="bu">range</span>(<span class="dv">8</span>), VARS, rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">"right"</span>)</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>ax.set_yticks(<span class="bu">range</span>(<span class="dv">8</span>), VARS)</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        ax.text(j, i, <span class="ss">f"</span><span class="sc">{</span>corr<span class="sc">.</span>iloc[i, j]<span class="sc">:.2f}</span><span class="ss">"</span>, ha<span class="op">=</span><span class="st">"center"</span>, va<span class="op">=</span><span class="st">"center"</span>,</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>                fontsize<span class="op">=</span><span class="dv">7</span>)</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>fig.colorbar(image, label<span class="op">=</span><span class="st">"correlation"</span>)</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> gaussian_kde</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>colours <span class="op">=</span> LinearSegmentedColormap.from_list(<span class="st">"dgxe"</span>, [BURGUNDY, <span class="st">"white"</span>, BLUE])</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> (wx[VARS] <span class="op">-</span> wx[VARS].mean()) <span class="op">/</span> wx[VARS].std()</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>corr <span class="op">=</span> z.corr()</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> z.sample(<span class="dv">600</span>, random_state<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>, <span class="dv">200</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">8</span>, <span class="dv">8</span>, figsize<span class="op">=</span>(<span class="fl">7.2</span>, <span class="fl">7.2</span>))</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        ax <span class="op">=</span> axes[i, j]</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        ax.<span class="bu">set</span>(xlim<span class="op">=</span>(<span class="op">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>), ylim<span class="op">=</span>(<span class="op">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>), xticks<span class="op">=</span>[], yticks<span class="op">=</span>[])</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> spine <span class="kw">in</span> ax.spines.values():</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>            spine.<span class="bu">set</span>(color<span class="op">=</span>GREY, linewidth<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> i <span class="op">&lt;</span> j:</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>            ax.scatter(sample[VARS[j]], sample[VARS[i]], s<span class="op">=</span><span class="fl">1.5</span>, alpha<span class="op">=</span><span class="fl">0.4</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>                       color<span class="op">=</span>BLUE, linewidths<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">elif</span> i <span class="op">==</span> j:</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>            density <span class="op">=</span> gaussian_kde(z[VARS[i]])(grid)</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>            ax.fill_between(grid, <span class="op">-</span><span class="fl">3.5</span>, <span class="op">-</span><span class="fl">3.5</span> <span class="op">+</span> <span class="dv">6</span> <span class="op">*</span> density <span class="op">/</span> density.<span class="bu">max</span>(),</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>                            color<span class="op">=</span>BLUE, alpha<span class="op">=</span><span class="fl">0.5</span>, linewidth<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>            r <span class="op">=</span> corr.iloc[i, j]</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            ax.set_facecolor(colours((r <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>))</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            ax.text(<span class="dv">0</span>, <span class="dv">0</span>, <span class="ss">f"</span><span class="sc">{</span>r<span class="sc">:.2f}</span><span class="ss">"</span>, ha<span class="op">=</span><span class="st">"center"</span>, va<span class="op">=</span><span class="st">"center"</span>, fontsize<span class="op">=</span><span class="dv">7</span>)</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> i <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>            ax.set_title(VARS[j], fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> j <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>            ax.set_ylabel(VARS[i], rotation<span class="op">=</span><span class="dv">0</span>, ha<span class="op">=</span><span class="st">"right"</span>, va<span class="op">=</span><span class="st">"center"</span>,</span>
+<span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a>                          fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a>fig.subplots_adjust(wspace<span class="op">=</span><span class="fl">0.04</span>, hspace<span class="op">=</span><span class="fl">0.04</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -507,7 +556,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <div class="cell-output-display">
 <div>
 <figure class="figure">
-<p><img src="02-data_files/figure-html/02-5-run-1.png" class="img-fluid figure-img" width="1036"></p>
+<p><img src="02-data_files/figure-html/02-5-run-1.png" class="img-fluid figure-img" width="1008"></p>
 </figure>
 </div>
 </div>
@@ -524,7 +573,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">spread_genotypes</span>(tr)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>three <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>)  <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> traj[traj<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(years, <span class="fu">aes</span>(das, biomass, <span class="at">group =</span> genotype)) <span class="sc">+</span></span>
@@ -543,7 +592,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(wx)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tr <span class="op">=</span> make_trajectories(traj, drv)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> spread_genotypes(tr)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>three <span class="op">=</span> [<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>]    <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>days <span class="op">=</span> np.arange(tr.Y.shape[<span class="dv">2</span>]) <span class="op">+</span> tr.das0</span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">4</span>, sharey<span class="op">=</span><span class="va">True</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">2.8</span>))</span>
