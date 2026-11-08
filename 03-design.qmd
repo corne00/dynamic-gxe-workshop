@@ -182,14 +182,8 @@ show_fun("make_design")
 ```python
 d = make_design(Theta, tr, "g114")
 print(d.X.shape)
-
-# the rows and columns of the figure: three mid-season days of years 1, 2 and 31
-first = np.r_[0, np.cumsum(np.bincount(d.year))][[0, 1, 30]]
-rows = (first[:, None] + 70 + np.arange(3)).ravel()
-cols = [*range(0, 6), *range(18, 24)]        # Tmin, Tmax, TT and RAW
-print(d.terms[cols])
-print(d.X[np.ix_(rows, cols)].round(2))
-print(d.dy[rows].round(2))
+print(d.X[:3].round(2))
+print(d.dy[:6])
 ```
 
 :::
@@ -199,11 +193,6 @@ print(d.dy[rows].round(2))
 #| echo: false
 d <- make_design(Theta, tr, "g114")
 dim(d$X)
-
-# the rows and columns of the figure: three mid-season days of years 1, 2 and 31
-first <- cumsum(c(1, table(factor(d$year))))[c(1, 2, 31)]
-rows <- unlist(lapply(first, function(i) i + 70 + 0:2))
-cols <- c(1:6, 19:24)                        # Tmin, Tmax, TT and RAW
-round(d$X[rows, cols], 2)
-round(d$dy[rows], 2)
+round(head(d$X, 3), 2)
+head(d$dy)
 ```
