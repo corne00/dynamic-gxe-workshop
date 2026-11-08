@@ -114,9 +114,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108e"></script>
-<script src="js/builder.js?v=20261108e"></script>
-<script src="js/equation.js?v=20261108e"></script>
+<script src="js/controls.js?v=20261108f"></script>
+<script src="js/builder.js?v=20261108f"></script>
+<script src="js/equation.js?v=20261108f"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -390,67 +390,69 @@ window.Quarto = {
 <p><span class="math display">\[
 \frac{dy}{dt} \approx \xi_0 + \sum_{k=1}^{8} \bigl( \xi_{k1}\, u_k + \xi_{k2}\, u_k^2 + \xi_{k3}\, u_k^3 \bigr),
 \]</span></p>
-<p>a cubic polynomial in each driver, added over the drivers. Sparsity means that most of these 25 coefficients are zero. The argument <code>degree</code> changes the powers, and <code>pairs = TRUE</code> adds products of pairs of drivers. Evaluating the library on every day of every year gives the array <code>Theta[year, day, term]</code>:</p>
+<p>a cubic polynomial in each driver, added over the drivers. Sparsity means that most of these 25 coefficients are zero. The argument <code>degree</code> changes the powers, and <code>pairs = TRUE</code> adds products of pairs of drivers whose exponents add up to at most <code>degree</code>. Evaluating the library on every day of every year gives the array <code>Theta[year, day, term]</code>:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Z: n x m matrix of standardised drivers -&gt; n x K matrix of terms. Powers</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="do">## 1..degree of every driver; pairs = TRUE adds products of pairs of drivers.</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="do">## The constant term is the intercept of the regression and is not included.</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>library_matrix <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  term <span class="ot">&lt;-</span> <span class="cf">function</span>(x, p) <span class="cf">if</span> (p <span class="sc">==</span> <span class="dv">1</span>) x <span class="cf">else</span> <span class="fu">paste0</span>(x, <span class="st">"^"</span>, p)</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  cols <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (d <span class="cf">in</span> <span class="fu">colnames</span>(Z)) {</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>degree) cols[[<span class="fu">term</span>(d, p)]] <span class="ot">&lt;-</span> Z[, d]<span class="sc">^</span>p</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (pairs) {</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (ij <span class="cf">in</span> <span class="fu">combn</span>(<span class="fu">colnames</span>(Z), <span class="dv">2</span>, <span class="at">simplify =</span> <span class="cn">FALSE</span>)) {</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (q <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>          name <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">term</span>(ij[<span class="dv">1</span>], p), <span class="st">"*"</span>, <span class="fu">term</span>(ij[<span class="dv">2</span>], q))</span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>          cols[[name]] <span class="ot">&lt;-</span> Z[, ij[<span class="dv">1</span>]]<span class="sc">^</span>p <span class="sc">*</span> Z[, ij[<span class="dv">2</span>]]<span class="sc">^</span>q</span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        }</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      }</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do.call</span>(cbind, cols)</span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="do">## Theta[year, day, term]</span></span>
-<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>make_library <span class="ot">&lt;-</span> <span class="cf">function</span>(drv, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
-<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">dim</span>(drv<span class="sc">$</span>U)</span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U, <span class="at">ncol =</span> d[<span class="dv">3</span>], <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, drv<span class="sc">$</span>drivers))</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  L <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(Z, degree, pairs)</span>
-<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">array</span>(L, <span class="fu">c</span>(d[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="fu">ncol</span>(L)), <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="fu">colnames</span>(L)))</span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="do">## 1..degree of every driver; pairs = TRUE adds products of pairs of drivers</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="do">## with exponents p, q &gt;= 1 and p + q &lt;= degree.</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="do">## The constant term is the intercept of the regression and is not included.</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>library_matrix <span class="ot">&lt;-</span> <span class="cf">function</span>(Z, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  term <span class="ot">&lt;-</span> <span class="cf">function</span>(x, p) <span class="cf">if</span> (p <span class="sc">==</span> <span class="dv">1</span>) x <span class="cf">else</span> <span class="fu">paste0</span>(x, <span class="st">"^"</span>, p)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  cols <span class="ot">&lt;-</span> <span class="fu">list</span>()</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (d <span class="cf">in</span> <span class="fu">colnames</span>(Z)) {</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (p <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>degree) cols[[<span class="fu">term</span>(d, p)]] <span class="ot">&lt;-</span> Z[, d]<span class="sc">^</span>p</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (pairs) {</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (ij <span class="cf">in</span> <span class="fu">combn</span>(<span class="fu">colnames</span>(Z), <span class="dv">2</span>, <span class="at">simplify =</span> <span class="cn">FALSE</span>)) {</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      <span class="cf">for</span> (p <span class="cf">in</span> <span class="fu">seq_len</span>(degree <span class="sc">-</span> <span class="dv">1</span>)) {</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> (q <span class="cf">in</span> <span class="fu">seq_len</span>(degree <span class="sc">-</span> p)) {</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>          name <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="fu">term</span>(ij[<span class="dv">1</span>], p), <span class="st">"*"</span>, <span class="fu">term</span>(ij[<span class="dv">2</span>], q))</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>          cols[[name]] <span class="ot">&lt;-</span> Z[, ij[<span class="dv">1</span>]]<span class="sc">^</span>p <span class="sc">*</span> Z[, ij[<span class="dv">2</span>]]<span class="sc">^</span>q</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>      }</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">do.call</span>(cbind, cols)</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a><span class="do">## Theta[year, day, term]</span></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>make_library <span class="ot">&lt;-</span> <span class="cf">function</span>(drv, <span class="at">degree =</span> <span class="dv">3</span>, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">dim</span>(drv<span class="sc">$</span>U)</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  Z <span class="ot">&lt;-</span> <span class="fu">matrix</span>(drv<span class="sc">$</span>U, <span class="at">ncol =</span> d[<span class="dv">3</span>], <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, drv<span class="sc">$</span>drivers))</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  L <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(Z, degree, pairs)</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">array</span>(L, <span class="fu">c</span>(d[<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>], <span class="fu">ncol</span>(L)), <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="cn">NULL</span>, <span class="fu">colnames</span>(L)))</span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Z: n x m matrix of standardised drivers -&gt; n x K matrix of terms. Powers</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1..degree of every driver; pairs = True adds products of pairs of drivers.</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># The constant term is the intercept of the regression and is not included.</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> library_matrix(Z, names, degree<span class="op">=</span><span class="dv">3</span>, pairs<span class="op">=</span><span class="va">False</span>):</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> term(x, p):</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x <span class="cf">if</span> p <span class="op">==</span> <span class="dv">1</span> <span class="cf">else</span> <span class="ss">f"</span><span class="sc">{</span>x<span class="sc">}</span><span class="ss">^</span><span class="sc">{</span>p<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    cols <span class="op">=</span> {}</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j, d <span class="kw">in</span> <span class="bu">enumerate</span>(names):</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> p <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, degree <span class="op">+</span> <span class="dv">1</span>):</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>            cols[term(d, p)] <span class="op">=</span> Z[:, j] <span class="op">**</span> p</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pairs:</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, j <span class="kw">in</span> combinations(<span class="bu">range</span>(<span class="bu">len</span>(names)), <span class="dv">2</span>):</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> p <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">2</span>):</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> q <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">2</span>):</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                    name <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>term(names[i], p)<span class="sc">}</span><span class="ss">*</span><span class="sc">{</span>term(names[j], q)<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                    cols[name] <span class="op">=</span> Z[:, i] <span class="op">**</span> p <span class="op">*</span> Z[:, j] <span class="op">**</span> q</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.column_stack(<span class="bu">list</span>(cols.values())), <span class="bu">list</span>(cols)</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 1..degree of every driver; pairs = True adds products of pairs of drivers</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># with exponents p, q &gt;= 1 and p + q &lt;= degree.</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The constant term is the intercept of the regression and is not included.</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> library_matrix(Z, names, degree<span class="op">=</span><span class="dv">3</span>, pairs<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> term(x, p):</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> x <span class="cf">if</span> p <span class="op">==</span> <span class="dv">1</span> <span class="cf">else</span> <span class="ss">f"</span><span class="sc">{</span>x<span class="sc">}</span><span class="ss">^</span><span class="sc">{</span>p<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    cols <span class="op">=</span> {}</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j, d <span class="kw">in</span> <span class="bu">enumerate</span>(names):</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> p <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, degree <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>            cols[term(d, p)] <span class="op">=</span> Z[:, j] <span class="op">**</span> p</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> pairs:</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, j <span class="kw">in</span> combinations(<span class="bu">range</span>(<span class="bu">len</span>(names)), <span class="dv">2</span>):</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> p <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, degree):</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> q <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, degree <span class="op">-</span> p <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>                    name <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>term(names[i], p)<span class="sc">}</span><span class="ss">*</span><span class="sc">{</span>term(names[j], q)<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>                    cols[name] <span class="op">=</span> Z[:, i] <span class="op">**</span> p <span class="op">*</span> Z[:, j] <span class="op">**</span> q</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.column_stack(<span class="bu">list</span>(cols.values())), <span class="bu">list</span>(cols)</span>
 <span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Theta[year, day, term]</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_library(drv, degree<span class="op">=</span><span class="dv">3</span>, pairs<span class="op">=</span><span class="va">False</span>):</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>    n_year, n_day, n_driver <span class="op">=</span> drv.U.shape</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> drv.U.reshape(<span class="op">-</span><span class="dv">1</span>, n_driver)</span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    L, terms <span class="op">=</span> library_matrix(Z, drv.drivers, degree, pairs)</span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(array<span class="op">=</span>L.reshape(n_year, n_day, <span class="op">-</span><span class="dv">1</span>), terms<span class="op">=</span>terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Theta[year, day, term]</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_library(drv, degree<span class="op">=</span><span class="dv">3</span>, pairs<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>    n_year, n_day, n_driver <span class="op">=</span> drv.U.shape</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    Z <span class="op">=</span> drv.U.reshape(<span class="op">-</span><span class="dv">1</span>, n_driver)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>    L, terms <span class="op">=</span> library_matrix(Z, drv.drivers, degree, pairs)</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> SimpleNamespace(array<span class="op">=</span>L.reshape(n_year, n_day, <span class="op">-</span><span class="dv">1</span>), terms<span class="op">=</span>terms)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>

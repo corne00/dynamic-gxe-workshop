@@ -13,8 +13,8 @@ const Builder = (() => {
     if (pairs) {
       for (let i = 0; i < selected.length; i++) {
         for (let j = i + 1; j < selected.length; j++) {
-          for (let p = 1; p <= 2; p++) {
-            for (let q = 1; q <= 2; q++) {
+          for (let p = 1; p < degree; p++) {
+            for (let q = 1; q <= degree - p; q++) {
               specs.push([[i, p], [j, q]]);
               names.push(`${name(selected[i], p)}*${name(selected[j], q)}`);
             }
@@ -618,7 +618,7 @@ const Builder = (() => {
   // ---- State feedback and coupled models ---------------------------------------
   // The modelled states enter the library through standardised terms (centre and
   // standard deviation of the genotype's records): powers of each state, and with
-  // products also products of states and products of a state with the powers 1 and
+  // products also products of states and products of a state with powers of
   // 2 of each driver (counterpart of state_terms in R/functions.R). Every state has
   // its own equation, fitted with the same method; the system is integrated with
   // fixed-step RK4 (a quarter of a day), and a held-out year whose solution exceeds
@@ -643,12 +643,12 @@ const Builder = (() => {
     });
     if (pairs) {
       for (let i = 0; i < states.length; i++) for (let j = i + 1; j < states.length; j++) {
-        for (let p = 1; p <= 2; p++) for (let q = 1; q <= 2; q++) {
+        for (let p = 1; p < degree; p++) for (let q = 1; q <= degree - p; q++) {
           specs.push({a: i, p, b: j, q, c: -1}); names.push(`${name(states[i], p)}*${name(states[j], q)}`);
         }
       }
       states.forEach((a, i) => {
-        for (const c of inter) for (let p = 1; p <= 2; p++) {
+        for (const c of inter) for (let p = 1; p <= degree - base.specs[c][0][1]; p++) {
           specs.push({a: i, p, b: -1, q: 0, c}); names.push(`${name(a, p)}*${base.names[c]}`);
         }
       });

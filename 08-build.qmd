@@ -73,7 +73,7 @@ The drivers are standardised (mean 0, standard deviation 1 over all years). Grey
 
 ## Step 2 · Library
 
-The library $\boldsymbol{\theta}$ contains each driver raised to the powers $1, \dots, p$, optionally products of pairs of powers, and further terms that you define. A richer library can describe more, but its columns become correlated and the fit has more freedom to follow noise.
+The library $\boldsymbol{\theta}$ contains each driver raised to the powers $1, \dots, p$, optionally products of pairs of powers whose exponents add up to at most the degree (so products need a degree of at least 2), and further terms that you define. A richer library can describe more, but its columns become correlated and the fit has more freedom to follow noise.
 
 ```{ojs}
 //| echo: false

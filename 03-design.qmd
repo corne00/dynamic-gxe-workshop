@@ -83,7 +83,7 @@ $$
 \frac{dy}{dt} \approx \xi_0 + \sum_{k=1}^{8} \bigl( \xi_{k1}\, u_k + \xi_{k2}\, u_k^2 + \xi_{k3}\, u_k^3 \bigr),
 $$
 
-a cubic polynomial in each driver, added over the drivers. Sparsity means that most of these 25 coefficients are zero. The argument `degree` changes the powers, and `pairs = TRUE` adds products of pairs of drivers. Evaluating the library on every day of every year gives the array `Theta[year, day, term]`:
+a cubic polynomial in each driver, added over the drivers. Sparsity means that most of these 25 coefficients are zero. The argument `degree` changes the powers, and `pairs = TRUE` adds products of pairs of drivers whose exponents add up to at most `degree`. Evaluating the library on every day of every year gives the array `Theta[year, day, term]`:
 
 ```{r}
 #| echo: false

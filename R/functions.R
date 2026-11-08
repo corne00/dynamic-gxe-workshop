@@ -36,7 +36,8 @@ make_drivers <- function(wx, drivers = c("Tmin", "Tmax", "Rain", "RAD", "VP", "D
 
 ## ---- Library of candidate terms ---------------------------------------------
 ## Z: n x m matrix of standardised drivers -> n x K matrix of terms. Powers
-## 1..degree of every driver; pairs = TRUE adds products of pairs of drivers.
+## 1..degree of every driver; pairs = TRUE adds products of pairs of drivers
+## with exponents p, q >= 1 and p + q <= degree.
 ## The constant term is the intercept of the regression and is not included.
 library_matrix <- function(Z, degree = 3, pairs = FALSE) {
   term <- function(x, p) if (p == 1) x else paste0(x, "^", p)
@@ -46,8 +47,8 @@ library_matrix <- function(Z, degree = 3, pairs = FALSE) {
   }
   if (pairs) {
     for (ij in combn(colnames(Z), 2, simplify = FALSE)) {
-      for (p in 1:2) {
-        for (q in 1:2) {
+      for (p in seq_len(degree - 1)) {
+        for (q in seq_len(degree - p)) {
           name <- paste0(term(ij[1], p), "*", term(ij[2], q))
           cols[[name]] <- Z[, ij[1]]^p * Z[, ij[2]]^q
         }
@@ -291,18 +292,20 @@ interacting_terms <- function(Theta, drivers) {
 }
 
 ## z: rows x states (standardised, named), U: rows x interacting library columns.
+## Products have total exponent at most degree.
 state_terms <- function(z, U, degree = 3, pairs = FALSE) {
   term <- function(x, p) if (p == 1) x else paste0(x, "^", p)
   cols <- list(); st <- colnames(z)
   for (a in st) for (p in seq_len(degree)) cols[[term(a, p)]] <- z[, a]^p
   if (pairs) {
     if (length(st) > 1) for (ij in combn(st, 2, simplify = FALSE)) {
-      for (p in 1:2) for (q in 1:2) {
+      for (p in seq_len(degree - 1)) for (q in seq_len(degree - p)) {
         cols[[paste0(term(ij[1], p), "*", term(ij[2], q))]] <- z[, ij[1]]^p * z[, ij[2]]^q
       }
     }
-    for (a in st) for (u in colnames(U)) for (p in 1:2) {
-      cols[[paste0(term(a, p), "*", u)]] <- z[, a]^p * U[, u]
+    power <- function(u) if (grepl("^", u, fixed = TRUE)) as.integer(sub(".*\\^", "", u)) else 1L
+    for (a in st) for (u in colnames(U)) for (p in seq_len(degree - 1)) {
+      if (p + power(u) <= degree) cols[[paste0(term(a, p), "*", u)]] <- z[, a]^p * U[, u]
     }
   }
   do.call(cbind, cols)

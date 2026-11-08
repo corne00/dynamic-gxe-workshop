@@ -413,7 +413,7 @@ viewof highlight = select("Genotype", Object.keys(ale.curves.TT), "g114")
 
 ## Interactions and partial dependence
 
-The library of powers is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of pairs of drivers (136 terms, backward elimination to 20 terms) they differ. For `g114`, partial dependence averages the growth rate over all observed days while one driver is set to each value in turn.
+The library of powers is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of pairs of drivers (108 terms, backward elimination to 20 terms) they differ. For `g114`, partial dependence averages the growth rate over all observed days while one driver is set to each value in turn.
 
 ::: {.panel-tabset group="language"}
 

@@ -13,7 +13,7 @@ configs <- list(
   list(drivers = all8, degree = 3, pairs = FALSE, method = "backward", value = 8),
   list(drivers = all8, degree = 3, pairs = FALSE, method = "best subset", value = 5),
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "STLSQ", value = 0.03),
-  list(drivers = c("TT", "DL", "RAW"), degree = 2, pairs = TRUE, method = "backward", value = 10),
+  list(drivers = c("TT", "DL", "RAW"), degree = 2, pairs = TRUE, method = "backward", value = 7),
   list(drivers = c("Tmax", "RAD", "RAW"), degree = 1, pairs = FALSE, method = "lasso", value = 1e-3),
   ## measured trait on the right-hand side, and LAI as the modelled state
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "STLSQ", value = 0.03,
@@ -43,6 +43,9 @@ configs <- c(configs, list(
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "lasso", value = 3e-3,
        states = c("biomass", "lai"), feedback = TRUE),
   list(drivers = c("TT", "RAD", "RAW"), degree = 2, pairs = TRUE, method = "ridge", value = 0.1,
+       states = c("biomass", "lai"), feedback = TRUE),
+  list(drivers = c("TT", "DL", "RAW"), degree = 3, pairs = TRUE, method = "backward", value = 10),
+  list(drivers = c("TT", "RAD", "RAW"), degree = 3, pairs = TRUE, method = "ridge", value = 0.1,
        states = c("biomass", "lai"), feedback = TRUE)))
 fitter <- function(m, v) switch(m,
   OLS = fit_ols, ridge = function(X, dy) fit_ridge(X, dy, v),

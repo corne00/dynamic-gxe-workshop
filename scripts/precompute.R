@@ -26,7 +26,7 @@ store("cv_methods.rds", t(sapply(names(fit_methods), function(name) {
 
 ## Error against the number of terms, with products of pairs (step 5)
 Theta2 <- make_library(drv, pairs = TRUE)
-ks <- c(4, 8, 12, 16, 24, 36, 60, 136)
+ks <- c(4, 8, 12, 16, 24, 36, 60, 108)
 store("rmse_vs_k.rds", data.frame(k = ks, rmse = cv_rmse_path(
   Theta2, tr, path_subset("backward"), ks, tr$genotypes[seq(1, 199, by = 20)])))
 

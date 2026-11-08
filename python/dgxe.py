@@ -39,7 +39,8 @@ def make_drivers(wx, drivers=DRIVERS):
 
 # ---- Library of candidate terms --------------------------------------------
 # Z: n x m matrix of standardised drivers -> n x K matrix of terms. Powers
-# 1..degree of every driver; pairs = True adds products of pairs of drivers.
+# 1..degree of every driver; pairs = True adds products of pairs of drivers
+# with exponents p, q >= 1 and p + q <= degree.
 # The constant term is the intercept of the regression and is not included.
 def library_matrix(Z, names, degree=3, pairs=False):
     def term(x, p):
@@ -50,8 +51,8 @@ def library_matrix(Z, names, degree=3, pairs=False):
             cols[term(d, p)] = Z[:, j] ** p
     if pairs:
         for i, j in combinations(range(len(names)), 2):
-            for p in (1, 2):
-                for q in (1, 2):
+            for p in range(1, degree):
+                for q in range(1, degree - p + 1):
                     name = f"{term(names[i], p)}*{term(names[j], q)}"
                     cols[name] = Z[:, i] ** p * Z[:, j] ** q
     return np.column_stack(list(cols.values())), list(cols)
@@ -284,7 +285,7 @@ def cross_validate(Theta, tr, fit, genotypes=None):
 # The modelled states enter the library through standardised terms (centre and
 # standard deviation of the observed values of the genotype): powers of each
 # state, and with pairs=True also products of states and products of a state
-# with the powers 1 and 2 of each driver. trs is a dict of trajectory sets from
+# with powers of each driver (total exponent at most degree). trs is a dict of trajectory sets from
 # make_trajectories(), one per modelled state, named by state; every state has
 # its own equation, and all are fitted with the same fit(X, dy). The state terms
 # of a row use the mean of the records on either side of the day.
@@ -309,13 +310,14 @@ def state_terms(z, states, U, unames, degree=3, pairs=False):
             cols[term(name, p)] = z[:, a] ** p
     if pairs:
         for a, b in combinations(range(len(states)), 2):
-            for p in (1, 2):
-                for q in (1, 2):
+            for p in range(1, degree):
+                for q in range(1, degree - p + 1):
                     cols[f"{term(states[a], p)}*{term(states[b], q)}"] = (
                         z[:, a] ** p * z[:, b] ** q)
         for a, name in enumerate(states):
             for j, u in enumerate(unames):
-                for p in (1, 2):
+                power = int(u.split("^")[1]) if "^" in u else 1
+                for p in range(1, degree - power + 1):
                     cols[f"{term(name, p)}*{u}"] = z[:, a] ** p * U[:, j]
     return np.column_stack(list(cols.values()))
 
