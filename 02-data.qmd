@@ -96,13 +96,13 @@ $$
 
 The sum starts at sowing, so `TT` on the first day in the table (day 15) already contains the first 14 days.
 
-Relative available water is the filling of a soil-water bucket of capacity $W_{\max}$: rain adds water and a fraction $k$ of the reference evapotranspiration $\mathrm{ET}_0$ removes it,
+Relative available water is the filling of a soil-water bucket: rain adds water and a fraction $k$ of the reference evapotranspiration $\mathrm{ET}_0$ removes it, up to the capacity $W_{\max}$ of the soil,
 
 $$
 W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 $$
 
-Here $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and $k = 0.796$ and $W_{\max} = 217.2$ mm were fitted to the daily changes of `RAW`. The table contains `RAW` but not these ingredients; we recovered them from the table.
+The capacity is the plant-available water capacity of the soil at Narrabri, $W_{\max} = 217.5$ mm (a grey vertosol), and the bucket starts each season with the plant-available water at sowing, $W_0 = 175$ mm, so that $\mathrm{RAW}_0 = 0.80$ (Bustos-Korts et al., 2019, Table 1). $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and $k = 0.795$ was fitted to the daily changes of `RAW`. With these values the bucket reproduces `RAW` over the whole season with an RMSE of 0.001.
 
 In total there are eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.
 
