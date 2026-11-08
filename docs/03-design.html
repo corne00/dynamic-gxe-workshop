@@ -539,7 +539,11 @@ window.Quarto = {
 </section>
 <section id="design-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="design-matrix">Design matrix</h2>
-<p>For one genotype, the rows of <span class="math inline">\(\mathbf{X}\)</span> are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day <span class="math inline">\(i\)</span> drives the change from observation <span class="math inline">\(i-1\)</span> to <span class="math inline">\(i\)</span>: <span class="math inline">\(\dot{\mathbf{y}}\)</span> holds the growth rates <span class="math inline">\(\dot y_i \approx y_i - y_{i-1}\)</span> (<code>numpy.diff</code> and <code>diff</code>, step 1), and row <span class="math inline">\(i\)</span> of <span class="math inline">\(\mathbf{X}\)</span> is the library of day <span class="math inline">\(i\)</span>.</p>
+<p>For one genotype, the rows of <span class="math inline">\(\mathbf{X}\)</span> are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day <span class="math inline">\(i\)</span> drives the change from observation <span class="math inline">\(i-1\)</span> to <span class="math inline">\(i\)</span>. The vector <span class="math inline">\(\dot{\mathbf{y}}\)</span> holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (<code>numpy.diff</code> in Python, <code>diff</code> in R),</p>
+<p><span class="math display">\[
+\dot y_i = \frac{dy}{dt}(t_{i-1/2}) = \frac{y_i - y_{i-1}}{\Delta t} + \mathcal{O}(\Delta t^2),
+\]</span></p>
+<p>and row <span class="math inline">\(i\)</span> of <span class="math inline">\(\mathbf{X}\)</span> is the library of day <span class="math inline">\(i\)</span>.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_design.png" class="img-fluid figure-img" style="width:100.0%"></p>

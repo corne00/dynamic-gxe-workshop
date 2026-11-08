@@ -157,7 +157,13 @@ dim(tr$Y)
 
 ## Design matrix
 
-For one genotype, the rows of $\mathbf{X}$ are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$: $\dot{\mathbf{y}}$ holds the growth rates $\dot y_i \approx y_i - y_{i-1}$ (`numpy.diff` and `diff`, step 1), and row $i$ of $\mathbf{X}$ is the library of day $i$.
+For one genotype, the rows of $\mathbf{X}$ are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$. The vector $\dot{\mathbf{y}}$ holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (`numpy.diff` in Python, `diff` in R),
+
+$$
+\dot y_i = \frac{dy}{dt}(t_{i-1/2}) = \frac{y_i - y_{i-1}}{\Delta t} + \mathcal{O}(\Delta t^2),
+$$
+
+and row $i$ of $\mathbf{X}$ is the library of day $i$.
 
 ![The regression problem for genotype `g114` as a table: three days from the middle of each of the years 1, 2 and 31. The highlighted row is one equation, $\dot y_i = \sum_j X_{ij}\xi_j$. The columns of $\mathbf{X}$ are standardised; the coefficients $\boldsymbol{\xi}$ are unknown and are estimated in step 4.](images/concept_design.png){width=100%}
 
