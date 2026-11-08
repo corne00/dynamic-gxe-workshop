@@ -8,32 +8,16 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-This page continues from steps 2 and 3. One line loads the data and builds the library:
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```r
-source("R/pipeline.R")
-```
-
-## Python
-
-```python
-from pipeline import *
-```
-
-:::
+This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv`, `Theta` and `tr`. To start here, load them as described on the [Set up](setup.html) page.
 
 
-For one genotype, the data are the growth rates $\dot{\mathbf{y}}$ and the library values $\boldsymbol{\Theta}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
+For one genotype, the data are the growth rates $\frac{d\mathbf{y}}{dt}$ and the library values $\boldsymbol{\Theta}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
 
 $$
-\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
+\frac{d\mathbf{y}}{dt} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 $$
 
-Every method maps $(\boldsymbol{\Theta}, \dot{\mathbf{y}})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(Theta, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
+Every method maps $(\boldsymbol{\Theta}, \frac{d\mathbf{y}}{dt})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(Theta, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
 
 ::: {.panel-tabset group="language"}
 
@@ -68,7 +52,7 @@ d <- make_design(Theta, tr, "g001")
 The reference: all terms are used, so there is no sparsity.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters: none.
@@ -86,7 +70,7 @@ show_fun("fit_ols", level = 3)
 Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters:
@@ -106,7 +90,7 @@ show_fun("fit_ridge", level = 3)
 The $\ell_1$ penalty sets coefficients exactly to zero, which gives a sparse equation.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
 $$
 
 Hyperparameters:
@@ -126,7 +110,7 @@ show_fun("fit_glmnet", "fit_lasso", level = 3)
 A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
 $$
 
 Hyperparameters:
@@ -147,7 +131,18 @@ show_fun("fit_glmnet", "fit_enet", level = 3)
 The best model with exactly $k$ terms, found by searching all subsets.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+$$
+
+Algorithm:
+
+$$
+\begin{array}{ll}
+\textbf{for each } S \subset \{1, \dots, K\} \textbf{ with } |S| = k: & \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the terms in } S \\[2pt]
+\quad \mathrm{RSS}(S) \leftarrow \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\hat{\boldsymbol{\xi}}_S \rVert_2^2 & \\[2pt]
+\textbf{return } \hat{\boldsymbol{\xi}}_{S^*} \text{ with } S^* = \arg\min_S \mathrm{RSS}(S) & \text{coefficients outside } S^* \text{ are zero}
+\end{array}
 $$
 
 Hyperparameters:
@@ -167,7 +162,13 @@ show_fun("fit_subset", level = 3)
 A greedy alternative to best subset: start with all terms and repeatedly remove the one that increases the residual error least.
 
 $$
-S \leftarrow S \setminus \{j^*\}, \qquad j^* = \arg\min_{j \in S} \bigl[ \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \bigr]
+\begin{array}{ll}
+S \leftarrow \{1, \dots, K\} & \text{start with all terms} \\[2pt]
+\textbf{while } |S| > k: & \\[2pt]
+\quad \Delta_j \leftarrow \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \quad \text{for each } j \in S & \text{increase of the error without term } j \\[2pt]
+\quad S \leftarrow S \setminus \{j^*\}, \quad j^* = \arg\min_{j \in S} \Delta_j & \text{remove the least useful term} \\[2pt]
+\textbf{return } \hat{\boldsymbol{\xi}}_S & \text{least squares on } S
+\end{array}
 $$
 
 Hyperparameters:
@@ -187,12 +188,19 @@ show_fun("fit_subset", level = 3)
 Sequential thresholded least squares, the algorithm of the original SINDy method.
 
 $$
-\hat{\boldsymbol{\xi}}_S = \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2, \qquad S \leftarrow \bigl\{ j : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \qquad s_j = \frac{\mathrm{sd}(\boldsymbol{\Theta}_j)}{\mathrm{sd}(\dot{\mathbf{y}})}
+\begin{array}{ll}
+S \leftarrow \{1, \dots, K\} & \text{start with all terms} \\[2pt]
+\textbf{repeat:} & \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the active terms} \\[2pt]
+\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\tfrac{d\mathbf{y}}{dt}\bigr) & \text{keep the terms above the threshold} \\[2pt]
+\quad \textbf{if } S' = S \text{ or } S' = \emptyset \textbf{ then stop, else } S \leftarrow S' & \\[2pt]
+\textbf{return } \hat{\boldsymbol{\xi}}_S & \text{coefficients outside } S \text{ are zero}
+\end{array}
 $$
 
 Hyperparameters:
 
-- $\tau$: threshold on the scaled coefficient; the fit is repeated on the remaining terms until no term is removed (the algorithm of the original SINDy method).
+- $\tau$: threshold on the scaled coefficient $|\hat{\xi}_j|\,s_j$.
 
 Least squares on the active set $S$, so there is no shrinkage.
 
@@ -254,48 +262,52 @@ Each bar is a coefficient, scaled to a common size (coefficient times the standa
 size = d.Theta.std(axis=0, ddof=1) / d.dy.std(ddof=1)
 effect = fits.iloc[1:].mul(size, axis=0)
 
-fig, axes = plt.subplots(1, effect.shape[1], sharey=True, sharex=True,
-                         figsize=(9, 5.6))
+fig, axes = plt.subplots(effect.shape[1], 1, sharex=True, sharey=True,
+                         figsize=(6.2, 6.2))
 for ax, (name, column) in zip(axes, effect.items()):
-    ax.barh(column.index, column,
-            color=np.where(column > 0, BLUE, BURGUNDY))
-    ax.axvline(0, color="black", lw=0.8)
-    ax.set_title(name, fontsize=8)
-axes[0].invert_yaxis()
-fig.supxlabel("scaled coefficient")
+    ax.bar(column.index, column, color=np.where(column > 0, BLUE, BURGUNDY))
+    ax.axhline(0, color="black", lw=0.8)
+    ax.set_title(name, fontsize=8, loc="left")
+axes[-1].tick_params(axis="x", rotation=90)
+fig.supylabel("scaled coefficient")
 fig.tight_layout()
 ```
 
 :::
 
+::: {.scroll-x}
+
 ```{r}
 #| label: 04-3-run
 #| echo: false
-#| fig-height: 5.6
-#| fig-width: 9
+#| fig-height: 6.2
+#| fig-width: 6.2
+#| out-width: 600px
 size <- apply(d$Theta, 2, sd) / sd(d$dy)
 effect <- fits[-1, ] * size
-long <- data.frame(term = factor(rownames(effect), rev(rownames(effect))),
+long <- data.frame(term = factor(rownames(effect), rownames(effect)),
                    method = factor(rep(colnames(effect), each = nrow(effect)),
                                    colnames(effect)),
                    effect = as.vector(effect))
 long <- long[long$effect != 0, ]
 
-ggplot(long, aes(effect, term, fill = effect > 0)) +
+ggplot(long, aes(term, effect, fill = effect > 0)) +
   geom_col(width = 0.7) +
-  geom_vline(xintercept = 0, linewidth = 0.3) +
+  geom_hline(yintercept = 0, linewidth = 0.3) +
   scale_fill_manual(values = c(`TRUE` = dgxe[["blue"]],
                                `FALSE` = dgxe[["burgundy"]]),
                     guide = "none") +
-  scale_y_discrete(drop = FALSE) +
-  scale_x_continuous(breaks = c(-0.5, 0, 0.5)) +
-  facet_grid(. ~ method, labeller = label_wrap_gen(8)) +
-  labs(x = "scaled coefficient", y = NULL) +
+  scale_x_discrete(drop = FALSE) +
+  scale_y_continuous(breaks = c(-0.5, 0, 0.5)) +
+  facet_wrap(~method, ncol = 1) +
+  labs(x = NULL, y = "scaled coefficient") +
   theme_dgxe() +
-  theme(strip.text = element_text(size = 8, lineheight = 0.9),
-        axis.text.x = element_text(size = 7),
-        panel.spacing.x = unit(0.6, "lines"))
+  theme(strip.text = element_text(size = 8),
+        axis.text.x = element_text(size = 7, angle = 90, hjust = 1,
+                                   vjust = 0.5))
 ```
+
+:::
 
 The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen years in step 5.
 
@@ -322,7 +334,7 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
   const all = Object.values(hyper.methods);
   const reach = d3.max(all.flatMap(m => m.effect.flat(2).map(Math.abs)));
   const rmse = [d3.min(all.flatMap(m => m.rmse)), 0.8];   // cap: very large penalties are off scale
-  const band = 6, n = shown.length;
+  const band = 5, n = shown.length;
   const key = (term, name) => term + "|" + name;
   const domain = hyper.terms.flatMap(term => [...shown.map(name => key(term, name)), key(term, "")]);
   const middle = hyper.terms.map(term => key(term, shown[Math.floor(n / 2)]));
@@ -331,11 +343,11 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
     return hyper.terms.map((term, i) => ({name, band: key(term, name), effect: spec.effect[step][g][i]}));
   });
   const coefficients = Plot.plot({
-    width: 520, height: 40 + band * domain.length, marginLeft: 56,
-    x: {domain: [-reach, reach], label: "scaled coefficient", ticks: 4},
-    y: {domain, ticks: middle, tickFormat: d => d.split("|")[0], label: null, padding: 0},
+    width: 56 + band * domain.length, height: 250, marginLeft: 56, marginBottom: 60,
+    y: {domain: [-reach, reach], label: "scaled coefficient", ticks: 4},
+    x: {domain, ticks: middle, tickFormat: d => d.split("|")[0], tickRotate: -90, label: null, padding: 0},
     color: {domain: contrast, range: shades},
-    marks: [Plot.barX(rows, {x: "effect", y: "band", fill: "name"}), Plot.ruleX([0])]
+    marks: [Plot.barY(rows, {x: "band", y: "effect", fill: "name"}), Plot.ruleY([0])]
   });
   const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
   const scale = spec.param === "terms" ? "linear" : "log";
@@ -347,7 +359,7 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
             Plot.dot(curve, {x: "value", y: "rmse", fill: "#9CA3AF", r: 3, clip: true}),
             Plot.dot([curve[step]], {x: "value", y: "rmse", fill: "#8B1E3F", r: 6, clip: true})]
   });
-  return html`<div>${coefficients}${error}</div>`;
+  return html`<div><div class="scroll-x">${coefficients}</div>${error}</div>`;
 }
 ```
 

@@ -55,7 +55,7 @@ p2 <- ggplot(z, aes(das, y)) +
            parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
   annotate("text", x = nb$das[2] - 0.2, y = nb$y[2] + pad, label = "y[i]",
            parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
-  labs(title = expression("(b) Zoom: " * dot(y)[i] %~~% y[i] - y[i - 1]),
+  labs(title = expression("(b) Zoom: " * frac(dy, dt) %~~% frac(y[i] - y[i - 1], Delta * t)),
        x = "days after sowing", y = "t/ha") +
   concept()
 p3 <- ggplot(r, aes(das, dy)) +
@@ -63,7 +63,7 @@ p3 <- ggplot(r, aes(das, dy)) +
   geom_point(data = r[i - 1, ], colour = bur, size = 2.6) +
   annotate("label", x = r$das[i - 1] + 4,
            y = r$dy[i - 1] - 0.02 * diff(range(r$dy)),
-           label = "dot(y)[i]", parse = TRUE, colour = bur, size = 3.6,
+           label = "frac(dy, dt)", parse = TRUE, colour = bur, size = 3.6,
            fill = "white", label.size = 0, hjust = 0) +
   labs(title = "(c) Growth rate by one-day differences",
        x = "days after sowing", y = "t/ha/day") +
@@ -147,7 +147,7 @@ xcol <- 2.4 + rep(0:3, each = 3) * 3.35 + rep(0:2, 4) * 1.05
 cells <- data.frame(
   x = rep(xcol, each = length(rows)), y = rep(ypos, k),
   label = sub("^-(0\\.0+)$", "\\1", sprintf("%.2f", as.vector(dd$Theta[rows, show]))))
-dycells <- data.frame(x = 0, y = ypos, label = sprintf("%.2f", dd$dy[rows]))
+dycells <- data.frame(x = 0, y = ypos, label = sprintf("%.4f", dd$dy[rows]))
 xicells <- data.frame(x = 2.4 + 4 * 3.35 + 0.9, y = (seq_len(k) - 0.5) * 11 / k + 0.5,
                       label = sprintf("xi[%d]", show))
 hi <- 2                                           # highlighted row of block 1
@@ -190,14 +190,14 @@ pd <- ggplot() +
   geom_text(data = heads, aes(x, -0.1, label = label), parse = TRUE,
             size = 2.8, colour = "#374151") +
   annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -1.6,
-           parse = TRUE, label = c("dot(bold(y))", "bold(Theta)", "bold(xi)"),
+           parse = TRUE, label = c("frac(d * bold(y), dt)", "bold(Theta)", "bold(xi)"),
            size = 4.4) +
   annotate("text", x = c(0, 2.4 + 1.5 * 3.35 + 1.05, xicells$x[1]), y = -2.7,
            size = 3, colour = "#6B7280",
            label = c("growth rates", "library terms (standardised)",
                      "coefficients")) +
   annotate("text", x = 2.4 + 1.5 * 3.35 + 1.05, y = 12.3,
-           label = "'row i:'~dot(y)[i] == sum(Theta[ij]*xi[j], j == 1, K)",
+           label = "'row i:'~frac(dy, dt)[i] == sum(Theta[ij]*xi[j], j == 1, K)",
            parse = TRUE, size = 3.3, colour = bur) +
   scale_y_reverse() +
   coord_cartesian(clip = "off", ylim = c(12.8, -3.2), xlim = c(-1.6, 17.6)) +

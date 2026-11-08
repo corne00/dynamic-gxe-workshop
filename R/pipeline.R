@@ -1,4 +1,4 @@
-## Steps 2-3 in one go (used by the later pages so that each page runs alone).
+## Loads the data and builds the objects of steps 2 and 3.
 source("R/functions.R")
 wx <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")

@@ -97,7 +97,7 @@ u_1(t_N) & u_1^2(t_N) & u_1^3(t_N) & \cdots & u_8(t_N) & u_8^2(t_N) & u_8^3(t_N)
 \end{pmatrix} \in \mathbb{R}^{N \times K},
 $$
 
-so that the model reads $\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$. In code the library of all days is stored as the array `Theta[year, day, term]`; the next section selects the rows that belong to the regression:
+so that the model reads $\frac{d\mathbf{y}}{dt} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$. In code the library of all days is stored as the array `Theta[year, day, term]`; the next section selects the rows that belong to the regression:
 
 ```{r}
 #| echo: false
@@ -171,15 +171,15 @@ dim(tr$Y)
 
 ## Design matrix
 
-For one genotype, the rows of $\boldsymbol{\Theta}$ are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$. The vector $\dot{\mathbf{y}}$ holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (`numpy.diff` in Python, `diff` in R),
+For one genotype, the rows of $\boldsymbol{\Theta}$ are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$. The vector $\frac{d\mathbf{y}}{dt}$ holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (`numpy.diff` in Python, `diff` in R),
 
 $$
-\dot y_i = \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t},
+\left.\frac{dy}{dt}\right|_{i} = \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t},
 $$
 
 and row $i$ of $\boldsymbol{\Theta}$ is the library of day $i$.
 
-![The regression problem for genotype `g114` as a table: the first three rows of each of the years 1, 2 and 31 (1983, 1984 and 2013). The highlighted row is one equation, $\dot y_i = \sum_j \Theta_{ij}\xi_j$. The columns of $\boldsymbol{\Theta}$ are standardised; the coefficients $\boldsymbol{\xi}$ are unknown and are estimated in step 4.](images/concept_design.png){width=100%}
+![The regression problem for genotype `g114` as a table: the first three rows of each of the years 1, 2 and 31 (1983, 1984 and 2013). The highlighted row is one equation, $\left.\frac{dy}{dt}\right|_{i} = \sum_j \Theta_{ij}\xi_j$. The columns of $\boldsymbol{\Theta}$ are standardised; the coefficients $\boldsymbol{\xi}$ are unknown and are estimated in step 4.](images/concept_design.png){width=100%}
 
 ```{r}
 #| echo: false

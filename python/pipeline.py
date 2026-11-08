@@ -1,4 +1,4 @@
-"""Steps 2-3 in one go (Python counterpart of R/pipeline.R); used by the pages.
+"""Loads the data and builds the objects of steps 2 and 3 (counterpart of R/pipeline.R).
 
 Run from the repository root with python/ on the path:
     from pipeline import *

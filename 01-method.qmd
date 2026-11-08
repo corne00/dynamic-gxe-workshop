@@ -108,17 +108,17 @@ where most coefficients $\xi_j$ are expected to be zero. The library contains ca
 Let $y_i = y(t_i)$ be the observation at the end of day $i$, with time step $\Delta t$ (one day). The weather of day $i$ acts during that day, so its growth rate belongs to the middle of the day, $t_{i-1/2} = t_i - \Delta t/2$. It is estimated from the two records enclosing the day,
 
 $$
-\dot y_i := \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t}.
+\left.\frac{dy}{dt}\right|_{i} := \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t}.
 $$
 
 The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (`numpy.diff` in Python, `diff` in R).
 
-![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations at the start and end of day $i$ estimates $\dot y_i$, the growth rate in the middle of the day. The growth rates of the whole year are shown in (c); the regression is performed on these.](images/concept_derivative.png){width=100%}
+![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations at the start and end of day $i$ estimates $\left.\frac{dy}{dt}\right|_{i}$, the growth rate in the middle of the day. The growth rates of the whole year are shown in (c); the regression is performed on these.](images/concept_derivative.png){width=100%}
 
-Collecting all the growth rates in a vector $\dot{\mathbf{y}}$ and the library values in a matrix $\boldsymbol{\Theta}$ with entries $\Theta_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
+Collecting all the growth rates in a vector $\frac{d\mathbf{y}}{dt}$ and the library values in a matrix $\boldsymbol{\Theta}$ with entries $\Theta_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
 
 $$
-\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
+\frac{d\mathbf{y}}{dt} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 $$
 
 The state $\mathbf{y}_i$ in the library is the observed state on day $t_i$. If data are collected in several environments and for several genotypes, the growth rates and library values are stacked. With $\theta_{i,j}^{(g, e)} = \theta_j(\mathbf{y}_i^{(g, e)}, \mathbf{u}_i^{(g, e)})$ for genotype $g$ in environment $e$ on day $i$:
@@ -126,7 +126,7 @@ The state $\mathbf{y}_i$ in the library is the observed state on day $t_i$. If d
 $$
 {\small
 \begin{pmatrix}
-\dot y_1^{(1, 1)} \\ \vdots \\ \dot y_n^{(1, 1)} \\ \vdots \\ \dot y_n^{(g, e)}
+\left.\frac{dy}{dt}\right|_{1}^{(1, 1)} \\ \vdots \\ \left.\frac{dy}{dt}\right|_{n}^{(1, 1)} \\ \vdots \\ \left.\frac{dy}{dt}\right|_{n}^{(g, e)}
 \end{pmatrix}
 \approx
 \begin{pmatrix}
@@ -142,10 +142,10 @@ $$
 }
 $$
 
-The coefficients enter linearly (recall $\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$), so we just need to solve a linear regression problem to estimate them, for example by least squares:
+The coefficients enter linearly (recall $\frac{d\mathbf{y}}{dt} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$), so we just need to solve a linear regression problem to estimate them, for example by least squares:
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 .
 $$
 
 However, any regression method can be used. We will compare several methods in the workshop.
@@ -167,7 +167,7 @@ If the library depends on the drivers only, the solution is the integral of the 
 Differences between genotypes are captured by a separate regression for each genotype $g = 1, \dots, G$, on its own growth rates and library values (stacked over the environments),
 
 $$
-\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}}^{(g)} - \boldsymbol{\Theta}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
+\hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}^{(g)}}{dt} - \boldsymbol{\Theta}^{(g)}\boldsymbol{\xi} \rVert_2^2 .
 $$
 
 The environments and the library are shared, so the columns of $\hat{\boldsymbol{\Xi}} = \bigl(\hat{\boldsymbol{\xi}}^{(1)}, \dots, \hat{\boldsymbol{\xi}}^{(G)}\bigr)$ are directly comparable: each column is the growth equation of one genotype, and the differences between columns describe how genotypes differ in their response to the drivers.
@@ -185,7 +185,7 @@ The following steps each have a defined input and output.
 ```{=html}
 <div class="flow">
   <a href="02-data.html"><span class="num">2</span><span class="title">Data</span><span class="io">weather and biomass tables</span></a>
-  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">&theta;(y, u), &Theta; and &#7823;</span></a>
+  <a href="03-design.html"><span class="num">3</span><span class="title">Library</span><span class="io">&theta;(y, u), &Theta; and dy/dt</span></a>
   <a href="04-fitting.html"><span class="num">4</span><span class="title">Fitting</span><span class="io">estimate of &xi;</span></a>
   <a href="05-validate.html"><span class="num">5</span><span class="title">Validation</span><span class="io">solution and cross-validation</span></a>
   <a href="06-reading.html"><span class="num">6</span><span class="title">Interpretation</span><span class="io">response curves</span></a>

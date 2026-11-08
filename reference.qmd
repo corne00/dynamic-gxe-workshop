@@ -12,7 +12,7 @@ subtitle: "Symbols, functions, data, and sources"
 | $\theta_j(\mathbf{y}, \mathbf{u})$ | candidate function $j$ of the library |
 | $\boldsymbol{\theta}$ | vector of all candidate functions |
 | $\boldsymbol{\xi}$ | coefficient vector |
-| $\dot y_i \approx (y_i - y_{i-1}) / \Delta t$, $\dot{\mathbf{y}}$ | growth rate of day $i$ by the one-day difference (centered at the middle of the day), and the vector of growth rates |
+| $\left.\frac{dy}{dt}\right|_{i} \approx (y_i - y_{i-1}) / \Delta t$, $\frac{d\mathbf{y}}{dt}$ | growth rate of day $i$ by the one-day difference (centered at the middle of the day), and the vector of growth rates |
 | $\boldsymbol{\Theta}$, $\Theta_{ij}$ | matrix of the library evaluated on the days used (rows), $\Theta_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$; the design matrix |
 | $K$ | number of candidate functions |
 

@@ -9,23 +9,7 @@ source("R/pipeline.R")
 library(iml)
 ```
 
-This page continues from steps 2 and 3. One line loads the data and builds the library:
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```r
-source("R/pipeline.R")
-```
-
-## Python
-
-```python
-from pipeline import *
-```
-
-:::
+This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv`, `Theta` and `tr`. To start here, load them as described on the [Set up](setup.html) page.
 
 
 ## Fitted equations

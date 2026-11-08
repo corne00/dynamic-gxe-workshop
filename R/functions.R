@@ -107,10 +107,8 @@ bind_terms <- function(Theta, extra) {
 }
 
 ## ---- Measured traits as drivers ---------------------------------------------
-## Adds measured states of one genotype (columns of traj, for example "lai" or
-## "biomass") to the weather table, so that they can be used like drivers. A
-## record is the value at the end of a day, so the value of a day is the mean of
-## the records at its start and end.
+## Adds measured states of one genotype (columns of traj, for example "lai") to
+## the weather table, as the mean of the records at the start and end of a day.
 with_traits <- function(wx, traj, genotype, vars = "lai") {
   t <- traj[traj$genotype == genotype, ]
   for (v in vars) {
@@ -141,10 +139,8 @@ make_trajectories <- function(traj, drv, var = "biomass") {
 }
 
 ## ---- Regression problem for one genotype ------------------------------------
-## Rows: days 2, ..., n + 1 of every year (all days with a record before them).
-## Biomass is recorded at the end of a day, so day i drives the change from
-## observation i - 1 to i. Row i of the returned matrix Theta is the library of
-## day i, and dy[i] = y_i - y_(i-1) is the growth rate at the middle of day i.
+## Rows: days 2, ..., n + 1 of every year. Row i of Theta is the library of day i;
+## dy[i] = y_i - y_(i-1) is the growth rate in the middle of day i.
 make_design <- function(Theta, tr, genotype) {
   g <- match(genotype, tr$genotypes)
   n <- tr$nend[g, ]
@@ -263,13 +259,11 @@ cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
 }
 
 ## ---- State feedback and coupled models --------------------------------------
-## The modelled states enter the library through standardised terms (centre and
-## standard deviation of the observed values of the genotype): powers of each
-## state, and with products = TRUE also products of states and products of a
-## state with the powers 1 and 2 of each driver. trs is a list of trajectory
-## sets from make_trajectories(), one per modelled state, named by state; every
-## state has its own equation, and all are fitted with the same fit(Theta, dy). The
-## state terms of a row use the mean of the records on either side of the day.
+## The standardised states enter the library as powers and, with pairs = TRUE, as
+## products with each other and with driver powers (total exponent at most
+## degree). trs: list of make_trajectories() results, one per state. Each state
+## has its own equation, fitted with the same fit(Theta, dy). State terms use the
+## mean of the records at the start and end of the day.
 state_scale <- function(Y) {
   m <- mean(Y, na.rm = TRUE)
   c(center = m, scale = sqrt(mean((Y - m)^2, na.rm = TRUE)))
@@ -301,8 +295,7 @@ state_terms <- function(z, U, degree = 3, pairs = FALSE) {
   do.call(cbind, cols)
 }
 
-## Regression problem of one genotype with state terms: one column of dy per
-## state; the state terms use the state at the observation of each row.
+## Regression problem with state terms: dy has one column per state.
 make_design_states <- function(Theta, trs, genotype, drivers, degree = 3,
                                pairs = FALSE, feedback = TRUE) {
   d <- make_design(Theta, trs[[1]], genotype)
@@ -312,7 +305,7 @@ make_design_states <- function(Theta, trs, genotype, drivers, degree = 3,
   full <- d$Theta
   if (feedback) {
     z <- sapply(names(trs), function(k) {
-      y <- unlist(lapply(seq_along(n), function(i) {   # state in the middle of the day
+      y <- unlist(lapply(seq_along(n), function(i) {
         Y <- trs[[k]]$Y[g, i, 1:(n[i] + 1)]
         (Y[-length(Y)] + Y[-1]) / 2
       }))
@@ -326,12 +319,9 @@ make_design_states <- function(Theta, trs, genotype, drivers, degree = 3,
        year = d$year, scales = scales)
 }
 
-## Solves the coupled system dy_k/dt = (1, theta(y, u)) coef_k. coef: list of
-## year x (1 + terms) matrices, one per state; y0: year x state. Returns a list
-## of day x year matrices. terms(y, u) is the library, with y the year x state
-## matrix. State terms can make a solution blow up; the years that do are solved
-## one by one and returned as NA (a state beyond limit[k] counts as blown up), so
-## that the others are not lost.
+## Solves the coupled system dy_k/dt = (1, theta(y, u)) coef_k. coef: one
+## year x (1 + terms) matrix per state; y0: year x state. Years whose solution
+## exceeds limit[k] are returned as NA.
 simulate_states <- function(coef, U, y0, terms = function(y, u) u, method = "lsoda",
                             limit = rep(1e4, length(coef))) {
   D <- dim(U)[2]; m <- length(coef)

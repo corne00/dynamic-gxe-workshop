@@ -8,23 +8,7 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-This page continues from steps 2 and 3. One line loads the data and builds the library:
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```r
-source("R/pipeline.R")
-```
-
-## Python
-
-```python
-from pipeline import *
-```
-
-:::
+This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv`, `Theta` and `tr`. To start here, load them as described on the [Set up](setup.html) page.
 
 
 ## Solution
@@ -46,7 +30,7 @@ Each genotype has trajectories in the years $E$. A year $e$ is predicted by a mo
 $$
 \begin{array}{ll}
 \textbf{for each genotype } g, \textbf{ for each year } e \in E: & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\boldsymbol{\Theta}^{(-e)},\, \dot{\mathbf{y}}^{(-e)}\bigr) & \text{fit on the other years} \\[2pt]
+\quad \hat{\boldsymbol{\xi}}^{(-e)} \leftarrow \texttt{fit}\bigl(\boldsymbol{\Theta}^{(-e)},\, \frac{d\mathbf{y}^{(-e)}}{dt}\bigr) & \text{fit on the other years} \\[2pt]
 \quad \bar{y}_0^{(-e)} \leftarrow \tfrac{1}{|E|-1} \textstyle\sum_{e' \ne e} y_0^{(e')} & \text{mean initial biomass} \\[2pt]
 \quad \dfrac{d\hat y}{dt} = \boldsymbol{\theta}\bigl(\mathbf{u}^{(e)}(t)\bigr)^\top \hat{\boldsymbol{\xi}}^{(-e)}, \quad \hat y(t_0) = \bar{y}_0^{(-e)} & \text{predict year } e \text{ from its drivers}
 \end{array}

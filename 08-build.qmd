@@ -149,7 +149,7 @@ corr.error ? html`<p class="interactive-note">${corr.error}</p>` : html`<p class
 
 ## Step 3 · Design matrix
 
-Each day of each year gives one equation $\dot y_i = \sum_j \Theta_{ij}\,\xi_j$. The target $\dot y_i = y_i - y_{i-1}$ is the biomass (or LAI) gained during day $i$; row $i$ of $\boldsymbol{\Theta}$ is the library of the weather of day $i$. The table shows three consecutive days of one year (the middle row is day $i$), the first six columns, and the growth rate.
+Each day of each year gives one equation $\left.\frac{dy}{dt}\right|_{i} = \sum_j \Theta_{ij}\,\xi_j$. The target $\left.\frac{dy}{dt}\right|_{i} = y_i - y_{i-1}$ is the biomass (or LAI) gained during day $i$; row $i$ of $\boldsymbol{\Theta}$ is the library of the weather of day $i$. The table shows three consecutive days of one year (the middle row is day $i$), the first six columns, and the growth rate.
 
 ```{ojs}
 //| echo: false
@@ -168,7 +168,7 @@ viewof designDay = slider("Day i", d3.range(2, 138), 70, v => `${v}`)
   const S = builder.years.length;
   const n = d3.sum(builder.nend[g]);
   return html`<div style="overflow-x:auto"><table class="dgxe-table">
-    <thead><tr><th>day</th><th>y<sub>i−1</sub></th><th>y<sub>i</sub></th><th>ẏ<sub>i</sub> (${unit}/day)</th>${t.names.slice(0, shown).map(c => html`<th>${c}</th>`)}${t.names.length > shown ? html`<th>…</th>` : ""}</tr></thead>
+    <thead><tr><th>day</th><th>y<sub>i−1</sub></th><th>y<sub>i</sub></th><th>dy/dt (${unit}/day)</th>${t.names.slice(0, shown).map(c => html`<th>${c}</th>`)}${t.names.length > shown ? html`<th>…</th>` : ""}</tr></thead>
     <tbody>${t.rows.map(r => html`<tr class=${r.day === day ? "active" : ""}><td>${r.day}</td><td>${f(r.y0)}</td><td>${f(r.y1)}</td><td>${r.dy.toFixed(3)}</td>${r.x.slice(0, shown).map(v => html`<td>${f(v)}</td>`)}${t.names.length > shown ? html`<td>…</td>` : ""}</tr>`)}</tbody></table></div>
     <p class="interactive-note">Genotype ${genotype}, year ${builder.years[designYear]}. For the genotype, <b>Θ</b> has ${n} rows (all days of ${S} years except the first record of each year) and ${K} columns${stateList.length > 1 || feedback ? "; the table shows the weather terms of the first state's equation" : ""}.</p>`;
 }
@@ -208,7 +208,7 @@ viewof termChoice = corr.error ? Object.assign(html`<div></div>`, {value: null})
 
 ## Step 4 · Fit
 
-The coefficients $\boldsymbol{\xi}$ are estimated by regression of $\dot{\mathbf{y}}$ on $\boldsymbol{\Theta}$. The methods differ in how they limit the freedom of the fit: ridge shrinks all coefficients, lasso and STLSQ remove terms, backward elimination and best subset keep a fixed number of terms. Choose a method and its parameter.
+The coefficients $\boldsymbol{\xi}$ are estimated by regression of $\frac{d\mathbf{y}}{dt}$ on $\boldsymbol{\Theta}$. The methods differ in how they limit the freedom of the fit: ridge shrinks all coefficients, lasso and STLSQ remove terms, backward elimination and best subset keep a fixed number of terms. Choose a method and its parameter.
 
 ```{ojs}
 //| echo: false
@@ -254,12 +254,12 @@ result.error ? html`` : html`<div>
     const {label} = info[eq.state];
     const kept = eq.terms.map((term, i) => ({term, effect: eq.scaled[i]})).filter(d => d.effect !== 0);
     const reach = d3.max(kept, d => Math.abs(d.effect)) || 1;
-    return html`<div>${result.equations.length > 1 ? html`<h4>${label}</h4>` : ""}${Plot.plot({
-      width: 520, height: 40 + 16 * Math.max(kept.length, 1), marginLeft: 90,
-      x: {domain: [-reach, reach], label: `scaled coefficient, ${label}`},
-      y: {domain: kept.map(d => d.term), label: null},
-      marks: [Plot.barX(kept, {x: "effect", y: "term", fill: d => d.effect > 0 ? "#014E81" : "#8B1E3F"}), Plot.ruleX([0])]
-    })}</div>`;
+    return html`<div>${result.equations.length > 1 ? html`<h4>${label}</h4>` : ""}<div class="scroll-x">${Plot.plot({
+      width: Math.max(520, 70 + 16 * kept.length), height: 260, marginLeft: 56, marginBottom: 70,
+      y: {domain: [-reach, reach], label: `scaled coefficient, ${label}`},
+      x: {domain: kept.map(d => d.term), tickRotate: -90, label: null},
+      marks: [Plot.barY(kept, {x: "term", y: "effect", fill: d => d.effect > 0 ? "#014E81" : "#8B1E3F"}), Plot.ruleY([0])]
+    })}</div></div>`;
   });
   return html`<div>${plots}<p class="interactive-note">Coefficients scaled by the standard deviation of the term and of the growth rate, so that bars of different terms are comparable.</p></div>`;
 }

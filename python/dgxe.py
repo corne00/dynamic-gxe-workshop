@@ -155,10 +155,8 @@ def bind_terms(Theta, extra):
 
 
 # ---- Measured traits as drivers --------------------------------------------
-# Adds measured states of one genotype (columns of traj, for example "lai" or
-# "biomass") to the weather table, so that they can be used like drivers. A
-# record is the value at the end of a day, so the value of a day is the mean of
-# the records at its start and end.
+# Adds measured states of one genotype (columns of traj, for example "lai") to
+# the weather table, as the mean of the records at the start and end of a day.
 def with_traits(wx, traj, genotype, vars=("lai",)):
     wx = wx.copy()
     t = traj[traj["genotype"] == genotype]
@@ -188,10 +186,8 @@ def make_trajectories(traj, drv, var="biomass"):
 
 
 # ---- Regression problem for one genotype -----------------------------------
-# Rows: days 2, ..., n + 1 of every year (all days with a record before them).
-# Biomass is recorded at the end of a day, so day i drives the change from
-# observation i - 1 to i. Row i of the returned matrix Theta is the library of
-# day i, and dy[i] = y_i - y_(i-1) is the growth rate at the middle of day i.
+# Rows: days 2, ..., n + 1 of every year. Row i of Theta is the library of day i;
+# dy[i] = y_i - y_(i-1) is the growth rate in the middle of day i.
 def make_design(Theta, tr, genotype):
     g = list(tr.genotypes).index(genotype)
     n = tr.nend[g]
@@ -301,7 +297,6 @@ def simulate(coef, U, y0, terms=lambda y, u: u, method="LSODA"):
                      rtol=1e-4, atol=1e-4).y
 
 
-# n genotypes spread evenly over the ranking of mean final biomass.
 # ---- Validation: leave-one-year-out --------------------------------------
 # Each year is predicted by a model fitted to the other years of the same
 # genotype, starting from the mean initial biomass of those years.
@@ -320,13 +315,11 @@ def cross_validate(Theta, tr, fit, genotypes=None):
 
 
 # ---- State feedback and coupled models --------------------------------------
-# The modelled states enter the library through standardised terms (centre and
-# standard deviation of the observed values of the genotype): powers of each
-# state, and with pairs=True also products of states and products of a state
-# with powers of each driver (total exponent at most degree). trs is a dict of trajectory sets from
-# make_trajectories(), one per modelled state, named by state; every state has
-# its own equation, and all are fitted with the same fit(Theta, dy). The state terms
-# of a row use the mean of the records on either side of the day.
+# The standardised states enter the library as powers and, with pairs=True, as
+# products with each other and with driver powers (total exponent at most
+# degree). trs: dict of make_trajectories() results, one per state. Each state
+# has its own equation, fitted with the same fit(Theta, dy). State terms use the
+# mean of the records at the start and end of the day.
 def state_scale(Y):
     m = np.nanmean(Y)
     return m, np.sqrt(np.nanmean((Y - m) ** 2))
@@ -360,8 +353,7 @@ def state_terms(z, states, U, unames, degree=3, pairs=False):
     return np.column_stack(list(cols.values()))
 
 
-# Regression problem of one genotype with state terms: dy has one column per
-# state; the state terms use the state at the observation of each row.
+# Regression problem with state terms: dy has one column per state.
 def make_design_states(Theta, trs, genotype, drivers, degree=3, pairs=False,
                        feedback=True):
     names = list(trs)
@@ -385,11 +377,9 @@ def make_design_states(Theta, trs, genotype, drivers, degree=3, pairs=False,
     return Design(Theta=full, dy=dy, year=d.year, scales=scales)
 
 
-# Solves the coupled system dy_k/dt = (1, theta(y, u)) coef_k. coef: list of
-# year x (1 + terms) arrays, one per state; y0: year x state. Returns a list of
-# year x day arrays. terms(y, u) is the library, with y the year x state array.
-# State terms can make a solution blow up; the years that do are solved one by
-# one and returned as NaN (a state beyond limit[k] counts as blown up).
+# Solves the coupled system dy_k/dt = (1, theta(y, u)) coef_k. coef: one
+# year x (1 + terms) array per state; y0: year x state. Years whose solution
+# exceeds limit[k] are returned as NaN.
 def simulate_states(coef, U, y0, terms=lambda y, u: u, method="LSODA", limit=None):
     D = U.shape[1]
     m = len(coef)

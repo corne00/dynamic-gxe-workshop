@@ -188,7 +188,7 @@ corr = z.corr()
 sample = z.sample(600, random_state=1)
 grid = np.linspace(-3.5, 3.5, 200)
 
-fig, axes = plt.subplots(8, 8, figsize=(7.2, 7.2))
+fig, axes = plt.subplots(8, 8, figsize=(5.6, 5.6))
 for i in range(8):
     for j in range(8):
         ax = axes[i, j]
@@ -207,10 +207,10 @@ for i in range(8):
             ax.set_facecolor(colours((r + 1) / 2))
             ax.text(0, 0, f"{r:.2f}", ha="center", va="center", fontsize=7)
         if i == 0:
-            ax.set_title(VARS[j], fontsize=8)
+            ax.set_title(VARS[j], fontsize=9, pad=3)
         if j == 0:
             ax.set_ylabel(VARS[i], rotation=0, ha="right", va="center",
-                          fontsize=8)
+                          fontsize=9)
 fig.subplots_adjust(wspace=0.04, hspace=0.04)
 ```
 
@@ -219,8 +219,8 @@ fig.subplots_adjust(wspace=0.04, hspace=0.04)
 ```{r}
 #| label: 02-5-run
 #| echo: false
-#| fig-height: 7
-#| fig-width: 7
+#| fig-height: 5.6
+#| fig-width: 5.6
 #| warning: false
 z <- as.data.frame(scale(wx[vars]))
 r <- cor(wx[vars])
@@ -262,7 +262,8 @@ ggplot() +
     theme(axis.line = element_blank(), axis.ticks = element_blank(),
           axis.text = element_blank(), aspect.ratio = 1,
           panel.spacing = unit(2, "pt"), strip.placement = "outside",
-          strip.text.y.left = element_text(angle = 0, hjust = 1),
+          strip.text = element_text(hjust = 0.5, vjust = 0.5, size = 11),
+          strip.text.y.left = element_text(angle = 0, hjust = 1, vjust = 0.5),
           panel.border = element_rect(colour = "#D1D5DB", fill = NA,
                                       linewidth = 0.3))
 ```

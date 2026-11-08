@@ -51,3 +51,23 @@ print(evaluate(P, tr))
 :::
 
 The result is the root-mean-square error (t/ha) of 20 genotypes on years that were left out of the fit; it should take a few seconds.
+
+## Loading the data for the steps
+
+The pages from step 4 on continue from the objects of steps 2 and 3 (`wx`, `traj`, `drv`, `Theta`, `tr`). One line creates them, for example to start at a later page:
+
+::: {.panel-tabset group="language"}
+
+## R
+
+```r
+source("R/pipeline.R")
+```
+
+## Python
+
+```python
+from pipeline import *
+```
+
+:::

@@ -77,3 +77,7 @@ figure img, .cell-output-display img { max-width: 100%; }
   border-bottom: 1px solid #E5E7EB; white-space: nowrap; }
 .dgxe-table th { color: #374151; font-weight: 500; border-bottom: 1px solid #9CA3AF; }
 .dgxe-table tr.active td { background: #F3E4E9; color: #8B1E3F; font-weight: 500; }
+
+/* wide figures scroll horizontally */
+.scroll-x { overflow-x: auto; max-width: 100%; }
+.scroll-x img { max-width: none; }
