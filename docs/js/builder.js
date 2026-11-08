@@ -522,11 +522,11 @@ const Builder = (() => {
       const rows = Array.from({length: Math.min(nend + 2, data.U[y].length)}, (_, d) => lib(y, d));
       const raw = {n: 0, sx: new Float64Array(K), sy: 0, sxx: new Float64Array(K * K),
                    sxy: new Float64Array(K), syy: 0};
-      raw.n = nend - 1;
+      raw.n = nend;
       const x = new Float64Array(K);
-      for (let d = 1; d < nend; d++) {
-        const dy = (Y[d + 1] - Y[d - 1]) / 2;
-        for (let j = 0; j < K; j++) x[j] = (rows[d][j] + rows[d + 1][j]) / 2;
+      for (let d = 1; d <= nend; d++) {
+        const dy = Y[d] - Y[d - 1];                 // growth rate of day d, one-day difference
+        for (let j = 0; j < K; j++) x[j] = rows[d][j];
         raw.sy += dy; raw.syy += dy * dy;
         for (let j = 0; j < K; j++) {
           const xj = x[j];
@@ -685,16 +685,16 @@ const Builder = (() => {
                    sy: new Float64Array(m), sxy: Array.from({length: m}, () => new Float64Array(Kt)), syy: new Float64Array(m)};
     for (let y = 0; y < S; y++) {
       const {rows} = base.years[y], nend = data.nend[g][y];
-      const raw = {n: nend - 1, sx: new Float64Array(Kt), sxx: new Float64Array(Kt * Kt),
+      const raw = {n: nend, sx: new Float64Array(Kt), sxx: new Float64Array(Kt * Kt),
                    sy: new Float64Array(m), sxy: Array.from({length: m}, () => new Float64Array(Kt)), syy: new Float64Array(m)};
-      for (let d = 1; d < nend; d++) {
-        for (let j = 0; j < Kw; j++) x[j] = (rows[d][j] + rows[d + 1][j]) / 2;
+      for (let d = 1; d <= nend; d++) {
+        for (let j = 0; j < Kw; j++) x[j] = rows[d][j];
         if (feedback) {
-          for (let k = 0; k < m; k++) z[k] = (series[k][y][d] - scales[k].center) / scales[k].scale;
+          for (let k = 0; k < m; k++) z[k] = ((series[k][y][d - 1] + series[k][y][d]) / 2 - scales[k].center) / scales[k].scale;
           stateRow(ss.specs, z, x, x, Kw);
         }
         for (let k = 0; k < m; k++) {
-          const dy = (series[k][y][d + 1] - series[k][y][d - 1]) / 2;
+          const dy = series[k][y][d] - series[k][y][d - 1];
           raw.sy[k] += dy; raw.syy[k] += dy * dy;
           for (let j = 0; j < Kt; j++) raw.sxy[k][j] += x[j] * dy;
         }

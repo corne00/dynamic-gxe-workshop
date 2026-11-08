@@ -2,7 +2,7 @@
 
   weather --make_drivers--> drv --make_library--> Theta   (candidate terms)
   biomass --make_trajectories--> tr
-  Theta, tr --make_design--> X, dy                (growth rate by centered differences)
+  Theta, tr --make_design--> X, dy                (growth rate by one-day differences)
   fit_*(X, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
 
 numpy, pandas, scipy and scikit-learn. Indices are 0-based; days are given
@@ -141,19 +141,19 @@ def make_trajectories(traj, drv, var="biomass"):
 
 
 # ---- Regression problem for one genotype -----------------------------------
-# Rows: observations 2, ..., n of every year. dy: centered difference of the
-# biomass. Biomass is recorded at the end of a day, so day i drives the change
-# from observation i - 1 to i. X: library at observation i, the mean of the
-# library of days i and i + 1.
+# Rows: days 2, ..., n + 1 of every year (all days with a record before them).
+# Biomass is recorded at the end of a day, so day i drives the change from
+# observation i - 1 to i. dy: the difference over that day, y_i - y_(i-1), the
+# growth rate at the middle of day i (centered difference with a half-day
+# step). X: library of day i.
 def make_design(Theta, tr, genotype):
     g = list(tr.genotypes).index(genotype)
     n = tr.nend[g]
     years = range(len(tr.years))
     A = Theta.array
-    X = np.vstack([(A[s, 1:n[s], :] + A[s, 2:n[s] + 1, :]) / 2 for s in years])
-    dy = np.concatenate([np.gradient(tr.Y[g, s, :n[s] + 1])[1:n[s]]
-                         for s in years])
-    year = np.repeat(np.arange(len(tr.years)), n - 1)
+    X = np.vstack([A[s, 1:n[s] + 1, :] for s in years])
+    dy = np.concatenate([np.diff(tr.Y[g, s, :n[s] + 1]) for s in years])
+    year = np.repeat(np.arange(len(tr.years)), n)
     return SimpleNamespace(X=X, dy=dy, year=year, terms=Theta.terms)
 
 
@@ -286,7 +286,8 @@ def cross_validate(Theta, tr, fit, genotypes=None):
 # state, and with pairs=True also products of states and products of a state
 # with the powers 1 and 2 of each driver. trs is a dict of trajectory sets from
 # make_trajectories(), one per modelled state, named by state; every state has
-# its own equation, and all are fitted with the same fit(X, dy).
+# its own equation, and all are fitted with the same fit(X, dy). The state terms
+# of a row use the mean of the records on either side of the day.
 def state_scale(Y):
     m = np.nanmean(Y)
     return m, np.sqrt(np.nanmean((Y - m) ** 2))
@@ -334,7 +335,7 @@ def make_design_states(Theta, trs, genotype, drivers, degree=3, pairs=False,
     X = d.X
     if feedback:
         z = np.column_stack([
-            (np.concatenate([trs[k].Y[g, s, 1:n[s]]
+            (np.concatenate([(trs[k].Y[g, s, :n[s]] + trs[k].Y[g, s, 1:n[s] + 1]) / 2
                              for s in range(len(first.years))]) - c) / sd
             for k, (c, sd) in zip(names, scales)])
         inter = interacting_terms(Theta, drivers)

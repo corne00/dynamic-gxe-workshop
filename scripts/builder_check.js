@@ -13,8 +13,8 @@ for (const cf of ref) {
       const out = Builder.runModel(data, g, {states: [].concat(cf.states), feedback: cf.feedback, drivers: trait ? [...cf.drivers, trait] : cf.drivers,
                                              degree: cf.degree, pairs: cf.pairs, method: cf.method, value: cf.value ?? null, trait, extras: []});
       console.log(cf.method.padEnd(12), [].concat(cf.states).join("+").padEnd(13), cf.feedback ? "feedback" : "        ", cf.pairs ? "pairs" : "     ",
-        "R", [].concat(r.rmse).map((v) => v.toFixed(4)).join("/"), "JS", out.equations.map((e) => e.rmse.toFixed(4)).join("/"),
-        "| maturity R", [].concat(r.maturity).map((v) => v.toFixed(3)).join("/"), "JS", out.equations.map((e) => e.maturityRmse.toFixed(3)).join("/"),
+        "R", [].concat(r.rmse).map((v) => (typeof v === "number" ? v.toFixed(4) : String(v))).join("/"), "JS", out.equations.map((e) => e.rmse.toFixed(4)).join("/"),
+        "| maturity R", [].concat(r.maturity).map((v) => (typeof v === "number" ? v.toFixed(3) : String(v))).join("/"), "JS", out.equations.map((e) => e.maturityRmse.toFixed(3)).join("/"),
         "| diverged R", r.diverged, "JS", out.diverged, "|", out.ms.toFixed(0), "ms");
       continue;
     }

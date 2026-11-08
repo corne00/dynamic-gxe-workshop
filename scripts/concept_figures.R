@@ -31,9 +31,9 @@ grey <- "#D1D5DB"
 g <- match("g114", tr$genotypes); v <- match(1998, tr$years)
 yy <- tr$Y[g, v, 1:(tr$nend[g, v] + 1)]
 d <- data.frame(das = seq_along(yy) + tr$das0 - 1, y = yy)
-d$dy <- pracma::gradient(yy)                      # centered differences
-i <- 85                                           # highlighted day
-win <- (i - 3):(i + 4)                            # days shown in the zoom
+r <- data.frame(das = d$das[-1] - 0.5, dy = diff(yy))   # growth rate in the middle of each day
+i <- 85                                           # highlighted day (index of its end record)
+win <- (i - 3):(i + 4)                            # records shown in the zoom
 z <- d[win, ]
 pad <- 0.06 * diff(range(z$y))
 p1 <- ggplot(d, aes(das, y)) +
@@ -44,30 +44,28 @@ p1 <- ggplot(d, aes(das, y)) +
   labs(title = "(a) Observed biomass", x = "days after sowing",
        y = expression(y[i] ~ "(t/ha)")) +
   concept()
-nb <- d[(i - 1):(i + 1), ]
+nb <- d[(i - 1):i, ]
 p2 <- ggplot(z, aes(das, y)) +
   geom_line(colour = grey, linewidth = 0.8) +
   geom_point(colour = blue, size = 2) +
   geom_point(data = nb, colour = bur, size = 2.6) +
-  annotate("segment", x = nb$das[1], xend = nb$das[3], y = nb$y[1],
-           yend = nb$y[3], colour = bur, linewidth = 0.8) +
+  annotate("segment", x = nb$das[1], xend = nb$das[2], y = nb$y[1],
+           yend = nb$y[2], colour = bur, linewidth = 0.8) +
   annotate("text", x = nb$das[1] - 0.2, y = nb$y[1] + pad, label = "y[i-1]",
            parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
   annotate("text", x = nb$das[2] - 0.2, y = nb$y[2] + pad, label = "y[i]",
            parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
-  annotate("text", x = nb$das[3] - 0.2, y = nb$y[3] + pad, label = "y[i+1]",
-           parse = TRUE, colour = bur, size = 3.4, hjust = 1) +
-  labs(title = expression("(b) Zoom: " * dot(y)[i] %~~% frac(y[i + 1] - y[i - 1], 2)),
+  labs(title = expression("(b) Zoom: " * dot(y)[i] %~~% y[i] - y[i - 1]),
        x = "days after sowing", y = "t/ha") +
   concept()
-p3 <- ggplot(d[2:(nrow(d) - 1), ], aes(das, dy)) +
+p3 <- ggplot(r, aes(das, dy)) +
   geom_point(colour = blue, size = 1) +
-  geom_point(data = d[i, ], colour = bur, size = 2.6) +
-  annotate("label", x = d$das[i] + 2,
-           y = d$dy[i] + 0.1 * diff(range(d$dy[2:(nrow(d) - 1)])),
+  geom_point(data = r[i - 1, ], colour = bur, size = 2.6) +
+  annotate("label", x = r$das[i - 1] + 4,
+           y = r$dy[i - 1] - 0.02 * diff(range(r$dy)),
            label = "dot(y)[i]", parse = TRUE, colour = bur, size = 3.6,
            fill = "white", label.size = 0, hjust = 0) +
-  labs(title = "(c) Growth rate by centered differences",
+  labs(title = "(c) Growth rate by one-day differences",
        x = "days after sowing", y = "t/ha/day") +
   concept()
 save(list(p1, p2, p3), "concept_derivative.png", 9, 2.5)
@@ -75,8 +73,8 @@ save(list(p1, p2, p3), "concept_derivative.png", 9, 2.5)
 ## 2. Solution: the fitted equation integrated over the year ---------------
 P <- readRDS("precomputed/cv_stlsq.rds")
 pred <- P[g, v, 1:(tr$nend[g, v] + 1)]
-e <- data.frame(das = d$das, rate = pracma::gradient(pred), pred = pred, obs = yy)
-e <- e[-nrow(e), ]
+e <- data.frame(das = d$das, rate = c(NA, diff(pred)), pred = pred, obs = yy)
+e <- e[-1, ]
 tm <- 100                                         # day shown in the figure
 shade <- e[e$das <= tm, ]
 q1 <- ggplot(e, aes(das, rate)) +

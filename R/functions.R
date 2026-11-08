@@ -3,10 +3,10 @@
 ##
 ##    weather --make_drivers--> drv --make_library--> Theta   (candidate terms)
 ##    biomass --make_trajectories--> tr
-##    Theta, tr --make_design--> X, dy                (growth rate by centered differences)
+##    Theta, tr --make_design--> X, dy                (growth rate by one-day differences)
 ##    fit_*(X, dy) --> coefficients --simulate--> prediction --evaluate--> RMSE
 ##
-##  Base R, except for pracma (derivatives), and glmnet and leaps (fitting).
+##  Base R, except for glmnet and leaps (fitting).
 ## =============================================================================
 
 ## ---- Drivers: array U[year, day, driver], standardised -------------------
@@ -140,21 +140,20 @@ make_trajectories <- function(traj, drv, var = "biomass") {
 }
 
 ## ---- Regression problem for one genotype ------------------------------------
-## Rows: observations 2, ..., n of every year. dy: centered difference of the
-## biomass. Biomass is recorded at the end of a day, so day i drives the change
-## from observation i - 1 to i. X: library at observation i, the mean of the
-## library of days i and i + 1.
+## Rows: days 2, ..., n + 1 of every year (all days with a record before them).
+## Biomass is recorded at the end of a day, so day i drives the change from
+## observation i - 1 to i. dy: the difference over that day, y_i - y_(i-1), the
+## growth rate at the middle of day i (centered difference with a half-day
+## step). X: library of day i.
 make_design <- function(Theta, tr, genotype) {
   g <- match(genotype, tr$genotypes)
   n <- tr$nend[g, ]
   years <- seq_along(tr$years)
-  X <- lapply(years, function(y)
-    (Theta[y, 2:n[y], ] + Theta[y, 3:(n[y] + 1), ]) / 2)
-  dy <- lapply(years, function(y)
-    pracma::gradient(tr$Y[g, y, 1:(n[y] + 1)])[2:n[y]])
+  X <- lapply(years, function(y) Theta[y, 2:(n[y] + 1), ])
+  dy <- lapply(years, function(y) diff(tr$Y[g, y, 1:(n[y] + 1)]))
   X <- do.call(rbind, X)
   colnames(X) <- dimnames(Theta)[[3]]
-  list(X = X, dy = unlist(dy), year = rep(years, n - 1))
+  list(X = X, dy = unlist(dy), year = rep(years, n))
 }
 
 ## ---- Fitting methods: fit(X, dy) -> coefficients (intercept first) ----------
@@ -278,7 +277,8 @@ cross_validate <- function(Theta, tr, fit, genotypes = tr$genotypes) {
 ## state, and with products = TRUE also products of states and products of a
 ## state with the powers 1 and 2 of each driver. trs is a list of trajectory
 ## sets from make_trajectories(), one per modelled state, named by state; every
-## state has its own equation, and all are fitted with the same fit(X, dy).
+## state has its own equation, and all are fitted with the same fit(X, dy). The
+## state terms of a row use the mean of the records on either side of the day.
 state_scale <- function(Y) {
   m <- mean(Y, na.rm = TRUE)
   c(center = m, scale = sqrt(mean((Y - m)^2, na.rm = TRUE)))
@@ -319,7 +319,10 @@ make_design_states <- function(Theta, trs, genotype, drivers, degree = 3,
   X <- d$X
   if (feedback) {
     z <- sapply(names(trs), function(k) {
-      y <- unlist(lapply(seq_along(n), function(i) trs[[k]]$Y[g, i, 2:n[i]]))
+      y <- unlist(lapply(seq_along(n), function(i) {   # state in the middle of the day
+        Y <- trs[[k]]$Y[g, i, 1:(n[i] + 1)]
+        (Y[-length(Y)] + Y[-1]) / 2
+      }))
       (y - scales["center", k]) / scales["scale", k]
     })
     U <- d$X[, interacting_terms(Theta, drivers), drop = FALSE]

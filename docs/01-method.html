@@ -116,9 +116,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
-<script src="js/controls.js?v=20261108c"></script>
-<script src="js/builder.js?v=20261108c"></script>
-<script src="js/equation.js?v=20261108c"></script>
+<script src="js/controls.js?v=20261108d"></script>
+<script src="js/builder.js?v=20261108d"></script>
+<script src="js/equation.js?v=20261108d"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&amp;family=Roboto+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
 
@@ -444,15 +444,15 @@ window.Quarto = {
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be observations on days <span class="math inline">\(t_i\)</span>, with time step <span class="math inline">\(\Delta t\)</span> (one day). The growth rate <span class="math inline">\(\dot y_i = \frac{dy}{dt}(t_i)\)</span> is estimated by the centered difference</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be the observation at the end of day <span class="math inline">\(i\)</span>, with time step <span class="math inline">\(\Delta t\)</span> (one day). The weather of day <span class="math inline">\(i\)</span> acts during that day, so its growth rate <span class="math inline">\(\dot y_i = \frac{dy}{dt}(t_{i-1/2})\)</span> belongs to the middle of the day. It is estimated by the centered difference with a half step on either side,</p>
 <p><span class="math display">\[
-\dot y_i \approx \frac{y_{i+1} - y_{i-1}}{2\,\Delta t}.
+\dot y_i \approx \frac{y(t_{i-1/2} + \Delta t/2) - y(t_{i-1/2} - \Delta t/2)}{\Delta t} = \frac{y_i - y_{i-1}}{\Delta t}.
 \]</span></p>
-<p>Adding the Taylor expansions of <span class="math inline">\(y(t_i \pm \Delta t)\)</span> in the form <span class="math inline">\(y_{i\pm1} = y_i \pm \Delta t\,\dot y_i + \tfrac{1}{2}\Delta t^2\,\ddot y_i \pm \dots\)</span> shows that the error of the centered difference is of order <span class="math inline">\(\Delta t^2\)</span>, against order <span class="math inline">\(\Delta t\)</span> for the forward difference <span class="math inline">\((y_{i+1} - y_i)/\Delta t\)</span>. The first and last observation of a trajectory have no neighbour on both sides and are not used. Routines for this are available in standard packages (<code>numpy.gradient</code> in Python, <code>pracma::gradient</code> in R).</p>
+<p>Adding the Taylor expansions <span class="math inline">\(y(t_{i-1/2} \pm \Delta t/2) = y(t_{i-1/2}) \pm \tfrac{1}{2}\Delta t\,\dot y_i + \tfrac{1}{8}\Delta t^2\,\ddot y_i \pm \dots\)</span> shows that the error is of order <span class="math inline">\(\Delta t^2\)</span>, against order <span class="math inline">\(\Delta t\)</span> for the same difference used as an estimate at <span class="math inline">\(t_i\)</span> (a forward or backward difference). The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (<code>numpy.diff</code> in Python, <code>diff</code> in R).</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_derivative.png" class="img-fluid figure-img" style="width:100.0%"></p>
-<figcaption>Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations on either side of day <span class="math inline">\(i\)</span> estimates <span class="math inline">\(\dot y_i\)</span>. The growth rates of the whole year are shown in (c); the regression is performed on these.</figcaption>
+<figcaption>Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations at the start and end of day <span class="math inline">\(i\)</span> estimates <span class="math inline">\(\dot y_i\)</span>, the growth rate in the middle of the day. The growth rates of the whole year are shown in (c); the regression is performed on these.</figcaption>
 </figure>
 </div>
 <p>Collecting all the growth rates in a vector <span class="math inline">\(\dot{\mathbf{y}}\)</span> and the library values in a matrix <span class="math inline">\(\mathbf{X}\)</span> with entries <span class="math inline">\(X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)\)</span> gives</p>

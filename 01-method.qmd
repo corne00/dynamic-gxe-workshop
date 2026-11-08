@@ -105,15 +105,15 @@ where most coefficients $\xi_j$ are expected to be zero. The library contains ca
 
 ## Regression
 
-Let $y_i = y(t_i)$ be observations on days $t_i$, with time step $\Delta t$ (one day). The growth rate $\dot y_i = \frac{dy}{dt}(t_i)$ is estimated by the centered difference
+Let $y_i = y(t_i)$ be the observation at the end of day $i$, with time step $\Delta t$ (one day). The weather of day $i$ acts during that day, so its growth rate $\dot y_i = \frac{dy}{dt}(t_{i-1/2})$ belongs to the middle of the day. It is estimated by the centered difference with a half step on either side,
 
 $$
-\dot y_i \approx \frac{y_{i+1} - y_{i-1}}{2\,\Delta t}.
+\dot y_i \approx \frac{y(t_{i-1/2} + \Delta t/2) - y(t_{i-1/2} - \Delta t/2)}{\Delta t} = \frac{y_i - y_{i-1}}{\Delta t}.
 $$
 
-Adding the Taylor expansions of $y(t_i \pm \Delta t)$ in the form $y_{i\pm1} = y_i \pm \Delta t\,\dot y_i + \tfrac{1}{2}\Delta t^2\,\ddot y_i \pm \dots$ shows that the error of the centered difference is of order $\Delta t^2$, against order $\Delta t$ for the forward difference $(y_{i+1} - y_i)/\Delta t$. The first and last observation of a trajectory have no neighbour on both sides and are not used. Routines for this are available in standard packages (`numpy.gradient` in Python, `pracma::gradient` in R).
+Adding the Taylor expansions $y(t_{i-1/2} \pm \Delta t/2) = y(t_{i-1/2}) \pm \tfrac{1}{2}\Delta t\,\dot y_i + \tfrac{1}{8}\Delta t^2\,\ddot y_i \pm \dots$ shows that the error is of order $\Delta t^2$, against order $\Delta t$ for the same difference used as an estimate at $t_i$ (a forward or backward difference). The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (`numpy.diff` in Python, `diff` in R).
 
-![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations on either side of day $i$ estimates $\dot y_i$. The growth rates of the whole year are shown in (c); the regression is performed on these.](images/concept_derivative.png){width=100%}
+![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations at the start and end of day $i$ estimates $\dot y_i$, the growth rate in the middle of the day. The growth rates of the whole year are shown in (c); the regression is performed on these.](images/concept_derivative.png){width=100%}
 
 Collecting all the growth rates in a vector $\dot{\mathbf{y}}$ and the library values in a matrix $\mathbf{X}$ with entries $X_{ij} = \theta_j(\mathbf{y}_i, \mathbf{u}_i)$ gives
 
