@@ -70,3 +70,12 @@ figure img, .cell-output-display img { max-width: 100%; }
 .dgxe-expressions .dgxe-buttons button { font-size: .8rem; padding: .1rem .55rem; }
 
 .dgxe-equation { overflow-x: auto; font-size: 0.85em; margin: 0.2rem 0 0.8rem; }
+
+/* collapsible details with an info icon */
+details.info { margin: 0 0 1rem; }
+details.info > summary { list-style: none; cursor: pointer; display: inline-flex; align-items: center; gap: .45rem; font-size: .85rem; color: #6B7280; }
+details.info > summary::-webkit-details-marker { display: none; }
+details.info > summary:hover { color: #014E81; }
+.info-icon { display: inline-flex; align-items: center; justify-content: center; width: 1.2rem; height: 1.2rem; border: 1.5px solid #014E81; border-radius: 50%; color: #014E81; font: italic 700 .8rem Georgia, serif; }
+details.info[open] > summary .info-icon { background: #014E81; color: #fff; }
+details.info > :not(summary) { margin-left: .6rem; padding-left: 1rem; border-left: 2px solid #E5E7EB; font-size: .92em; overflow-x: auto; }

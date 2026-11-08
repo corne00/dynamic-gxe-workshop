@@ -406,7 +406,10 @@ window.Quarto = {
 <p><span class="math display">\[
 W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 \]</span></p>
-<p>The table contains <code>RAW</code> but not these ingredients; we recovered them from the table. With <span class="math inline">\(T = (T_{\min} + T_{\max})/2\)</span>, <span class="math inline">\(e_a = \mathrm{VP}/10\)</span> (kPa) and <span class="math inline">\(u_2 = 2\)</span> m s⁻¹ (FAO-56 default, there is no wind in the table), <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith equation,</p>
+<p>Here <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and <span class="math inline">\(k = 0.796\)</span> and <span class="math inline">\(W_{\max} = 217.2\)</span> mm were fitted to the daily changes of <code>RAW</code>. The table contains <code>RAW</code> but not these ingredients; we recovered them from the table.</p>
+<details class="info">
+<summary title="Equations of ET0 (click)"><span class="info-icon">i</span>Equations of ET<sub>0</sub></summary>
+<p>With <span class="math inline">\(T = (T_{\min} + T_{\max})/2\)</span>, <span class="math inline">\(e_a = \mathrm{VP}/10\)</span> (kPa) and <span class="math inline">\(u_2 = 2\)</span> m s⁻¹ (the FAO-56 default, there is no wind in the table),</p>
 <p><span class="math display">\[
 \mathrm{ET}_0 = \frac{0.408\,\Delta\,R_n + \gamma\,\dfrac{900}{T + 273}\,u_2\,(e_s - e_a)}{\Delta + \gamma\,(1 + 0.34\,u_2)},
 \]</span></p>
@@ -418,7 +421,8 @@ R_{nl} = 4.903\cdot 10^{-9}\,\frac{(T_{\max} + 273.16)^4 + (T_{\min} + 273.16)^4
 <p><span class="math display">\[
 R_a = \frac{24 \cdot 60}{\pi}\,0.0820\,\bigl(\omega_s \sin\varphi \sin\delta + \cos\varphi \cos\delta \sin\omega_s\bigr).
 \]</span></p>
-<p>The elevation <span class="math inline">\(z = 230\)</span> m and the latitude are assumed values for Narrabri; <span class="math inline">\(k = 0.796\)</span> and <span class="math inline">\(W_{\max} = 217.2\)</span> mm were fitted to the daily changes of <code>RAW</code>. Started from the given first value of each year (about 0.80, the weather before day 15 is not in the table), this reproduces <code>RAW</code> with an RMSE of 0.002.</p>
+<p>The elevation <span class="math inline">\(z = 230\)</span> m and the latitude are assumed values for Narrabri. Started from the given first value of each year (about 0.80, the weather before day 15 is not in the table), this reproduces <code>RAW</code> with an RMSE of 0.002.</p>
+</details>
 <p>In total there are eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.</p>
 </section>
 <section id="variables-over-the-years" class="level2">

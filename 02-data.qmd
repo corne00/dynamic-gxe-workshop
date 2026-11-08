@@ -102,7 +102,14 @@ $$
 W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 $$
 
-The table contains `RAW` but not these ingredients; we recovered them from the table. With $T = (T_{\min} + T_{\max})/2$, $e_a = \mathrm{VP}/10$ (kPa) and $u_2 = 2$ m s⁻¹ (FAO-56 default, there is no wind in the table), $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith equation,
+Here $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and $k = 0.796$ and $W_{\max} = 217.2$ mm were fitted to the daily changes of `RAW`. The table contains `RAW` but not these ingredients; we recovered them from the table.
+
+```{=html}
+<details class="info">
+<summary title="Equations of ET0 (click)"><span class="info-icon">i</span>Equations of ET<sub>0</sub></summary>
+```
+
+With $T = (T_{\min} + T_{\max})/2$, $e_a = \mathrm{VP}/10$ (kPa) and $u_2 = 2$ m s⁻¹ (the FAO-56 default, there is no wind in the table),
 
 $$
 \mathrm{ET}_0 = \frac{0.408\,\Delta\,R_n + \gamma\,\dfrac{900}{T + 273}\,u_2\,(e_s - e_a)}{\Delta + \gamma\,(1 + 0.34\,u_2)},
@@ -120,7 +127,11 @@ $$
 R_a = \frac{24 \cdot 60}{\pi}\,0.0820\,\bigl(\omega_s \sin\varphi \sin\delta + \cos\varphi \cos\delta \sin\omega_s\bigr).
 $$
 
-The elevation $z = 230$ m and the latitude are assumed values for Narrabri; $k = 0.796$ and $W_{\max} = 217.2$ mm were fitted to the daily changes of `RAW`. Started from the given first value of each year (about 0.80, the weather before day 15 is not in the table), this reproduces `RAW` with an RMSE of 0.002.
+The elevation $z = 230$ m and the latitude are assumed values for Narrabri. Started from the given first value of each year (about 0.80, the weather before day 15 is not in the table), this reproduces `RAW` with an RMSE of 0.002.
+
+```{=html}
+</details>
+```
 
 In total there are eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.
 
