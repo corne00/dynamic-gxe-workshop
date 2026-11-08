@@ -402,61 +402,23 @@ window.Quarto = {
 \mathrm{TT}_t = \sum_{s \le t} \max\left(\frac{T_{\min,s} + T_{\max,s}}{2},\, 0\right).
 \]</span></p>
 <p>The sum starts at sowing, so <code>TT</code> on the first day in the table (day 15) already contains the first 14 days.</p>
-<p>Relative available water describes the water status of the soil. It is the filling of a soil-water bucket: rainfall <span class="math inline">\(P_t\)</span> adds water, evaporative demand removes it, and the bucket has a capacity <span class="math inline">\(W_{\max}\)</span>,</p>
+<p>Relative available water is the filling of a soil-water bucket of capacity <span class="math inline">\(W_{\max}\)</span>: rain adds water and a fraction <span class="math inline">\(k\)</span> of the reference evapotranspiration <span class="math inline">\(\mathrm{ET}_0\)</span> removes it,</p>
 <p><span class="math display">\[
 W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 \]</span></p>
-<p>The table contains <code>RAW</code> but neither the loss term nor the capacity. We identified them from the table itself. <code>RAW</code> is the same for all genotypes, so it cannot come from the crop simulation, and on every dry day it decreases by an amount that follows radiation, temperature and humidity. The one-step change <span class="math inline">\(\mathrm{RAW}_t - \mathrm{RAW}_{t-1}\)</span> on days without clipping (4034 days) is explained by <span class="math inline">\(P_t/W_{\max} - k\,\mathrm{ET}_{0,t}/W_{\max}\)</span>, where <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith reference evapotranspiration (mm d⁻¹) computed from the weather variables of the table:</p>
-<table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th>Water loss <span class="math inline">\(\mathrm{ET}_0\)</span></th>
-<th>RMSE of <span class="math inline">\(\mathrm{RAW}_t - \mathrm{RAW}_{t-1}\)</span></th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>linear in <code>RAD</code>, mean temperature and vapour pressure deficit</td>
-<td>0.0006</td>
-</tr>
-<tr class="even">
-<td>Hargreaves</td>
-<td>0.0014</td>
-</tr>
-<tr class="odd">
-<td>Priestley–Taylor</td>
-<td>0.0015</td>
-</tr>
-<tr class="even">
-<td>FAO-56 Penman–Monteith</td>
-<td>0.0001</td>
-</tr>
-</tbody>
-</table>
-<p>The error of the last row is at the rounding of <code>RAW</code> (four decimals). The two constants were fitted to these one-step changes: <span class="math inline">\(k = 0.796\)</span> and <span class="math inline">\(W_{\max} = 217.2\)</span> mm. Wind is not in the table, so the FAO-56 default <span class="math inline">\(u_2 = 2\)</span> m s⁻¹ is used; fitting <span class="math inline">\(u_2\)</span> as well gives 2.04 m s⁻¹. The reference evapotranspiration is, with <span class="math inline">\(T = (T_{\min} + T_{\max})/2\)</span>,</p>
+<p>The table contains <code>RAW</code> but not these ingredients; we recovered them from the table. With <span class="math inline">\(T = (T_{\min} + T_{\max})/2\)</span>, <span class="math inline">\(e_a = \mathrm{VP}/10\)</span> (kPa) and <span class="math inline">\(u_2 = 2\)</span> m s⁻¹ (FAO-56 default, there is no wind in the table), <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith equation,</p>
 <p><span class="math display">\[
-\mathrm{ET}_0 = \frac{0.408\,\Delta\,R_n + \gamma\,\dfrac{900}{T + 273}\,u_2\,(e_s - e_a)}{\Delta + \gamma\,(1 + 0.34\,u_2)}.
+\mathrm{ET}_0 = \frac{0.408\,\Delta\,R_n + \gamma\,\dfrac{900}{T + 273}\,u_2\,(e_s - e_a)}{\Delta + \gamma\,(1 + 0.34\,u_2)},
 \]</span></p>
-<p>Its ingredients are computed from the table as follows (temperatures in °C, pressures in kPa, radiation in MJ m⁻² d⁻¹). The vapour pressure of the air is <span class="math inline">\(e_a = \mathrm{VP}/10\)</span> and the saturation vapour pressure is <span class="math inline">\(e^\circ(\tau) = 0.6108\exp\bigl(17.27\,\tau/(\tau + 237.3)\bigr)\)</span>, so that</p>
+<p>with <span class="math inline">\(e^\circ(\tau) = 0.6108\exp\bigl(17.27\,\tau/(\tau + 237.3)\bigr)\)</span>, <span class="math inline">\(e_s = \bigl(e^\circ(T_{\max}) + e^\circ(T_{\min})\bigr)/2\)</span>, <span class="math inline">\(\Delta = 4098\,e^\circ(T)/(T + 237.3)^2\)</span> and <span class="math inline">\(\gamma = 0.000665 \cdot 101.3\,\bigl((293 - 0.0065\,z)/293\bigr)^{5.26}\)</span>. The net radiation is <span class="math inline">\(R_n = 0.77\,\mathrm{RAD} - R_{nl}\)</span> with</p>
 <p><span class="math display">\[
-e_s = \frac{e^\circ(T_{\max}) + e^\circ(T_{\min})}{2}, \qquad
-\Delta = \frac{4098\,e^\circ(T)}{(T + 237.3)^2}, \qquad
-\gamma = 0.000665 \cdot 101.3\left(\frac{293 - 0.0065\,z}{293}\right)^{5.26}.
+R_{nl} = 4.903\cdot 10^{-9}\,\frac{(T_{\max} + 273.16)^4 + (T_{\min} + 273.16)^4}{2}\,\bigl(0.34 - 0.14\sqrt{e_a}\bigr)\left(1.35\,\min\Bigl(\frac{\mathrm{RAD}}{R_{so}}, 1\Bigr) - 0.35\right),
 \]</span></p>
-<p>The net radiation is the absorbed shortwave radiation minus the outgoing longwave radiation,</p>
-<p><span class="math display">\[
-R_n = (1 - 0.23)\,\mathrm{RAD} - R_{nl}, \qquad
-R_{nl} = \sigma\,\frac{(T_{\max} + 273.16)^4 + (T_{\min} + 273.16)^4}{2}\,\bigl(0.34 - 0.14\sqrt{e_a}\bigr)\left(1.35\,\min\Bigl(\frac{\mathrm{RAD}}{R_{so}}, 1\Bigr) - 0.35\right),
-\]</span></p>
-<p>with <span class="math inline">\(\sigma = 4.903\cdot 10^{-9}\)</span> MJ K⁻⁴ m⁻² d⁻¹ and the elevation <span class="math inline">\(z\)</span> in metres. The clear-sky radiation <span class="math inline">\(R_{so} = (0.75 + 2\cdot 10^{-5} z)\,R_a\)</span> follows from the extraterrestrial radiation <span class="math inline">\(R_a\)</span>, which needs only the day length <code>DL</code> and the latitude <span class="math inline">\(\varphi = -30.32^\circ\)</span> of Narrabri: with the sunset hour angle <span class="math inline">\(\omega_s = \pi\,\mathrm{DL}/24\)</span> and the solar declination <span class="math inline">\(\delta\)</span> given by <span class="math inline">\(\tan\delta = -\cos\omega_s/\tan\varphi\)</span>,</p>
+<p>where <span class="math inline">\(R_{so} = (0.75 + 2\cdot 10^{-5} z)\,R_a\)</span> and <span class="math inline">\(R_a\)</span> is the extraterrestrial radiation, obtained from the day length: with <span class="math inline">\(\omega_s = \pi\,\mathrm{DL}/24\)</span>, latitude <span class="math inline">\(\varphi = -30.32^\circ\)</span> and <span class="math inline">\(\tan\delta = -\cos\omega_s/\tan\varphi\)</span>,</p>
 <p><span class="math display">\[
 R_a = \frac{24 \cdot 60}{\pi}\,0.0820\,\bigl(\omega_s \sin\varphi \sin\delta + \cos\varphi \cos\delta \sin\omega_s\bigr).
 \]</span></p>
-<p>The latitude and the elevation <span class="math inline">\(z = 230\)</span> m are approximate values for Narrabri (assumed, not fitted), the albedo 0.23 is the FAO-56 value of the reference grass surface, and the Earth–Sun distance factor of <span class="math inline">\(R_a\)</span> is omitted. Starting from the given value of the first day of each year, this construction reproduces <code>RAW</code> over the whole season with an RMSE of 0.0018 (largest error 0.007, about 1.5 mm of water). The first day of the table (day 15) is not an initial condition we can reconstruct, because the weather before it is not in the table; its value is nearly the same in every year (0.80 ± 0.01).</p>
+<p>The elevation <span class="math inline">\(z = 230\)</span> m and the latitude are assumed values for Narrabri; <span class="math inline">\(k = 0.796\)</span> and <span class="math inline">\(W_{\max} = 217.2\)</span> mm were fitted to the daily changes of <code>RAW</code>. Started from the given first value of each year (about 0.80, the weather before day 15 is not in the table), the code below reproduces <code>RAW</code> with an RMSE of 0.002.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
