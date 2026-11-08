@@ -70,3 +70,10 @@ figure img, .cell-output-display img { max-width: 100%; }
 .dgxe-expressions .dgxe-buttons button { font-size: .8rem; padding: .1rem .55rem; }
 
 .dgxe-equation { overflow-x: auto; font-size: 0.85em; margin: 0.2rem 0 0.8rem; }
+
+/* design matrix table */
+.dgxe-table { border-collapse: collapse; font-size: .82rem; margin: .4rem 0; }
+.dgxe-table th, .dgxe-table td { padding: .15rem .6rem; text-align: right;
+  border-bottom: 1px solid #E5E7EB; white-space: nowrap; }
+.dgxe-table th { color: #374151; font-weight: 500; border-bottom: 1px solid #9CA3AF; }
+.dgxe-table tr.active td { background: #F3E4E9; color: #8B1E3F; font-weight: 500; }

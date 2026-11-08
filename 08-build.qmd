@@ -2,9 +2,7 @@
 title: "8 · Build your own model"
 ---
 
-Choose the modelled states, the drivers, the library and the fitting method, and see the resulting equations and their prediction for years that were left out of the fit. The calculations run in the browser and follow the functions of the previous steps: each genotype is fitted to all years for the coefficients, and leave-one-year-out validation gives the held-out error.
-
-With one modelled state $y$ (biomass or LAI) the model is $\dot{y} = \boldsymbol{\xi}^{\top}\boldsymbol{\theta}(\mathbf{u})$ with weather drivers $\mathbf{u}$. With *state feedback* the modelled states enter the library as well, $\dot{y}_k = \boldsymbol{\xi}_k^{\top}\boldsymbol{\theta}(\mathbf{u}, y_1, y_2)$, and with both states modelled the two equations form a coupled system with a coefficient vector $\boldsymbol{\xi}_k$ each. States are standardised like the drivers, and with products the library also contains state × state and state × driver terms. The coupled system is integrated over the held-out year; a year whose solution grows beyond ten times the largest observed value counts as diverged and is left out of the error. In our tests, feedback was typically not better than weather-only models and can be unstable.
+This page repeats steps 2 to 5 on one genotype, with every choice under your control and the object it produces shown directly below it: drivers and states, the library, the design matrix, the fit, and the check on years that were left out. The calculations run in the browser and follow the functions of the previous steps. Changing a choice updates all later steps; the code for the final model is at the end of the page.
 
 ```{ojs}
 //| echo: false
@@ -12,6 +10,21 @@ d3 = window.d3
 Plot = window.Plot
 builder = FileAttachment("data/interactive/builder.json").json()
 palette = ["#014E81", "#00A6D6", "#8B1E3F", "#469C2A", "#6F1D77", "#EF60A3", "#00A390", "#6B7280"]
+highlights = [1983, 1998, 2008]
+highlightColours = ["#8B1E3F", "#014E81", "#00A6D6"]
+info = ({
+  biomass: {label: "biomass", short: "B", unit: "t/ha", series: builder.Y, peak: false},
+  lai: {label: "LAI", short: "LAI", unit: "m²/m²", series: builder.L, peak: true}})
+lhs = state => `\\frac{d\\,\\mathrm{${info[state].short}}}{dt}`
+```
+
+## Step 1 · States and drivers
+
+The data of one genotype are used: its biomass and LAI trajectories in 31 years and the weather of those years. Choose the modelled states and the drivers that may enter the library. With one modelled state $y$ the model is $\dot{y} = \boldsymbol{\xi}^{\top}\boldsymbol{\theta}(\mathbf{u})$ with weather drivers $\mathbf{u}$. With *state feedback* the modelled states enter the library as well, $\dot{y}_k = \boldsymbol{\xi}_k^{\top}\boldsymbol{\theta}(\mathbf{u}, y_1, y_2)$, and with both states modelled the two equations form a coupled system.
+
+```{ojs}
+//| echo: false
+viewof genotype = select("Genotype", builder.genotypes, builder.genotypes[0])
 viewof stateName = select("Modelled states", ["biomass", "LAI", "both (coupled)"], "biomass")
 stateList = stateName === "both (coupled)" ? ["biomass", "lai"] : [stateName === "LAI" ? "lai" : "biomass"]
 traitKey = stateList[0] === "lai" ? "biomass" : "lai"
@@ -19,6 +32,51 @@ viewof feedbackChoice = buttons("State feedback on the right-hand side", ["no", 
 feedback = feedbackChoice === "yes"
 viewof chosen = toggles("Drivers", builder.drivers, builder.drivers.map(() => "#014E81"), builder.drivers)
 viewof measured = buttons(stateList.length > 1 ? "Measured input (one modelled state only)" : traitKey === "lai" ? "Measured LAI as input" : "Measured biomass as input", ["no", "yes"], "no")
+traitName = measured === "yes" && stateList.length === 1 ? traitKey : null
+drivers = traitName ? [...chosen, traitName] : chosen
+g = builder.genotypes.indexOf(genotype)
+```
+
+The drivers are standardised (mean 0, standard deviation 1 over all years). Grey: all 31 years; coloured: 1983, 1998 and 2008. Below the drivers, the growth rate that the model has to reproduce, estimated by one-day differences.
+
+```{ojs}
+//| echo: false
+{
+  const panel = (label, rows, unit) => html`<figure style="margin:0 0 .3rem 0"><div class="interactive-note" style="margin:0">${label}</div>${
+    Plot.plot({
+      width: 185, height: 100, marginLeft: 34, marginRight: 4, marginTop: 6, marginBottom: 28,
+      style: {fontSize: "9px"},
+      x: {label: null, ticks: 4}, y: {label: null, ticks: 4, grid: false},
+      color: {domain: highlights, range: highlightColours},
+      marks: [
+        Plot.line(rows.filter(d => !highlights.includes(d.year)), {x: "das", y: "v", z: "year", stroke: "#D1D5DB", strokeWidth: 0.6}),
+        Plot.line(rows.filter(d => highlights.includes(d.year)), {x: "das", y: "v", z: "year", stroke: "year", strokeWidth: 1.2})]
+    })}</figure>`;
+  const D = builder.U[0].length;
+  const drv = chosen.map(name => {
+    const k = builder.drivers.indexOf(name);
+    const rows = builder.years.flatMap((yr, y) => Array.from({length: D}, (_, d) => ({year: yr, das: builder.das0 + d, v: builder.U[y][d][k]})));
+    return panel(name, rows);
+  });
+  const rate = stateList.map(state => {
+    const {label, unit, series} = info[state];
+    const rows = builder.years.flatMap((yr, y) => {
+      const rec = series[g][y], n = builder.nend[g][y];
+      return Array.from({length: n}, (_, i) => ({year: yr, das: builder.das0 + i + 0.5, v: rec[i + 1] - rec[i]}));
+    });
+    return panel(`growth rate of ${label} (${unit}/day)`, rows);
+  });
+  return html`<div style="display:flex;flex-wrap:wrap;gap:.2rem .9rem">${drv}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:.2rem .9rem;margin-top:.4rem">${rate}</div>`;
+}
+```
+
+## Step 2 · Library
+
+The library $\boldsymbol{\theta}$ contains each driver raised to the powers $1, \dots, p$, optionally products of pairs of powers, and further terms that you define. A richer library can describe more, but its columns become correlated and the fit has more freedom to follow noise.
+
+```{ojs}
+//| echo: false
 viewof degree = buttons("Powers up to degree", [1, 2, 3], 3)
 viewof products = buttons("Products of pairs", ["no", "yes"], "no")
 examples = [
@@ -36,8 +94,6 @@ examples = [
   {label: "canopy light (measured LAI)", line: "canopy = lai * RAD"},
   {label: "LAI, 5 days (measured LAI)", line: "lai5 = roll(lai, 5)"}]
 viewof extraText = expressions("Extra terms", examples)
-traitName = measured === "yes" && stateList.length === 1 ? traitKey : null
-drivers = traitName ? [...chosen, traitName] : chosen
 parsed = Builder.parseExtras(extraText, traitName ? [traitName] : [])
 extras = parsed.terms
 html`${parsed.errors.map(e => html`<p class="interactive-note">Line ${e.line}: ${e.message}</p>`)}`
@@ -50,6 +106,112 @@ Extra terms are functions of the raw weather. Each line adds one term to the lib
 library = Builder.termSpecs(drivers, degree, products === "yes")
 stateTerms = feedback ? Builder.stateSpecs(stateList, library, degree, products === "yes").names : []
 K = library.names.length + extras.length + stateTerms.length
+baseConfig = ({states: stateList, feedback, drivers, degree, pairs: products === "yes", extras, trait: traitName})
+corr = {
+  try { return Builder.correlations(builder, g, baseConfig); }
+  catch (e) { return {error: e.message}; }
+}
+```
+
+```{ojs}
+//| echo: false
+corr.error ? html`<p class="interactive-note">${corr.error}</p>` : html`<p class="interactive-note">The library has ${K} terms: ${library.names.length} from ${drivers.length} drivers${extras.length ? `, ${extras.length} extra` : ""}${feedback ? `, ${stateTerms.length} of the states` : ""}. The heat map shows the correlation between its columns over all days of the genotype (blue positive, burgundy negative).</p>`
+```
+
+```{ojs}
+//| echo: false
+{
+  if (corr.error) return html``;
+  const {names, K: n, corr: R} = corr;
+  const cells = [];
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) cells.push({i: names[i], j: names[j], r: R[i * n + j]});
+  const labels = n <= 40;
+  const heat = Plot.plot({
+    width: 460, height: 460, marginLeft: labels ? 70 : 10, marginBottom: labels ? 70 : 10, marginTop: 6, marginRight: 6,
+    style: {fontSize: "8px"},
+    x: {domain: names, label: null, axis: labels ? "bottom" : null, tickRotate: -90, tickSize: 0},
+    y: {domain: names, label: null, axis: labels ? "left" : null, tickSize: 0, reverse: true},
+    color: {type: "diverging", domain: [-1, 1], range: ["#8B1E3F", "#FFFFFF", "#014E81"], legend: false},
+    marks: [Plot.cell(cells, {x: "j", y: "i", fill: "r"})]
+  });
+  const pairs = [];
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) pairs.push({a: names[i], b: names[j], r: R[i * n + j]});
+  pairs.sort((u, v) => Math.abs(v.r) - Math.abs(u.r));
+  const high = pairs.filter(d => Math.abs(d.r) > 0.9).length;
+  return html`<div style="display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start">${heat}
+    <div class="interactive-note" style="max-width:20rem">
+      <p><b>${high}</b> of ${pairs.length} pairs of terms have |correlation| above 0.9.</p>
+      <p>Most correlated pairs:</p>
+      <ul style="margin-top:0">${pairs.slice(0, 5).map(d => html`<li>${d.a} and ${d.b}: ${d.r.toFixed(2)}</li>`)}</ul>
+      <p>Powers of one driver are correlated by construction. Strongly correlated columns make the least-squares coefficients sensitive to small changes in the data, which is why regularisation and sparse methods are used in step 4.</p></div></div>`;
+}
+```
+
+## Step 3 · Design matrix
+
+Each day of each year gives one equation $\dot y_i = \sum_j X_{ij}\,\xi_j$. The target $\dot y_i = y_i - y_{i-1}$ is the biomass (or LAI) gained during day $i$; row $i$ of $\mathbf{X}$ is the library of the weather of day $i$. The table shows three consecutive days of one year (the middle row is day $i$), the first six columns, and the growth rate.
+
+```{ojs}
+//| echo: false
+viewof designYear = slider("Year", builder.years, builder.years.indexOf(1998))
+viewof designDay = slider("Day i", d3.range(2, 138), 70, v => `${v}`)
+```
+
+```{ojs}
+//| echo: false
+{
+  if (corr.error) return html``;
+  const day = designDay + 2;
+  const t = Builder.designRows(builder, g, baseConfig, designYear, day - 1, 3);
+  const {unit} = info[stateList[0]];
+  const shown = Math.min(6, t.names.length), f = v => v.toFixed(2);
+  const S = builder.years.length;
+  const n = d3.sum(builder.nend[g]);
+  return html`<div style="overflow-x:auto"><table class="dgxe-table">
+    <thead><tr><th>day</th><th>y<sub>i−1</sub></th><th>y<sub>i</sub></th><th>ẏ<sub>i</sub> (${unit}/day)</th>${t.names.slice(0, shown).map(c => html`<th>${c}</th>`)}${t.names.length > shown ? html`<th>…</th>` : ""}</tr></thead>
+    <tbody>${t.rows.map(r => html`<tr class=${r.day === day ? "active" : ""}><td>${r.day}</td><td>${f(r.y0)}</td><td>${f(r.y1)}</td><td>${r.dy.toFixed(3)}</td>${r.x.slice(0, shown).map(v => html`<td>${f(v)}</td>`)}${t.names.length > shown ? html`<td>…</td>` : ""}</tr>`)}</tbody></table></div>
+    <p class="interactive-note">Genotype ${genotype}, year ${builder.years[designYear]}. For the genotype, <b>X</b> has ${n} rows (all days of ${S} years except the first record of each year) and ${K} columns${stateList.length > 1 || feedback ? "; the table shows the weather terms of the first state's equation" : ""}.</p>`;
+}
+```
+
+The bars show how strongly each library column correlates with the growth rate (the 15 strongest), and the scatter plot shows the growth rate against one chosen column.
+
+```{ojs}
+//| echo: false
+viewof termChoice = corr.error ? Object.assign(html`<div></div>`, {value: null}) : select("Term", corr.names, corr.names[d3.maxIndex(corr.withY[0], Math.abs)])
+```
+
+```{ojs}
+//| echo: false
+{
+  if (corr.error || !corr.names.includes(termChoice)) return html``;
+  const j = corr.names.indexOf(termChoice);
+  const {label, unit} = info[stateList[0]];
+  const ranked = corr.names.map((name, i) => ({name, r: corr.withY[0][i]})).sort((a, b) => Math.abs(b.r) - Math.abs(a.r)).slice(0, 15);
+  const bars = Plot.plot({
+    width: 260, height: 40 + 16 * ranked.length, marginLeft: 70,
+    x: {domain: [-1, 1], label: `correlation with growth rate of ${label}`},
+    y: {domain: ranked.map(d => d.name), label: null},
+    marks: [Plot.barX(ranked, {x: "r", y: "name", fill: d => d.r > 0 ? "#014E81" : "#8B1E3F"}), Plot.ruleX([0])]
+  });
+  const pts = Builder.designColumn(builder, g, baseConfig, j);
+  const scatter = Plot.plot({
+    width: 310, height: 40 + 16 * ranked.length, marginLeft: 50,
+    x: {label: `${termChoice} (library column)`}, y: {label: `growth rate (${unit}/day)`},
+    marks: [Plot.dot(pts.filter(d => d.year !== designYear), {x: "x", y: "dy", r: 1.4, fill: "#9CA3AF", fillOpacity: 0.4}),
+            Plot.dot(pts.filter(d => d.year === designYear), {x: "x", y: "dy", r: 2.4, fill: "#8B1E3F"})]
+  });
+  return html`<div style="display:flex;flex-wrap:wrap;gap:1rem">${bars}${scatter}</div>
+    <p class="interactive-note">Grey: all days of all years; red: the year chosen above. The regression looks for a combination of such columns that follows the growth rate.</p>`;
+}
+```
+
+## Step 4 · Fit
+
+The coefficients $\boldsymbol{\xi}$ are estimated by regression of $\dot{\mathbf{y}}$ on $\mathbf{X}$. The methods differ in how they limit the freedom of the fit: ridge shrinks all coefficients, lasso and STLSQ remove terms, backward elimination and best subset keep a fixed number of terms. Choose a method and its parameter.
+
+```{ojs}
+//| echo: false
 catalogue = Builder.methods(K)
 available = Object.keys(catalogue).filter(m => catalogue[m].values.length > 0)
 viewof method = select("Method", available, "STLSQ")
@@ -57,29 +219,17 @@ spec = catalogue[method]
 viewof step = spec.param
   ? slider(spec.param, spec.values, Math.min(Math.floor(spec.values.length / 2), spec.values.length - 1), v => (+v).toPrecision(2))
   : Object.assign(html`<div></div>`, {value: 0})
-viewof genotype = select("Genotype", builder.genotypes, builder.genotypes[0])
-viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
 ```
 
 ```{ojs}
 //| echo: false
 result = {
   try {
-    return Builder.runModel(builder, builder.genotypes.indexOf(genotype), {
-      states: stateList, feedback, drivers, degree, pairs: products === "yes", extras, method,
-      value: spec.values[step], trait: traitName});
+    return Builder.runModel(builder, g, {...baseConfig, method, value: spec.values[step]});
   } catch (e) {
     return {error: e.message};
   }
 }
-```
-
-```{ojs}
-//| echo: false
-info = ({
-  biomass: {label: "biomass", short: "B", unit: "t/ha", series: builder.Y, peak: false},
-  lai: {label: "LAI", short: "LAI", unit: "m²/m²", series: builder.L, peak: true}})
-lhs = state => `\\frac{d\\,\\mathrm{${info[state].short}}}{dt}`
 ```
 
 ```{ojs}
@@ -100,19 +250,91 @@ result.error ? html`` : html`<div>
 //| echo: false
 {
   if (result.error) return html``;
-  const g = builder.genotypes.indexOf(genotype), s = year, shown = builder.years[s];
-  const das = i => builder.das0 + i;
-  const panels = result.equations.map(eq => {
-    const {label, unit, series, peak} = info[eq.state];
+  const plots = result.equations.map(eq => {
+    const {label} = info[eq.state];
     const kept = eq.terms.map((term, i) => ({term, effect: eq.scaled[i]})).filter(d => d.effect !== 0);
     const reach = d3.max(kept, d => Math.abs(d.effect)) || 1;
-    const coefficients = Plot.plot({
+    return html`<div>${result.equations.length > 1 ? html`<h4>${label}</h4>` : ""}${Plot.plot({
       width: 520, height: 40 + 16 * Math.max(kept.length, 1), marginLeft: 90,
       x: {domain: [-reach, reach], label: `scaled coefficient, ${label}`},
       y: {domain: kept.map(d => d.term), label: null},
-      marks: [Plot.barX(kept, {x: "effect", y: "term", fill: d => d.effect > 0 ? "#014E81" : "#8B1E3F"}),
-              Plot.ruleX([0])]
-    });
+      marks: [Plot.barX(kept, {x: "effect", y: "term", fill: d => d.effect > 0 ? "#014E81" : "#8B1E3F"}), Plot.ruleX([0])]
+    })}</div>`;
+  });
+  return html`<div>${plots}<p class="interactive-note">Coefficients scaled by the standard deviation of the term and of the growth rate, so that bars of different terms are comparable.</p></div>`;
+}
+```
+
+### Comparison of methods
+
+The same library and genotype fitted with each method over a range of its parameter. The horizontal axis is the number of terms that remain in the equation, the vertical axis the held-out RMSE of the first modelled state over whole trajectories. The ring marks the choice above; ridge keeps all terms. Lasso and elastic net are evaluated at every other parameter value, and are left out for libraries of more than 60 terms; best subset is not included.
+
+```{ojs}
+//| echo: false
+sweep = {
+  const out = [];
+  const M = Builder.methods(K);
+  const order = ["OLS", "ridge", "STLSQ", "backward", "lasso", "elastic net"];
+  const thin = (m, vals) => (m === "lasso" || m === "elastic net" ? vals.filter((_, i) => i % 2 === 0)
+    : K > 60 && m === "backward" ? vals.filter((_, i) => i % 3 === 0) : vals);
+  let stop = false;
+  invalidation.then(() => { stop = true; });
+  yield {points: [], done: false};
+  await new Promise(r => setTimeout(r, 30));
+  for (const m of order) {
+    if (!M[m] || (K > 60 && (m === "lasso" || m === "elastic net"))) continue;
+    for (const v of thin(m, M[m].values)) {
+      if (stop) return;
+      try {
+        const r = Builder.runModel(builder, g, {...baseConfig, method: m, value: v});
+        const eq = r.equations[0];
+        if (Number.isFinite(eq.rmse)) out.push({method: m, value: v, terms: eq.nterms, rmse: eq.rmse});
+      } catch (e) { /* skip */ }
+      yield {points: out.slice(), done: false};
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  yield {points: out.slice(), done: true};
+}
+```
+
+```{ojs}
+//| echo: false
+{
+  const order = ["OLS", "ridge", "STLSQ", "backward", "lasso", "elastic net"];
+  const pts = sweep.points;
+  const current = result.error ? [] : [{terms: result.equations[0].nterms, rmse: result.equations[0].rmse}];
+  const chart = Plot.plot({
+    width: 560, height: 320, marginLeft: 50,
+    x: {label: "terms retained in the equation", domain: [0, K]},
+    y: {label: `held-out trajectory RMSE (${info[stateList[0]].unit})`, zero: true},
+    color: {domain: order, range: ["#6B7280", "#00A6D6", "#8B1E3F", "#014E81", "#469C2A", "#6F1D77"], legend: true},
+    marks: [
+      Plot.line(pts, {x: "terms", y: "rmse", z: "method", stroke: "method", strokeWidth: 1.4, sort: "terms"}),
+      Plot.dot(pts, {x: "terms", y: "rmse", stroke: "method", fill: "method", r: 2.6}),
+      Plot.dot(current, {x: "terms", y: "rmse", r: 8, stroke: "#111827", strokeWidth: 1.4})]
+  });
+  return html`<div>${chart}<p class="interactive-note">${sweep.done ? "" : "Computing: the curves are added method by method. "}${pts.length} fits shown.</p></div>`;
+}
+```
+
+## Step 5 · Check
+
+The equation of step 4 is integrated over a year that was not used in the fit, starting from the mean initial value of the other years, and compared with APSIM. Each point in the scatter plot is one held-out year; the bars give the trajectory error of every year.
+
+```{ojs}
+//| echo: false
+viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
+```
+
+```{ojs}
+//| echo: false
+{
+  if (result.error) return html``;
+  const s = year, shown = builder.years[s];
+  const das = i => builder.das0 + i;
+  const panels = result.equations.map(eq => {
+    const {label, unit, series, peak} = info[eq.state];
     const observed = series[g][s].map((y, i) => ({das: das(i), y}));
     const predicted = (eq.predicted[s] || []).map((y, i) => ({das: das(i), y}));
     const trajectory = Plot.plot({
@@ -135,16 +357,29 @@ result.error ? html`` : html`<div>
               Plot.dot(finals, {x: "observed", y: "predicted", fill: "year", stroke: "#014E81", r: 4}),
               Plot.dot(finals.filter(d => d.year === shown), {x: "observed", y: "predicted", fill: "#8B1E3F", stroke: "#8B1E3F", r: 6})]
     });
-    return html`<div>${result.equations.length > 1 ? html`<h4>${label}</h4>` : ""}${coefficients}${trajectory}${scatter}</div>`;
+    const errors = builder.years.map((yr, i) => {
+      if (!eq.predicted[i]) return {year: yr, rmse: NaN};
+      let sq = 0;
+      const n = builder.nend[g][i];
+      for (let d = 1; d <= n; d++) sq += (eq.predicted[i][d] - series[g][i][d]) ** 2;
+      return {year: yr, rmse: Math.sqrt(sq / n)};
+    }).filter(d => Number.isFinite(d.rmse));
+    const bars = Plot.plot({
+      width: 520, height: 210, marginLeft: 50, marginBottom: 46,
+      x: {label: null, tickFormat: d => `${d}`, tickRotate: -90, domain: builder.years},
+      y: {label: `RMSE (${unit})`},
+      marks: [Plot.barY(errors, {x: "year", y: "rmse", fill: d => d.year === shown ? "#8B1E3F" : "#014E81"})]
+    });
+    return html`<div>${result.equations.length > 1 ? html`<h4>${label}</h4>` : ""}${trajectory}${scatter}${bars}</div>`;
   });
   return html`<div>${panels}
-    <p class="interactive-note">Grey: APSIM. Red: prediction for year ${shown}, from a model fitted to the other years${result.equations.some(eq => !eq.predicted[s]) ? " (this year diverged, so there is no prediction)" : ""}. Each point in the lower panels is one year.${traitName ? " The measured input of the held-out year is used in the prediction." : ""}</p></div>`;
+    <p class="interactive-note">Grey: APSIM. Red: prediction for year ${shown}, from a model fitted to the other years${result.equations.some(eq => !eq.predicted[s]) ? " (this year diverged, so there is no prediction)" : ""}.${traitName ? " The measured input of the held-out year is used in the prediction." : ""}</p></div>`;
 }
 ```
 
 ## The same model in R and Python
 
-The choices above correspond to the following calls, with `wx` and `traj` loaded as in step 2.
+The choices of steps 1 to 4 correspond to the following calls, with `wx` and `traj` loaded as in step 2.
 
 ```{ojs}
 //| echo: false

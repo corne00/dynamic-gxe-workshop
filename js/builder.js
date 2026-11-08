@@ -820,7 +820,61 @@ const Builder = (() => {
             scales: feedback ? states.map((state, k) => ({state, ...design.scales[k]})) : []};
   }
 
-  return {termSpecs, methods, prepare, run, runModel, stateSpecs, prepareStates, centred, fits, integrate, parseExtras, parseExpression, evaluate, extraColumns, traitSeries};
+  // ---- Views of the design (steps 2 and 3 of the build page) -------------------
+  // Correlations between the library columns, and between each column and the
+  // growth rate of each modelled state, over all rows of the genotype's design.
+  function correlations(data, g, config) {
+    const states = config.states, feedback = !!config.feedback;
+    let names, K, Sxx, n;
+    const Sxy = [], Syy = [];
+    if (states.length === 1 && !feedback) {
+      const d = prepare(data, g, config.drivers, config.degree, config.pairs, config.extras || [], states[0], config.trait || null);
+      const c = centred(d.total, d.K);
+      names = d.names; K = d.K; Sxx = c.Sxx; n = c.n;
+      Sxy.push(c.Sxy); Syy.push(c.Syy);
+    } else {
+      const d = prepareStates(data, g, {...config, states, feedback});
+      names = d.names; K = d.Kt; n = d.total.n;
+      states.forEach((_, k) => {
+        const c = centred({n, sx: d.total.sx, sxx: d.total.sxx, sy: d.total.sy[k], sxy: d.total.sxy[k], syy: d.total.syy[k]}, K);
+        Sxx = c.Sxx; Sxy.push(c.Sxy); Syy.push(c.Syy);
+      });
+    }
+    const sd = Float64Array.from({length: K}, (_, j) => Math.sqrt(Math.max(Sxx[j * K + j], 0)));
+    const corr = new Float64Array(K * K);
+    for (let i = 0; i < K; i++) for (let j = 0; j < K; j++) {
+      const den = sd[i] * sd[j];
+      corr[i * K + j] = den > 1e-12 ? Sxx[i * K + j] / den : 0;
+    }
+    const withY = Sxy.map((sxy, k) => Float64Array.from(sxy, (v, j) => {
+      const den = sd[j] * Math.sqrt(Math.max(Syy[k], 0));
+      return den > 1e-12 ? v / den : 0;
+    }));
+    return {names, K, n, corr, withY};
+  }
+
+  // Rows of the design matrix of one year: days from .. from + count - 1 (counted
+  // as records, the first record of a year has no row), with the target.
+  function designRows(data, g, config, y, from, count) {
+    const d = prepare(data, g, config.drivers, config.degree, config.pairs, config.extras || [], config.states[0], config.trait || null);
+    const yr = d.years[y], rows = [];
+    for (let k = from; k < Math.min(from + count, yr.nend + 1); k++) {
+      rows.push({day: k, x: Array.from(yr.rows[k]), dy: yr.Y[k] - yr.Y[k - 1], y0: yr.Y[k - 1], y1: yr.Y[k]});
+    }
+    return {names: d.names, rows, nend: yr.nend};
+  }
+
+  // One library column against the growth rate, all rows of all years.
+  function designColumn(data, g, config, j) {
+    const d = prepare(data, g, config.drivers, config.degree, config.pairs, config.extras || [], config.states[0], config.trait || null);
+    const out = [];
+    d.years.forEach((yr, y) => {
+      for (let k = 1; k <= yr.nend; k++) out.push({year: y, day: k, x: yr.rows[k][j], dy: yr.Y[k] - yr.Y[k - 1]});
+    });
+    return out;
+  }
+
+  return {termSpecs, methods, prepare, run, runModel, stateSpecs, prepareStates, centred, fits, integrate, parseExtras, parseExpression, evaluate, extraColumns, traitSeries, correlations, designRows, designColumn};
 })();
 
 if (typeof module !== "undefined") module.exports = Builder;
