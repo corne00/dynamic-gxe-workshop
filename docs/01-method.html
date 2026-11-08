@@ -444,11 +444,11 @@ window.Quarto = {
 </section>
 <section id="regression" class="level2">
 <h2 class="anchored" data-anchor-id="regression">Regression</h2>
-<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be the observation at the end of day <span class="math inline">\(i\)</span>, with time step <span class="math inline">\(\Delta t\)</span> (one day). The weather of day <span class="math inline">\(i\)</span> acts during that day, so its growth rate <span class="math inline">\(\dot y_i = \frac{dy}{dt}(t_{i-1/2})\)</span> belongs to the middle of the day. It is estimated by the centered difference with a half step on either side,</p>
+<p>Let <span class="math inline">\(y_i = y(t_i)\)</span> be the observation at the end of day <span class="math inline">\(i\)</span>, with time step <span class="math inline">\(\Delta t\)</span> (one day). The weather of day <span class="math inline">\(i\)</span> acts during that day, so its growth rate belongs to the middle of the day, <span class="math inline">\(t_{i-1/2} = t_i - \Delta t/2\)</span>. The centered difference over the two records enclosing that point gives</p>
 <p><span class="math display">\[
-\dot y_i \approx \frac{y(t_{i-1/2} + \Delta t/2) - y(t_{i-1/2} - \Delta t/2)}{\Delta t} = \frac{y_i - y_{i-1}}{\Delta t}.
+\dot y_i := \frac{dy}{dt}(t_{i-1/2}) = \frac{y_i - y_{i-1}}{\Delta t} + \mathcal{O}(\Delta t^2).
 \]</span></p>
-<p>Adding the Taylor expansions <span class="math inline">\(y(t_{i-1/2} \pm \Delta t/2) = y(t_{i-1/2}) \pm \tfrac{1}{2}\Delta t\,\dot y_i + \tfrac{1}{8}\Delta t^2\,\ddot y_i \pm \dots\)</span> shows that the error is of order <span class="math inline">\(\Delta t^2\)</span>, against order <span class="math inline">\(\Delta t\)</span> for the same difference used as an estimate at <span class="math inline">\(t_i\)</span> (a forward or backward difference). The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (<code>numpy.diff</code> in Python, <code>diff</code> in R).</p>
+<p>The expansion of <span class="math inline">\(y(t_{i-1/2} \pm \Delta t/2)\)</span> about <span class="math inline">\(t_{i-1/2}\)</span> shows that the odd-order terms cancel, so the error is <span class="math inline">\(\tfrac{1}{24}\Delta t^2\, y^{(3)}(t_{i-1/2})\)</span>. The same difference used as an estimate at <span class="math inline">\(t_i\)</span> or <span class="math inline">\(t_{i-1}\)</span> would be only first order, <span class="math inline">\(\mathcal{O}(\Delta t)\)</span>. The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (<code>numpy.diff</code> in Python, <code>diff</code> in R).</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/concept_derivative.png" class="img-fluid figure-img" style="width:100.0%"></p>
