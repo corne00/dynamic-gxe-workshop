@@ -11,13 +11,13 @@ source("R/pipeline.R")
 This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv`, `Theta` and `tr`. To start here, load them as described on the [Set up](setup.html) page.
 
 
-For one genotype, the data are the growth rates $\frac{d\mathbf{y}}{dt}$ and the library values $\boldsymbol{\Theta}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
+For one genotype, the data are the growth rates $\dot{\mathbf{y}}$ and the library values $\boldsymbol{\Theta}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
 
 $$
-\frac{d\mathbf{y}}{dt} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
+\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 $$
 
-Every method maps $(\boldsymbol{\Theta}, \frac{d\mathbf{y}}{dt})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(Theta, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
+Every method maps $(\boldsymbol{\Theta}, \dot{\mathbf{y}})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(Theta, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
 
 ::: {.panel-tabset group="language"}
 
@@ -32,7 +32,7 @@ Every method maps $(\boldsymbol{\Theta}, \frac{d\mathbf{y}}{dt})$ to an estimate
 ## Python
 
 ```python
-d = make_design(Theta, tr, "g001")
+design = make_design(Theta, tr, "g001")
 ```
 
 :::
@@ -40,7 +40,7 @@ d = make_design(Theta, tr, "g001")
 ```{r}
 #| label: 04-1-run
 #| echo: false
-d <- make_design(Theta, tr, "g001")
+design <- make_design(Theta, tr, "g001")
 ```
 
 ## Methods
@@ -52,7 +52,7 @@ d <- make_design(Theta, tr, "g001")
 The reference: all terms are used, so there is no sparsity.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters: none.
@@ -70,7 +70,7 @@ show_fun("fit_ols", level = 3)
 Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 $$
 
 Hyperparameters:
@@ -90,7 +90,7 @@ show_fun("fit_ridge", level = 3)
 The $\ell_1$ penalty sets coefficients exactly to zero, which gives a sparse equation.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
 $$
 
 Hyperparameters:
@@ -110,7 +110,7 @@ show_fun("fit_glmnet", "fit_lasso", level = 3)
 A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
 $$
 
 Hyperparameters:
@@ -131,7 +131,7 @@ show_fun("fit_glmnet", "fit_enet", level = 3)
 The best model with exactly $k$ terms, found by searching all subsets.
 
 $$
-\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
 $$
 
 Algorithm:
@@ -139,8 +139,8 @@ Algorithm:
 $$
 \begin{array}{ll}
 \textbf{for each } S \subset \{1, \dots, K\} \textbf{ with } |S| = k: & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the terms in } S \\[2pt]
-\quad \mathrm{RSS}(S) \leftarrow \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\hat{\boldsymbol{\xi}}_S \rVert_2^2 & \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the terms in } S \\[2pt]
+\quad \mathrm{RSS}(S) \leftarrow \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\hat{\boldsymbol{\xi}}_S \rVert_2^2 & \\[2pt]
 \textbf{return } \hat{\boldsymbol{\xi}}_{S^*} \text{ with } S^* = \arg\min_S \mathrm{RSS}(S) & \text{coefficients outside } S^* \text{ are zero}
 \end{array}
 $$
@@ -191,8 +191,8 @@ $$
 \begin{array}{ll}
 S \leftarrow \{1, \dots, K\} & \text{start with all terms} \\[2pt]
 \textbf{repeat:} & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the active terms} \\[2pt]
-\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\tfrac{d\mathbf{y}}{dt}\bigr) & \text{keep the terms above the threshold} \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the active terms} \\[2pt]
+\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\dot{\mathbf{y}}\bigr) & \text{keep the terms above the threshold} \\[2pt]
 \quad \textbf{if } S' = S \text{ or } S' = \emptyset \textbf{ then stop, else } S \leftarrow S' & \\[2pt]
 \textbf{return } \hat{\boldsymbol{\xi}}_S & \text{coefficients outside } S \text{ are zero}
 \end{array}
@@ -229,9 +229,9 @@ The methods fitted to the same data:
 ## Python
 
 ```python
-fits = pd.DataFrame({name: fit(d.Theta, d.dy)
+fits = pd.DataFrame({name: fit(design.Theta, design.dy)
                      for name, fit in fit_methods.items()},
-                    index=["1"] + d.terms)
+                    index=["1"] + design.terms)
 print(fits.round(3))
 ```
 
@@ -240,7 +240,7 @@ print(fits.round(3))
 ```{r}
 #| label: 04-2-run
 #| echo: false
-fits <- sapply(fit_methods, function(fit) fit(d$Theta, d$dy))
+fits <- sapply(fit_methods, function(fit) fit(design$Theta, design$dy))
 round(fits, 3)
 ```
 
@@ -259,7 +259,7 @@ Each bar is a coefficient, scaled to a common size (coefficient times the standa
 ## Python
 
 ```python
-size = d.Theta.std(axis=0, ddof=1) / d.dy.std(ddof=1)
+size = design.Theta.std(axis=0, ddof=1) / design.dy.std(ddof=1)
 effect = fits.iloc[1:].mul(size, axis=0)
 
 fig, axes = plt.subplots(effect.shape[1], 1, sharex=True, sharey=True,
@@ -283,7 +283,7 @@ fig.tight_layout()
 #| fig-height: 6.2
 #| fig-width: 6.2
 #| out-width: 600px
-size <- apply(d$Theta, 2, sd) / sd(d$dy)
+size <- apply(design$Theta, 2, sd) / sd(design$dy)
 effect <- fits[-1, ] * size
 long <- data.frame(term = factor(rownames(effect), rownames(effect)),
                    method = factor(rep(colnames(effect), each = nrow(effect)),

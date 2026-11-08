@@ -52,3 +52,31 @@ cached <- function(file, expr) {
   if (file.exists(f)) return(readRDS(f))
   v <- expr; dir.create("precomputed", showWarnings = FALSE); saveRDS(v, f); v
 }
+
+## Fitted equation as LaTeX: the terms with a non-zero coefficient, per terms to
+## a line (counterpart of Equation.latex in js/equation.js). coef: named vector,
+## intercept first.
+equation_latex <- function(coef, lhs = "\\frac{dy}{dt}", per = 3) {
+  number <- function(v) {
+    a <- abs(v)
+    if (a >= 0.01 && a < 1000) return(format(signif(a, 3)))
+    e <- floor(log10(a))
+    sprintf("%s\\times 10^{%d}", format(signif(a / 10^e, 3)), e)
+  }
+  term <- function(name) {
+    factors <- strsplit(name, "*", fixed = TRUE)[[1]]
+    paste(vapply(factors, function(f) {
+      p <- strsplit(f, "^", fixed = TRUE)[[1]]
+      if (length(p) > 1) sprintf("\\mathrm{%s}^{%s}", p[1], p[2]) else sprintf("\\mathrm{%s}", p)
+    }, ""), collapse = "\\,")
+  }
+  coef <- coef[coef != 0]
+  text <- vapply(seq_along(coef), function(i) {
+    paste0(if (coef[i] < 0) "-" else "+", " ", number(coef[i]),
+           if (names(coef)[i] == "1") "" else paste0("\\,", term(names(coef)[i])))
+  }, "")
+  text[1] <- sub("^\\+ ", "", text[1])
+  lines <- tapply(text, (seq_along(text) - 1) %/% per, paste, collapse = " ")
+  paste0("$$\\begin{aligned} ", lhs, " &= ", paste(lines, collapse = " \\\\ &\\quad "),
+         " \\end{aligned}$$")
+}

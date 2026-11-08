@@ -29,8 +29,8 @@ Each genotype has its own equation, with coefficients estimated from the 31 traj
 
 ```python
 def fit_genotype(g):
-    d = make_design(Theta, tr, g)
-    return fit_stlsq(d.Theta, d.dy)
+    design = make_design(Theta, tr, g)
+    return fit_stlsq(design.Theta, design.dy)
 
 coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
                      index=["1"] + Theta.terms)
@@ -42,8 +42,8 @@ coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
 #| label: 07-1-run
 #| echo: false
 fit_genotype <- function(g) {
-  d <- make_design(Theta, tr, g)
-  fit_stlsq(d$Theta, d$dy)
+  design <- make_design(Theta, tr, g)
+  fit_stlsq(design$Theta, design$dy)
 }
 coefs <- sapply(tr$genotypes, fit_genotype)
 ```
@@ -61,7 +61,7 @@ coefs <- sapply(tr$genotypes, fit_genotype)
 ## Python
 
 ```python
-three = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
+highlighted = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
 mean_path = Theta.array.mean(axis=0)
 b = coefs.to_numpy()
 rate = pd.DataFrame(b[0] + mean_path @ b[1:], columns=coefs.columns)
@@ -70,7 +70,7 @@ rate = rate[rate["das"] <= 155]
 
 fig, ax = plt.subplots(figsize=(7, 2.8))
 ax.plot(rate["das"], rate.drop(columns="das"), color=GREY, lw=0.2)
-for g, colour in zip(three, [BURGUNDY, CYAN, BLUE]):
+for g, colour in zip(highlighted, [BURGUNDY, CYAN, BLUE]):
     ax.plot(rate["das"], rate[g], color=colour, lw=1.2, label=g)
 ax.legend(frameon=False)
 ax.set_xlabel("days after sowing")
@@ -84,18 +84,18 @@ fig.tight_layout()
 #| label: 07-2-run
 #| echo: false
 #| fig-height: 2.8
-three <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
+highlighted <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
 mean_path <- cbind(1, apply(Theta, c(2, 3), mean))
 das <- 1:nrow(mean_path) + tr$das0 - 1
-d <- data.frame(das = rep(das, ncol(coefs)),
-                genotype = rep(colnames(coefs), each = length(das)),
-                rate = as.vector(mean_path %*% coefs))
-d <- d[d$das <= 155, ]
+rates <- data.frame(das = rep(das, ncol(coefs)),
+                    genotype = rep(colnames(coefs), each = length(das)),
+                    rate = as.vector(mean_path %*% coefs))
+rates <- rates[rates$das <= 155, ]
 
-ggplot(d, aes(das, rate, group = genotype)) +
+ggplot(rates, aes(das, rate, group = genotype)) +
   geom_line(colour = "#D1D5DB", linewidth = 0.2) +
-  geom_line(data = d[d$genotype %in% three, ], aes(colour = genotype),
-            linewidth = 0.8) +
+  geom_line(data = rates[rates$genotype %in% highlighted, ],
+            aes(colour = genotype), linewidth = 0.8) +
   scale_colour_dgxe("burgundy", "cyan", "blue") +
   labs(x = "days after sowing", y = "growth rate (t/ha/day)") +
   theme_dgxe() +
@@ -118,7 +118,7 @@ show_fun("rank_scores")
 
 ```{r}
 #| label: 07-3
-#| ref.label: 07-3-run
+#| ref.label: [07-3-show, 07-3-run]
 #| eval: false
 ```
 
@@ -133,26 +133,38 @@ def scores(day):
     rho, top = rank_scores(P[:, :, i], tr.Y[:, :, i])
     return day, rho.mean().round(3), top.mean().round(3)
 
-out = pd.DataFrame([scores(day) for day in days],
-                   columns=["das", "rho", "top10"])
-print(out)
+ranking = pd.DataFrame([scores(day) for day in days],
+                       columns=["das", "rho", "top10"])
+print(ranking)
 ```
 
 :::
 
 ```{r}
-#| label: 07-3-run
+#| label: 07-3-show
+#| eval: false
+#| include: false
+P <- cross_validate(Theta, tr, fit_stlsq)
+```
+
+```{r}
+#| label: 07-3-exec
 #| echo: false
 P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
+```
+
+```{r}
+#| label: 07-3-run
+#| echo: false
 days <- c(35, 50, 63, 84, 99)       # array index; day after sowing = index + 14
 
-scores <- function(d) {
-  s <- rank_scores(P[, , d], tr$Y[, , d])
-  data.frame(das = d + tr$das0 - 1, rho = mean(s$rho), top10 = mean(s$top))
+scores <- function(i) {
+  s <- rank_scores(P[, , i], tr$Y[, , i])
+  data.frame(das = i + tr$das0 - 1, rho = mean(s$rho), top10 = mean(s$top))
 }
-out <- do.call(rbind, lapply(days, scores))
-out[, c("rho", "top10")] <- round(out[, c("rho", "top10")], 3)
-out
+ranking <- do.call(rbind, lapply(days, scores))
+ranking[, c("rho", "top10")] <- round(ranking[, c("rho", "top10")], 3)
+ranking
 ```
 
 ::: {.panel-tabset group="language"}
@@ -171,7 +183,7 @@ out
 fig, axes = plt.subplots(1, 2, figsize=(8, 2.8))
 for ax, column, title in zip(axes, ["rho", "top10"],
                              ["Spearman correlation", "top-10% overlap"]):
-    ax.plot(out["das"], out[column], "o-", color=BLUE)
+    ax.plot(ranking["das"], ranking[column], "o-", color=BLUE)
     ax.set_title(title, loc="left")
 fig.supxlabel("days after sowing")
 fig.tight_layout()
@@ -184,8 +196,8 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 2.8
 long <- rbind(
-  data.frame(das = out$das, metric = "Spearman correlation", score = out$rho),
-  data.frame(das = out$das, metric = "top-10% overlap", score = out$top10))
+  data.frame(das = ranking$das, metric = "Spearman correlation", score = ranking$rho),
+  data.frame(das = ranking$das, metric = "top-10% overlap", score = ranking$top10))
 
 ggplot(long, aes(das, score)) +
   geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +

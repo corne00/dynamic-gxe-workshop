@@ -30,8 +30,8 @@ For interpretation, the sparse model (STLSQ) of every genotype is fitted to all 
 
 ```python
 def fit_genotype(g):
-    d = make_design(Theta, tr, g)
-    return fit_stlsq(d.Theta, d.dy)
+    design = make_design(Theta, tr, g)
+    return fit_stlsq(design.Theta, design.dy)
 
 coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
                      index=["1"] + Theta.terms)
@@ -44,14 +44,22 @@ print(coefs["g114"].round(4))
 #| label: 06-1-run
 #| echo: false
 fit_genotype <- function(g) {
-  d <- make_design(Theta, tr, g)
-  fit_stlsq(d$Theta, d$dy)
+  design <- make_design(Theta, tr, g)
+  fit_stlsq(design$Theta, design$dy)
 }
 coefs <- sapply(tr$genotypes, fit_genotype)
 round(coefs[, "g114"], 4)
 ```
 
-Terms with a coefficient of zero were removed. Individual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.
+Terms with a coefficient of zero were removed. Written out for `g114`, with the standardised drivers,
+
+```{r}
+#| echo: false
+#| results: asis
+cat(equation_latex(coefs[, "g114"]))
+```
+
+Individual coefficients of a polynomial are difficult to interpret, so the equation is examined through the growth rate it implies.
 
 ## Growth rate over the year
 
@@ -92,15 +100,15 @@ fig.tight_layout()
 #| label: 06-2-run
 #| echo: false
 #| fig-height: 2.8
-nd <- dim(Theta)[2]
+n_days <- dim(Theta)[2]
 rate_y <- function(y) cbind(1, Theta[y, , ]) %*% coefs[, "g114"]
-d <- data.frame(das = rep(1:nd + tr$das0 - 1, length(tr$years)),
-                year = rep(tr$years, each = nd),
-                rate = unlist(lapply(seq_along(tr$years), rate_y)))
-d <- d[d$das <= tr$das0 + max(tr$nend) - 1, ]
-shown <- d[d$year %in% c(1984, 1998, 2008), ]
+rates <- data.frame(das = rep(1:n_days + tr$das0 - 1, length(tr$years)),
+                    year = rep(tr$years, each = n_days),
+                    rate = unlist(lapply(seq_along(tr$years), rate_y)))
+rates <- rates[rates$das <= tr$das0 + max(tr$nend) - 1, ]
+shown <- rates[rates$year %in% c(1984, 1998, 2008), ]
 
-ggplot(d, aes(das, rate, group = year)) +
+ggplot(rates, aes(das, rate, group = year)) +
   geom_line(colour = "#D1D5DB", linewidth = 0.3) +
   geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.8) +
   scale_colour_dgxe("blue", "cyan", "burgundy") +
@@ -156,13 +164,15 @@ contribution <- function(driver) {
 }
 palette <- c("#014E81", "#00A6D6", "#8B1E3F", "#469C2A", "#6F1D77", "#EF60A3", "#00A390", "#9CA3AF", "#1F2937")
 parts <- sapply(drv$drivers, contribution)
-d <- data.frame(das = rep(1:nd + tr$das0 - 1, ncol(parts) + 1),
-                part = factor(rep(c(drv$drivers, "total"), each = nd),
-                              c(drv$drivers, "total")),
-                value = c(parts, coefs[1, "g114"] + rowSums(parts)))
-d <- d[d$das <= tr$das0 + tr$nend["g114", match(1998, tr$years)], ]
+contributions <- data.frame(
+  das = rep(1:n_days + tr$das0 - 1, ncol(parts) + 1),
+  part = factor(rep(c(drv$drivers, "total"), each = n_days),
+                c(drv$drivers, "total")),
+  value = c(parts, coefs[1, "g114"] + rowSums(parts)))
+contributions <- contributions[
+  contributions$das <= tr$das0 + tr$nend["g114", match(1998, tr$years)], ]
 
-ggplot(d, aes(das, value, colour = part, linewidth = part)) +
+ggplot(contributions, aes(das, value, colour = part, linewidth = part)) +
   geom_hline(yintercept = 0, colour = "#9CA3AF", linewidth = 0.3) +
   geom_line() +
   scale_colour_manual(values = palette) +
@@ -244,7 +254,13 @@ Z <- as.data.frame(observed_points(drv, tr))
 round(cor(Z), 2)
 ```
 
-Accumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the growth rate. The `iml` package computes them for any model that provides a prediction function; here the model is the growth rate of a genotype.
+Accumulated local effects (ALE) vary the driver only within narrow intervals around values that occur, using the observed values of the other drivers, and accumulate the resulting changes in the growth rate. For the fitted growth rate $f(\mathbf{u}) = \boldsymbol{\theta}(\mathbf{u})^\top \hat{\boldsymbol{\xi}}$ and driver $j$,
+
+$$
+\mathrm{ALE}_j(z) = \int_{z_0}^{z} \mathbb{E}\!\left[\frac{\partial f(\mathbf{u})}{\partial u_j} \,\middle|\, u_j = v\right] dv - c,
+$$
+
+where $z_0$ is the smallest observed value and the constant $c$ centres the curve at mean zero over the data. The expectation is estimated over the observations in each interval of a grid (24 intervals here). The `iml` package computes ALE curves for any model that provides a prediction function; here the model is the growth rate of a genotype.
 
 ::: {.panel-tabset group="language"}
 
@@ -252,7 +268,7 @@ Accumulated local effects (ALE) vary the driver only within narrow intervals aro
 
 ```{r}
 #| label: 06-5
-#| ref.label: 06-5-run
+#| ref.label: [06-5-run, 06-5-show]
 #| eval: false
 ```
 
@@ -302,6 +318,18 @@ ale_genotype <- function(g, j) {
 }
 cells <- expand.grid(g = tr$genotypes, j = seq_along(drv$drivers),
                      stringsAsFactors = FALSE)
+```
+
+```{r}
+#| label: 06-5-show
+#| eval: false
+#| include: false
+curves <- do.call(rbind, Map(ale_genotype, cells$g, cells$j))
+```
+
+```{r}
+#| label: 06-5-exec
+#| echo: false
 curves <- cached("ale_genotypes.rds", do.call(rbind, Map(ale_genotype, cells$g, cells$j)))
 ```
 
@@ -320,13 +348,13 @@ The ALE curve of each driver for every genotype (grey), and for the genotypes wi
 ## Python
 
 ```python
-three = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
-fig, axes = plt.subplots(2, 4, figsize=(9, 4.4))
+highlighted = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
+fig, axes = plt.subplots(4, 2, figsize=(7.2, 9))
 for j, (ax, name) in enumerate(zip(axes.flat, drv.drivers)):
     sub = curves[curves["driver"] == name]
     for g, c in sub.groupby("genotype"):
         ax.plot(c["x"], c["effect"], color=GREY, lw=0.25)
-    for g, colour in zip(three, [BURGUNDY, CYAN, BLUE]):
+    for g, colour in zip(highlighted, [BURGUNDY, CYAN, BLUE]):
         c = sub[sub["genotype"] == g]
         ax.plot(c["x"], c["effect"], color=colour, lw=1.2, label=g)
     ax.plot(natural(Z[name], j), np.full(len(Z), ax.get_ylim()[0]), "|",
@@ -343,9 +371,9 @@ fig.tight_layout()
 ```{r}
 #| label: 06-6-run
 #| echo: false
-#| fig-height: 4.4
-#| fig-width: 9
-three <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
+#| fig-height: 9
+#| fig-width: 7.2
+highlighted <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
 observed <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
   data.frame(driver = factor(drv$drivers[j], drv$drivers), x = natural(Z[, j], j))
 }))
@@ -353,11 +381,11 @@ observed <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
 ggplot(curves, aes(x, effect, group = genotype)) +
   geom_hline(yintercept = 0, colour = "#9CA3AF", linewidth = 0.3) +
   geom_line(colour = "#D1D5DB", linewidth = 0.25) +
-  geom_line(data = curves[curves$genotype %in% three, ],
+  geom_line(data = curves[curves$genotype %in% highlighted, ],
             aes(colour = genotype), linewidth = 0.8) +
   geom_rug(data = observed, aes(x = x), inherit.aes = FALSE, sides = "b",
            alpha = 0.03) +
-  facet_wrap(~driver, scales = "free_x") +
+  facet_wrap(~driver, ncol = 2, scales = "free_x") +
   scale_colour_dgxe("burgundy", "cyan", "blue") +
   labs(x = "driver value (original units)",
        y = "effect on growth rate (t/ha/day)") +
@@ -413,8 +441,8 @@ The library of powers is additive in the drivers: the effect of one driver does 
 
 ```python
 Theta2 = make_library(drv, pairs=True)
-d2 = make_design(Theta2, tr, "g114")
-rate2 = GrowthRate(fit_subset(d2.Theta, d2.dy, k=20, method="backward"), pairs=True)
+design2 = make_design(Theta2, tr, "g114")
+rate2 = GrowthRate(fit_subset(design2.Theta, design2.dy, k=20, method="backward"), pairs=True)
 
 def effects(feature):
     j = drv.drivers.index(feature)
@@ -432,8 +460,8 @@ def effects(feature):
 #| label: 06-7-run
 #| echo: false
 Theta2 <- make_library(drv, pairs = TRUE)
-d2 <- make_design(Theta2, tr, "g114")
-pred2 <- predictor(fit_subset(d2$Theta, d2$dy, k = 20, method = "backward"), TRUE)
+design2 <- make_design(Theta2, tr, "g114")
+pred2 <- predictor(fit_subset(design2$Theta, design2$dy, k = 20, method = "backward"), TRUE)
 
 effects <- function(j) {
   feature <- drv$drivers[j]

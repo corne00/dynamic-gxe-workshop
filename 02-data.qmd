@@ -289,14 +289,14 @@ The response is the biomass (t/ha) of each genotype. Each panel is one year: all
 ```python
 drv = make_drivers(wx)
 tr = make_trajectories(traj, drv)
-three = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
+highlighted = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
 days = np.arange(tr.Y.shape[2]) + tr.das0
 
 fig, axes = plt.subplots(1, 4, sharey=True, figsize=(10, 2.8))
 for ax, year in zip(axes, [1984, 1990, 1998, 2008]):
     s = list(tr.years).index(year)
     ax.plot(days, tr.Y[:, s].T, color=GREY, lw=0.2)
-    for g, colour in zip(three, [BURGUNDY, CYAN, BLUE]):
+    for g, colour in zip(highlighted, [BURGUNDY, CYAN, BLUE]):
         ax.plot(days, tr.Y[np.searchsorted(tr.genotypes, g), s],
                 color=colour, lw=0.9, label=g)
     ax.set_title(year, loc="left")
@@ -315,13 +315,13 @@ fig.tight_layout()
 #| warning: false
 drv <- make_drivers(wx)
 tr <- make_trajectories(traj, drv)
-three <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
+highlighted <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
 years <- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]
 
 ggplot(years, aes(das, biomass, group = genotype)) +
     geom_line(colour = "#D1D5DB", linewidth = 0.2) +
     geom_line(
-        data = years[years$genotype %in% three, ],
+        data = years[years$genotype %in% highlighted, ],
         aes(colour = genotype), linewidth = 0.7
     ) +
     facet_wrap(~year, nrow = 1) +

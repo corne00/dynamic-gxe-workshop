@@ -294,21 +294,21 @@ window.Quarto = {
 
 
 <p>This page continues from steps 2 and 3 and uses their objects <code>wx</code>, <code>traj</code>, <code>drv</code>, <code>Theta</code> and <code>tr</code>. To start here, load them as described on the <a href="setup.html">Set up</a> page.</p>
-<p>For one genotype, the data are the growth rates <span class="math inline">\(\frac{d\mathbf{y}}{dt}\)</span> and the library values <span class="math inline">\(\boldsymbol{\Theta}\)</span> of step 3, and the unknown is the coefficient vector <span class="math inline">\(\boldsymbol{\xi}\)</span>:</p>
+<p>For one genotype, the data are the growth rates <span class="math inline">\(\dot{\mathbf{y}}\)</span> and the library values <span class="math inline">\(\boldsymbol{\Theta}\)</span> of step 3, and the unknown is the coefficient vector <span class="math inline">\(\boldsymbol{\xi}\)</span>:</p>
 <p><span class="math display">\[
-\frac{d\mathbf{y}}{dt} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
+\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 \]</span></p>
-<p>Every method maps <span class="math inline">\((\boldsymbol{\Theta}, \frac{d\mathbf{y}}{dt})\)</span> to an estimate <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span>, with the intercept first. A method is therefore a function <code>fit(Theta, dy)</code>, and methods can be exchanged freely. Genotype <code>g001</code> is used here.</p>
+<p>Every method maps <span class="math inline">\((\boldsymbol{\Theta}, \dot{\mathbf{y}})\)</span> to an estimate <span class="math inline">\(\hat{\boldsymbol{\xi}}\)</span>, with the intercept first. A method is therefore a function <code>fit(Theta, dy)</code>, and methods can be exchanged freely. Genotype <code>g001</code> is used here.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>d <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, <span class="st">"g001"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta, tr, <span class="st">"g001"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> make_design(Theta, tr, <span class="st">"g001"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>design <span class="op">=</span> make_design(Theta, tr, <span class="st">"g001"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -320,7 +320,7 @@ window.Quarto = {
 <div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
 <p>The reference: all terms are used, so there is no sparsity.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
 \]</span></p>
 <p>Hyperparameters: none.</p>
 <p>R: <code>lm.fit</code>. Python: <code>numpy.linalg.lstsq</code>.</p>
@@ -344,7 +344,7 @@ window.Quarto = {
 <div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
 <p>Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -380,7 +380,7 @@ window.Quarto = {
 <div id="tabset-9-3" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-3-tab">
 <p>The <span class="math inline">\(\ell_1\)</span> penalty sets coefficients exactly to zero, which gives a sparse equation.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -421,7 +421,7 @@ window.Quarto = {
 <div id="tabset-9-4" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-4-tab">
 <p>A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
 \]</span></p>
 <p>Hyperparameters:</p>
 <ul>
@@ -463,14 +463,14 @@ window.Quarto = {
 <div id="tabset-9-5" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-5-tab">
 <p>The best model with exactly <span class="math inline">\(k\)</span> terms, found by searching all subsets.</p>
 <p><span class="math display">\[
-\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
 \]</span></p>
 <p>Algorithm:</p>
 <p><span class="math display">\[
 \begin{array}{ll}
 \textbf{for each } S \subset \{1, \dots, K\} \textbf{ with } |S| = k: &amp; \\[2pt]
-\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 &amp; \text{least squares on the terms in } S \\[2pt]
-\quad \mathrm{RSS}(S) \leftarrow \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\hat{\boldsymbol{\xi}}_S \rVert_2^2 &amp; \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 &amp; \text{least squares on the terms in } S \\[2pt]
+\quad \mathrm{RSS}(S) \leftarrow \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\hat{\boldsymbol{\xi}}_S \rVert_2^2 &amp; \\[2pt]
 \textbf{return } \hat{\boldsymbol{\xi}}_{S^*} \text{ with } S^* = \arg\min_S \mathrm{RSS}(S) &amp; \text{coefficients outside } S^* \text{ are zero}
 \end{array}
 \]</span></p>
@@ -571,8 +571,8 @@ S \leftarrow \{1, \dots, K\} &amp; \text{start with all terms} \\[2pt]
 \begin{array}{ll}
 S \leftarrow \{1, \dots, K\} &amp; \text{start with all terms} \\[2pt]
 \textbf{repeat:} &amp; \\[2pt]
-\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \frac{d\mathbf{y}}{dt} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 &amp; \text{least squares on the active terms} \\[2pt]
-\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\tfrac{d\mathbf{y}}{dt}\bigr) &amp; \text{keep the terms above the threshold} \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 &amp; \text{least squares on the active terms} \\[2pt]
+\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\dot{\mathbf{y}}\bigr) &amp; \text{keep the terms above the threshold} \\[2pt]
 \quad \textbf{if } S' = S \text{ or } S' = \emptyset \textbf{ then stop, else } S \leftarrow S' &amp; \\[2pt]
 \textbf{return } \hat{\boldsymbol{\xi}}_S &amp; \text{coefficients outside } S \text{ are zero}
 \end{array}
@@ -634,14 +634,14 @@ S \leftarrow \{1, \dots, K\} &amp; \text{start with all terms} \\[2pt]
 <div class="tab-content" data-group="language">
 <div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">sapply</span>(fit_methods, <span class="cf">function</span>(fit) <span class="fu">fit</span>(d<span class="sc">$</span>Theta, d<span class="sc">$</span>dy))</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">sapply</span>(fit_methods, <span class="cf">function</span>(fit) <span class="fu">fit</span>(design<span class="sc">$</span>Theta, design<span class="sc">$</span>dy))</span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(fits, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fits <span class="op">=</span> pd.DataFrame({name: fit(d.Theta, d.dy)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fits <span class="op">=</span> pd.DataFrame({name: fit(design.Theta, design.dy)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                     <span class="cf">for</span> name, fit <span class="kw">in</span> fit_methods.items()},</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                    index<span class="op">=</span>[<span class="st">"1"</span>] <span class="op">+</span> d.terms)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                    index<span class="op">=</span>[<span class="st">"1"</span>] <span class="op">+</span> design.terms)</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(fits.<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
@@ -708,7 +708,7 @@ RAW^3   0.000</code></pre>
 <div class="tab-content" data-group="language">
 <div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>size <span class="ot">&lt;-</span> <span class="fu">apply</span>(d<span class="sc">$</span>Theta, <span class="dv">2</span>, sd) <span class="sc">/</span> <span class="fu">sd</span>(d<span class="sc">$</span>dy)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>size <span class="ot">&lt;-</span> <span class="fu">apply</span>(design<span class="sc">$</span>Theta, <span class="dv">2</span>, sd) <span class="sc">/</span> <span class="fu">sd</span>(design<span class="sc">$</span>dy)</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>effect <span class="ot">&lt;-</span> fits[<span class="sc">-</span><span class="dv">1</span>, ] <span class="sc">*</span> size</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>long <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">term =</span> <span class="fu">factor</span>(<span class="fu">rownames</span>(effect), <span class="fu">rownames</span>(effect)),</span>
 <span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                   <span class="at">method =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">colnames</span>(effect), <span class="at">each =</span> <span class="fu">nrow</span>(effect)),</span>
@@ -733,7 +733,7 @@ RAW^3   0.000</code></pre>
 </div>
 </div>
 <div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>size <span class="op">=</span> d.Theta.std(axis<span class="op">=</span><span class="dv">0</span>, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> d.dy.std(ddof<span class="op">=</span><span class="dv">1</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>size <span class="op">=</span> design.Theta.std(axis<span class="op">=</span><span class="dv">0</span>, ddof<span class="op">=</span><span class="dv">1</span>) <span class="op">/</span> design.dy.std(ddof<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>effect <span class="op">=</span> fits.iloc[<span class="dv">1</span>:].mul(size, axis<span class="op">=</span><span class="dv">0</span>)</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(effect.shape[<span class="dv">1</span>], <span class="dv">1</span>, sharex<span class="op">=</span><span class="va">True</span>, sharey<span class="op">=</span><span class="va">True</span>,</span>
