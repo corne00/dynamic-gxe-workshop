@@ -82,6 +82,6 @@ figure img, .cell-output-display img { max-width: 100%; }
 .scroll-x { overflow-x: auto; max-width: 100%; }
 .scroll-x img { max-width: none; }
 
-/* QR code to the workshop website, bottom right of every page */
-.nav-footer .footer-qr { height: 72px; width: 72px; margin-left: 12px; vertical-align: middle; }
-.nav-footer .nav-footer-right { display: flex; align-items: center; justify-content: flex-end; }
+/* QR code to the workshop website, small and unobtrusive in the footer */
+.nav-footer .footer-qr { height: 40px; width: 40px; margin-left: 10px; vertical-align: middle; opacity: 0.5; transition: opacity 0.2s; }
+.nav-footer .footer-qr:hover { opacity: 1; }
