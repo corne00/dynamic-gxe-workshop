@@ -171,6 +171,17 @@
     ]
   },
   {
+    "objectID": "03-design.html#recap",
+    "href": "03-design.html#recap",
+    "title": "3 · Library and design matrix",
+    "section": "Recap",
+    "text": "Recap\nWe estimate the growth rate of biomass as a linear combination of candidate functions of the drivers,\n\\[\n\\dot{\\mathbf{y}} \\approx \\boldsymbol{\\Theta}\\boldsymbol{\\xi}.\n\\]\nHere \\(\\dot{\\mathbf{y}}\\) holds the growth rates of all days, the library matrix \\(\\boldsymbol{\\Theta}\\) holds the candidate functions evaluated on those days, and \\(\\boldsymbol{\\xi}\\) are the unknown coefficients. Regression can only find \\(\\boldsymbol{\\xi}\\) once \\(\\boldsymbol{\\Theta}\\) and \\(\\dot{\\mathbf{y}}\\) are given as numbers, so this step constructs both from the weather and the biomass data.",
+    "crumbs": [
+      "Steps",
+      "3 · Library and design matrix"
+    ]
+  },
+  {
     "objectID": "03-design.html#drivers",
     "href": "03-design.html#drivers",
     "title": "3 · Library and design matrix",
@@ -591,17 +602,6 @@
     "crumbs": [
       "Steps",
       "8 · Build your own"
-    ]
-  },
-  {
-    "objectID": "03-design.html#recap",
-    "href": "03-design.html#recap",
-    "title": "3 · Library and design matrix",
-    "section": "Recap",
-    "text": "Recap\nWe estimate the growth rate of biomass as a linear combination of candidate functions of the drivers,\n\\[\n\\dot{\\mathbf{y}} \\approx \\boldsymbol{\\Theta}\\boldsymbol{\\xi}.\n\\]\nHere \\(\\dot{\\mathbf{y}}\\) holds the growth rates of all days, the library matrix \\(\\boldsymbol{\\Theta}\\) holds the candidate functions evaluated on those days, and \\(\\boldsymbol{\\xi}\\) are the unknown coefficients. Regression can only find \\(\\boldsymbol{\\xi}\\) once \\(\\boldsymbol{\\Theta}\\) and \\(\\dot{\\mathbf{y}}\\) are given as numbers, so this step constructs both from the weather and the biomass data.",
-    "crumbs": [
-      "Steps",
-      "3 · Library and design matrix"
     ]
   }
 ]
