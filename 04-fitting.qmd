@@ -335,7 +335,7 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
 {
   const all = Object.values(hyper.methods);
   const reach = d3.max(all.flatMap(m => m.effect.flat(2).map(Math.abs)));
-  const rmse = [d3.min(all.flatMap(m => m.rmse)), 0.8];   // cap: very large penalties are off scale
+  const rmse = d3.extent(all.flatMap(m => m.rmse));
   const band = 5, n = shown.length;
   const key = (term, name) => term + "|" + name;
   const domain = hyper.terms.flatMap(term => [...shown.map(name => key(term, name)), key(term, "")]);

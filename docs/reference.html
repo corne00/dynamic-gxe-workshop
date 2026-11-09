@@ -322,7 +322,7 @@ window.Quarto = {
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>make_drivers(wx)</code></td>
+<td><code>make_drivers(weather)</code></td>
 <td>standardised drivers <code>U[year, day, driver]</code></td>
 </tr>
 <tr class="even">
@@ -330,12 +330,12 @@ window.Quarto = {
 <td>library <code>Theta[year, day, term]</code></td>
 </tr>
 <tr class="odd">
-<td><code>extra_terms(wx, exprs)</code>, <code>bind_terms(Theta, extra)</code></td>
+<td><code>extra_terms(weather, exprs)</code>, <code>bind_terms(Theta, extra)</code></td>
 <td>extra library terms from expressions of the raw weather</td>
 </tr>
 <tr class="even">
-<td><code>with_traits(wx, traj, genotype, vars)</code></td>
-<td>adds measured states (<code>"lai"</code>, <code>"biomass"</code>) to the weather as day series, so they can be drivers or appear in expressions</td>
+<td><code>with_traits(weather, traj, genotype, vars)</code></td>
+<td>adds measured states (<code>"LAI"</code>, <code>"biomass"</code>) to the weather as day series, so they can be drivers or appear in expressions</td>
 </tr>
 <tr class="odd">
 <td><code>make_trajectories(traj, drv, var)</code></td>
@@ -900,7 +900,7 @@ window.Quarto = {
       &nbsp;
     <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/reference.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
-<p>C. Verburg · TU Delft · CropXR</p>
+<p>C. Verburg · TU Delft · CropXR <a href="https://corne00.github.io/dynamic-gxe-workshop/"><img src="images/qr.svg" class="footer-qr img-fluid" alt="QR code to the workshop website"></a></p>
 </div>
   </div>
 </footer>

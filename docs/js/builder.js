@@ -441,7 +441,7 @@ const Builder = (() => {
   function traitSeries(data, g, name) {
     const key = `${g}|${name}`;
     if (traitCache.has(key)) return traitCache.get(key);
-    const source = name === "lai" ? data.L[g] : data.Y[g];
+    const source = name === "LAI" ? data.L[g] : data.Y[g];
     const D = data.U[0].length;
     const raw = source.map((rec) => {
       const day = new Float64Array(D);
@@ -508,7 +508,7 @@ const Builder = (() => {
     const names = base.names.concat(extra.map((e) => e.name));
     const K = specs.length + extra.length, S = data.years.length;
     const col = selected.map((d) => (d === trait ? -1 : data.drivers.indexOf(d)));
-    const targetSeries = target === "lai" ? data.L[g] : data.Y[g];
+    const targetSeries = target === "LAI" ? data.L[g] : data.Y[g];
     const years = [];
     const lib = (y, d) => {
       const u = col.map((c) => (c < 0 ? series.std[y][d] : data.U[y][d][c]));
@@ -623,7 +623,7 @@ const Builder = (() => {
   // its own equation, fitted with the same method; the system is integrated with
   // fixed-step RK4 (a quarter of a day), and a held-out year whose solution exceeds
   // ten times the largest observed value is reported as diverged.
-  const stateSeries = (data, g, name) => (name === "lai" ? data.L[g] : data.Y[g]);
+  const stateSeries = (data, g, name) => (name === "LAI" ? data.L[g] : data.Y[g]);
 
   function stateScale(series) {
     let n = 0, sum = 0, sq = 0;
@@ -764,7 +764,7 @@ const Builder = (() => {
   }
 
   // Fit to all years, validate leaving one year out, for one or two coupled states.
-  // config: states (["biomass"], ["lai"] or both), feedback, drivers (with the
+  // config: states (["biomass"], ["LAI"] or both), feedback, drivers (with the
   // measured trait, if any), trait, degree, pairs, extras, method, value.
   function runModel(data, g, config) {
     const states = config.states, feedback = !!config.feedback;

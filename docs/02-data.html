@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-9088ff574c0dff7a49483a0e1a1bc527.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -305,9 +305,9 @@ window.Quarto = {
 <div class="tab-content" data-group="language">
 <div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>wx <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>weather <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_weather.csv"</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>traj <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(wx, <span class="dv">3</span>)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(weather, <span class="dv">3</span>)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(traj, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
@@ -317,9 +317,9 @@ window.Quarto = {
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> dgxe <span class="im">import</span> <span class="op">*</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>wx <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_weather.csv"</span>)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>weather <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_weather.csv"</span>)</span>
 <span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>traj <span class="op">=</span> pd.read_csv(<span class="st">"data/narrabri_biomass.csv.gz"</span>)</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(wx.head(<span class="dv">3</span>))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(weather.head(<span class="dv">3</span>))</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(traj.head(<span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
@@ -332,7 +332,7 @@ window.Quarto = {
 3 1983  17  6.0 15.5    0  13 10 11.169 267.50 0.7838</code></pre>
 </div>
 <div class="cell-output cell-output-stdout">
-<pre><code>  genotype year das biomass   lai
+<pre><code>  genotype year das biomass   LAI
 1     g001 1983  15  0.0164 0.039
 2     g001 1983  16  0.0190 0.043
 3     g001 1983  17  0.0228 0.049</code></pre>
@@ -397,15 +397,22 @@ window.Quarto = {
   <div class="covmap-new" style="top:30px"><b>TT</b> thermal time<br>\(\sum_{s \le t} \max\left(\tfrac{T_{\min,s} + T_{\max,s}}{2}, 0\right)\)</div>
   <div class="covmap-new" style="top:126px"><b>RAW</b> relative available water<br>\(W_t / W_{\max}\), bucket of rain and \(\mathrm{ET}_0\)</div>
 </div>
-<p>Thermal time is a measure for the development of the plant, and is computed as the sum of the daily mean temperature, here with base temperature 0<span class="math inline">\(^\circ\)</span>C, over the days since sowing:</p>
+<p>Thermal time is a measure of the development of the plant, and is computed as the sum of the daily mean temperature, here with base temperature 0<span class="math inline">\(^\circ\)</span>C, over the days since sowing:</p>
 <p><span class="math display">\[
 \mathrm{TT}_t = \sum_{s \le t} \max\left(\frac{T_{\min,s} + T_{\max,s}}{2},\, 0\right).
 \]</span></p>
-<p>Relative available water is approximated by a simple soil moisture model: rain adds water and a fraction <span class="math inline">\(k\)</span> of the reference evapotranspiration <span class="math inline">\(\mathrm{ET}_0\)</span> removes it, up to the capacity <span class="math inline">\(W_{\max}\)</span> of the soil,</p>
+<p>Relative available water is approximated by a simple soil moisture model: rain <span class="math inline">\(P_t\)</span> adds water and a fraction <span class="math inline">\(k\)</span> of the reference evapotranspiration <span class="math inline">\(\mathrm{ET}_0\)</span> removes it, up to the capacity <span class="math inline">\(W_{\max}\)</span> of the soil,</p>
 <p><span class="math display">\[
-W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
+W_t =
+\begin{cases}
+0 &amp; \text{if } W_{t-1} + P_t - k\,\mathrm{ET}_{0,t} &lt; 0, \\
+W_{\max} &amp; \text{if } W_{t-1} + P_t - k\,\mathrm{ET}_{0,t} &gt; W_{\max}, \\
+W_{t-1} + P_t - k\,\mathrm{ET}_{0,t} &amp; \text{otherwise,}
+\end{cases}
+\qquad
+\mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 \]</span></p>
-<p>The maximum available water capacity <span class="math inline">\(W_{\max} = 217.5\)</span> mm is a property of the soil, and the initial available water <span class="math inline">\(W_0 = 175\)</span> mm is a property of the season. In this formula. Furthermore, <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and <span class="math inline">\(k = 0.8\)</span>.</p>
+<p>The maximum available water capacity <span class="math inline">\(W_{\max} = 217.5\)</span> mm is a property of the soil, and the initial available water <span class="math inline">\(W_0 = 175\)</span> mm is a property of the season. Furthermore, <span class="math inline">\(\mathrm{ET}_0\)</span> is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and <span class="math inline">\(k = 0.8\)</span>.</p>
 <p>So, in total we use eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.</p>
 </section>
 <section id="variables-over-the-years" class="level2">
@@ -417,14 +424,14 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"Tmin"</span>, <span class="st">"Tmax"</span>, <span class="st">"Rain"</span>, <span class="st">"RAD"</span>, <span class="st">"VP"</span>, <span class="st">"DL"</span>, <span class="st">"TT"</span>, <span class="st">"RAW"</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>weather <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> wx<span class="sc">$</span>year, <span class="at">das =</span> wx<span class="sc">$</span>das,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">variable =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="at">each =</span> <span class="fu">nrow</span>(wx)), vars),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="fu">unlist</span>(wx[vars])</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>weather_long <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">year =</span> weather<span class="sc">$</span>year, <span class="at">das =</span> weather<span class="sc">$</span>das,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">variable =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(vars, <span class="at">each =</span> <span class="fu">nrow</span>(weather)), vars),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="fu">unlist</span>(weather[vars])</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>shown <span class="ot">&lt;-</span> weather[weather<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>shown <span class="ot">&lt;-</span> weather_long[weather_long<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
 <span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(weather, <span class="fu">aes</span>(das, value, <span class="at">group =</span> year)) <span class="sc">+</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(weather_long, <span class="fu">aes</span>(das, value, <span class="at">group =</span> year)) <span class="sc">+</span></span>
 <span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
 <span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">data =</span> shown, <span class="fu">aes</span>(<span class="at">colour =</span> <span class="fu">factor</span>(year)), <span class="at">linewidth =</span> <span class="fl">0.7</span>) <span class="sc">+</span></span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>variable, <span class="at">scales =</span> <span class="st">"free_y"</span>, <span class="at">nrow =</span> <span class="dv">2</span>) <span class="sc">+</span></span>
@@ -439,10 +446,10 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>years <span class="op">=</span> [<span class="dv">1984</span>, <span class="dv">1998</span>, <span class="dv">2008</span>]</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="fl">4.5</span>), sharex<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, name <span class="kw">in</span> <span class="bu">zip</span>(axes.flat, VARS):</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> year, g <span class="kw">in</span> wx.groupby(<span class="st">"year"</span>):</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> year, g <span class="kw">in</span> weather.groupby(<span class="st">"year"</span>):</span>
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        ax.plot(g[<span class="st">"das"</span>], g[name], color<span class="op">=</span>GREY, lw<span class="op">=</span><span class="fl">0.25</span>)</span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> year, colour <span class="kw">in</span> <span class="bu">zip</span>(years, [BLUE, CYAN, BURGUNDY]):</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        g <span class="op">=</span> wx[wx[<span class="st">"year"</span>] <span class="op">==</span> year]</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        g <span class="op">=</span> weather[weather[<span class="st">"year"</span>] <span class="op">==</span> year]</span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        ax.plot(g[<span class="st">"das"</span>], g[name], color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">0.9</span>, label<span class="op">=</span>year)</span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    ax.set_title(name, loc<span class="op">=</span><span class="st">"left"</span>)</span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>, <span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
@@ -469,8 +476,8 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <div class="tab-content" data-group="language">
 <div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>standardised <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">scale</span>(wx[vars]))</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>corr <span class="ot">&lt;-</span> <span class="fu">cor</span>(wx[vars])</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>standardised <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">scale</span>(weather[vars]))</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>corr <span class="ot">&lt;-</span> <span class="fu">cor</span>(weather[vars])</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>panel <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">row =</span> <span class="fu">seq_along</span>(vars), <span class="at">col =</span> <span class="fu">seq_along</span>(vars))</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>label <span class="ot">&lt;-</span> <span class="cf">function</span>(i) <span class="fu">factor</span>(vars[i], vars)</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
@@ -505,7 +512,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
 <span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_text</span>(</span>
 <span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> lower, <span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">sprintf</span>(<span class="st">"%.2f"</span>, rho)), <span class="at">x =</span> <span class="dv">0</span>, <span class="at">y =</span> <span class="dv">0</span>,</span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>        <span class="at">size =</span> <span class="fl">2.6</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>        <span class="at">size =</span> <span class="fl">3.4</span></span>
 <span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
 <span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_point</span>(</span>
 <span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> upper, <span class="fu">aes</span>(x, y), <span class="at">size =</span> <span class="fl">0.15</span>, <span class="at">alpha =</span> <span class="fl">0.4</span>,</span>
@@ -541,7 +548,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.stats <span class="im">import</span> gaussian_kde</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>colours <span class="op">=</span> LinearSegmentedColormap.from_list(<span class="st">"dgxe"</span>, [BURGUNDY, <span class="st">"white"</span>, BLUE])</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>standardised <span class="op">=</span> (wx[VARS] <span class="op">-</span> wx[VARS].mean()) <span class="op">/</span> wx[VARS].std()</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>standardised <span class="op">=</span> (weather[VARS] <span class="op">-</span> weather[VARS].mean()) <span class="op">/</span> weather[VARS].std()</span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>corr <span class="op">=</span> standardised.corr()</span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>sample <span class="op">=</span> standardised.sample(<span class="dv">600</span>, random_state<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>grid <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">3.5</span>, <span class="fl">3.5</span>, <span class="dv">200</span>)</span>
@@ -563,7 +570,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
 <span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>            rho <span class="op">=</span> corr.iloc[i, j]</span>
 <span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>            ax.set_facecolor(colours((rho <span class="op">+</span> <span class="dv">1</span>) <span class="op">/</span> <span class="dv">2</span>))</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            ax.text(<span class="dv">0</span>, <span class="dv">0</span>, <span class="ss">f"</span><span class="sc">{</span>rho<span class="sc">:.2f}</span><span class="ss">"</span>, ha<span class="op">=</span><span class="st">"center"</span>, va<span class="op">=</span><span class="st">"center"</span>, fontsize<span class="op">=</span><span class="dv">7</span>)</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>            ax.text(<span class="dv">0</span>, <span class="dv">0</span>, <span class="ss">f"</span><span class="sc">{</span>rho<span class="sc">:.2f}</span><span class="ss">"</span>, ha<span class="op">=</span><span class="st">"center"</span>, va<span class="op">=</span><span class="st">"center"</span>, fontsize<span class="op">=</span><span class="dv">9</span>)</span>
 <span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> i <span class="op">==</span> <span class="dv">0</span>:</span>
 <span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>            ax.set_title(VARS[j], fontsize<span class="op">=</span><span class="dv">9</span>, pad<span class="op">=</span><span class="dv">3</span>)</span>
 <span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> j <span class="op">==</span> <span class="dv">0</span>:</span>
@@ -592,7 +599,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 <div class="tab-content" data-group="language">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(wx)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>drv <span class="ot">&lt;-</span> <span class="fu">make_drivers</span>(weather)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>tr <span class="ot">&lt;-</span> <span class="fu">make_trajectories</span>(traj, drv)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>highlighted <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>) <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> traj[traj<span class="sc">$</span>year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1984</span>, <span class="dv">1990</span>, <span class="dv">1998</span>, <span class="dv">2008</span>), ]</span>
@@ -611,7 +618,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
 </div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(wx)</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>drv <span class="op">=</span> make_drivers(weather)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>tr <span class="op">=</span> make_trajectories(traj, drv)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>highlighted <span class="op">=</span> [<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>]    <span class="co"># lowest, median, highest final biomass</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>days <span class="op">=</span> np.arange(tr.Y.shape[<span class="dv">2</span>]) <span class="op">+</span> tr.das0</span>
@@ -1143,7 +1150,7 @@ W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr
       &nbsp;
     <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/02-data.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></div>
     <div class="nav-footer-right">
-<p>C. Verburg · TU Delft · CropXR</p>
+<p>C. Verburg · TU Delft · CropXR <a href="https://corne00.github.io/dynamic-gxe-workshop/"><img src="images/qr.svg" class="footer-qr img-fluid" alt="QR code to the workshop website"></a></p>
 </div>
   </div>
 </footer>

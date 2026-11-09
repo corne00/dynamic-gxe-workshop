@@ -1,6 +1,6 @@
 // The fitted equation as LaTeX: dy/dt = c0 + c1 term1 + ..., typeset with MathJax.
 const Equation = (() => {
-  const pretty = {lai: "LAI", biomass: "B"};
+  const pretty = {LAI: "LAI", biomass: "B"};
   const word = (name) => `\\mathrm{${(pretty[name] || name).replace(/_/g, "\\_")}}`;
   // "TT^2*RAW" -> \mathrm{TT}^{2}\,\mathrm{RAW}
   function term(name) {
