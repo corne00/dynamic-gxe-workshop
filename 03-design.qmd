@@ -35,7 +35,7 @@ traj = pd.read_csv("data/narrabri_biomass.csv.gz")
 
 ## Drivers
 
-The library is built from all eight variables of step 2, `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT` and `RAW`, standardised to mean 0 and standard deviation 1. They are denoted $u_1, \dots, u_8$. A subset can be chosen with the argument `drivers` of `make_drivers`. The response does not enter this step.
+The library is built from all eight variables of step 2, `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT` and `RAW`, standardised to mean 0 and standard deviation 1. They are here denoted as $u_1, \dots, u_8$. 
 
 ```{r}
 #| echo: false
@@ -171,7 +171,7 @@ dim(tr$Y)
 
 ## Design matrix
 
-For one genotype, the rows of $\boldsymbol{\Theta}$ are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$. The vector $\dot{\mathbf{y}}$ holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (`numpy.diff` in Python, `diff` in R),
+For one genotype, the rows of $\boldsymbol{\Theta}$ are the days of all years and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day $i$ drives the change from observation $i-1$ to $i$. The vector $\dot{\mathbf{y}}$ holds the growth rate estimates for days $i$:
 
 $$
 \dot y_i = \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t},

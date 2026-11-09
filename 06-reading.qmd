@@ -14,7 +14,7 @@ This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv
 
 ## Fitted equations
 
-For interpretation, the sparse model (STLSQ) of every genotype is fitted to all years. The coefficients of the median genotype (`g114`) are
+For interpretation, the sparse model (STLSQ) of every genotype is fitted to all years. The coefficients of genotype `g114` are
 
 ::: {.panel-tabset group="language"}
 
@@ -44,14 +44,14 @@ print(coefs["g114"].round(4))
 #| label: 06-1-run
 #| echo: false
 fit_genotype <- function(g) {
-  design <- make_design(Theta, tr, g)
-  fit_stlsq(design$Theta, design$dy)
+    design <- make_design(Theta, tr, g)
+    fit_stlsq(design$Theta, design$dy)
 }
 coefs <- sapply(tr$genotypes, fit_genotype)
 round(coefs[, "g114"], 4)
 ```
 
-Terms with a coefficient of zero were removed. Written out for `g114`, with the standardised drivers,
+Written out for `g114`, with the standardised drivers,
 
 ```{r}
 #| echo: false
@@ -102,19 +102,21 @@ fig.tight_layout()
 #| fig-height: 2.8
 n_days <- dim(Theta)[2]
 rate_y <- function(y) cbind(1, Theta[y, , ]) %*% coefs[, "g114"]
-rates <- data.frame(das = rep(1:n_days + tr$das0 - 1, length(tr$years)),
-                    year = rep(tr$years, each = n_days),
-                    rate = unlist(lapply(seq_along(tr$years), rate_y)))
+rates <- data.frame(
+    das = rep(1:n_days + tr$das0 - 1, length(tr$years)),
+    year = rep(tr$years, each = n_days),
+    rate = unlist(lapply(seq_along(tr$years), rate_y))
+)
 rates <- rates[rates$das <= tr$das0 + max(tr$nend) - 1, ]
 shown <- rates[rates$year %in% c(1984, 1998, 2008), ]
 
 ggplot(rates, aes(das, rate, group = year)) +
-  geom_line(colour = "#D1D5DB", linewidth = 0.3) +
-  geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.8) +
-  scale_colour_dgxe("blue", "cyan", "burgundy") +
-  labs(x = "days after sowing", y = "growth rate (t/ha/day)") +
-  theme_dgxe() +
-  legend_top()
+    geom_line(colour = "#D1D5DB", linewidth = 0.3) +
+    geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.8) +
+    scale_colour_dgxe("blue", "cyan", "burgundy") +
+    labs(x = "days after sowing", y = "growth rate (t/ha/day)") +
+    theme_dgxe() +
+    legend_top()
 ```
 
 For this additive library the rate is a sum of one function per driver, so its contributions can be separated. For year 1998:
@@ -159,27 +161,31 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 2.8
 contribution <- function(driver) {
-  terms <- grep(paste0("^", driver), dimnames(Theta)[[3]])
-  Theta[match(1998, tr$years), , terms] %*% coefs[1 + terms, "g114"]
+    terms <- grep(paste0("^", driver), dimnames(Theta)[[3]])
+    Theta[match(1998, tr$years), , terms] %*% coefs[1 + terms, "g114"]
 }
 palette <- c("#014E81", "#00A6D6", "#8B1E3F", "#469C2A", "#6F1D77", "#EF60A3", "#00A390", "#9CA3AF", "#1F2937")
 parts <- sapply(drv$drivers, contribution)
 contributions <- data.frame(
-  das = rep(1:n_days + tr$das0 - 1, ncol(parts) + 1),
-  part = factor(rep(c(drv$drivers, "total"), each = n_days),
-                c(drv$drivers, "total")),
-  value = c(parts, coefs[1, "g114"] + rowSums(parts)))
+    das = rep(1:n_days + tr$das0 - 1, ncol(parts) + 1),
+    part = factor(
+        rep(c(drv$drivers, "total"), each = n_days),
+        c(drv$drivers, "total")
+    ),
+    value = c(parts, coefs[1, "g114"] + rowSums(parts))
+)
 contributions <- contributions[
-  contributions$das <= tr$das0 + tr$nend["g114", match(1998, tr$years)], ]
+    contributions$das <= tr$das0 + tr$nend["g114", match(1998, tr$years)],
+]
 
 ggplot(contributions, aes(das, value, colour = part, linewidth = part)) +
-  geom_hline(yintercept = 0, colour = "#9CA3AF", linewidth = 0.3) +
-  geom_line() +
-  scale_colour_manual(values = palette) +
-  scale_linewidth_manual(values = c(rep(0.6, ncol(parts)), 1.1)) +
-  labs(x = "days after sowing", y = "contribution to growth rate (t/ha/day)") +
-  theme_dgxe() +
-  legend_top()
+    geom_hline(yintercept = 0, colour = "#9CA3AF", linewidth = 0.3) +
+    geom_line() +
+    scale_colour_manual(values = palette) +
+    scale_linewidth_manual(values = c(rep(0.6, ncol(parts)), 1.1)) +
+    labs(x = "days after sowing", y = "contribution to growth rate (t/ha/day)") +
+    theme_dgxe() +
+    legend_top()
 ```
 
 The growth rate (total) is the sum of the eight contributions and the constant term (not shown).
@@ -302,22 +308,27 @@ curves = pd.concat(ale_genotype(g, j)
 #| label: 06-5-run
 #| echo: false
 predictor <- function(coef, pairs = FALSE) {
-  rate <- function(model, newdata) {
-    Theta_new <- library_matrix(as.matrix(newdata), pairs = pairs)
-    as.vector(cbind(1, Theta_new) %*% model)
-  }
-  Predictor$new(coef, data = observed, predict.function = rate)
+    rate <- function(model, newdata) {
+        Theta_new <- library_matrix(as.matrix(newdata), pairs = pairs)
+        as.vector(cbind(1, Theta_new) %*% model)
+    }
+    Predictor$new(coef, data = observed, predict.function = rate)
 }
 
 natural <- function(z, j) z * drv$scale[j] + drv$center[j]
 ale_genotype <- function(g, j) {
-  effect <- FeatureEffect$new(predictor(coefs[, g]), drv$drivers[j],
-                              method = "ale", grid.size = 24)$results
-  data.frame(genotype = g, driver = factor(drv$drivers[j], drv$drivers),
-             x = natural(effect[[drv$drivers[j]]], j), effect = effect$.value)
+    effect <- FeatureEffect$new(predictor(coefs[, g]), drv$drivers[j],
+        method = "ale", grid.size = 24
+    )$results
+    data.frame(
+        genotype = g, driver = factor(drv$drivers[j], drv$drivers),
+        x = natural(effect[[drv$drivers[j]]], j), effect = effect$.value
+    )
 }
-grid_cells <- expand.grid(g = tr$genotypes, j = seq_along(drv$drivers),
-                     stringsAsFactors = FALSE)
+grid_cells <- expand.grid(
+    g = tr$genotypes, j = seq_along(drv$drivers),
+    stringsAsFactors = FALSE
+)
 ```
 
 ```{r}
@@ -373,24 +384,30 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 9
 #| fig-width: 7.2
-highlighted <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
+highlighted <- c("g194", "g114", "g048") # lowest, median, highest final biomass
 rug <- do.call(rbind, lapply(seq_along(drv$drivers), function(j) {
-  data.frame(driver = factor(drv$drivers[j], drv$drivers), x = natural(observed[, j], j))
+    data.frame(driver = factor(drv$drivers[j], drv$drivers), x = natural(observed[, j], j))
 }))
 
 ggplot(curves, aes(x, effect, group = genotype)) +
-  geom_hline(yintercept = 0, colour = "#9CA3AF", linewidth = 0.3) +
-  geom_line(colour = "#D1D5DB", linewidth = 0.25) +
-  geom_line(data = curves[curves$genotype %in% highlighted, ],
-            aes(colour = genotype), linewidth = 0.8) +
-  geom_rug(data = rug, aes(x = x), inherit.aes = FALSE, sides = "b",
-           alpha = 0.03) +
-  facet_wrap(~driver, ncol = 2, scales = "free_x") +
-  scale_colour_dgxe("burgundy", "cyan", "blue") +
-  labs(x = "driver value (original units)",
-       y = "effect on growth rate (t/ha/day)") +
-  theme_dgxe() +
-  legend_top()
+    geom_hline(yintercept = 0, colour = "#9CA3AF", linewidth = 0.3) +
+    geom_line(colour = "#D1D5DB", linewidth = 0.25) +
+    geom_line(
+        data = curves[curves$genotype %in% highlighted, ],
+        aes(colour = genotype), linewidth = 0.8
+    ) +
+    geom_rug(
+        data = rug, aes(x = x), inherit.aes = FALSE, sides = "b",
+        alpha = 0.03
+    ) +
+    facet_wrap(~driver, ncol = 2, scales = "free_x") +
+    scale_colour_dgxe("burgundy", "cyan", "blue") +
+    labs(
+        x = "driver value (original units)",
+        y = "effect on growth rate (t/ha/day)"
+    ) +
+    theme_dgxe() +
+    legend_top()
 ```
 
 The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the year, not a response to temperature. Thermal time and day length are correlated at 0.97 and are best read together.
@@ -464,17 +481,17 @@ design2 <- make_design(Theta2, tr, "g114")
 pred2 <- predictor(fit_subset(design2$Theta, design2$dy, k = 20, method = "backward"), TRUE)
 
 effects <- function(j) {
-  feature <- drv$drivers[j]
-  ale <- FeatureEffect$new(pred2, feature, "ale", grid.size = 24)$results
-  pdp <- FeatureEffect$new(pred2, feature, "pdp", grid.size = 24)$results
-  pdp$x <- natural(pdp[[feature]], j)
-  pdp$driver <- factor(feature, drv$drivers)
-  pdp$.value <- pdp$.value - mean(pdp$.value)
-  ale$x <- natural(ale[[feature]], j)
-  ale$driver <- pdp$driver[1]
-  pdp[[feature]] <- NULL
-  ale[[feature]] <- NULL
-  list(pdp = pdp, ale = ale)
+    feature <- drv$drivers[j]
+    ale <- FeatureEffect$new(pred2, feature, "ale", grid.size = 24)$results
+    pdp <- FeatureEffect$new(pred2, feature, "pdp", grid.size = 24)$results
+    pdp$x <- natural(pdp[[feature]], j)
+    pdp$driver <- factor(feature, drv$drivers)
+    pdp$.value <- pdp$.value - mean(pdp$.value)
+    ale$x <- natural(ale[[feature]], j)
+    ale$driver <- pdp$driver[1]
+    pdp[[feature]] <- NULL
+    ale[[feature]] <- NULL
+    list(pdp = pdp, ale = ale)
 }
 parts <- lapply(1:2, effects)
 ```
@@ -511,17 +528,20 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 3
 bind <- function(name) do.call(rbind, lapply(parts, `[[`, name))
-pdp <- bind("pdp"); ale <- bind("ale")
+pdp <- bind("pdp")
+ale <- bind("ale")
 
 ggplot(pdp, aes(x, .value)) +
-  geom_line(aes(colour = "partial dependence"), linewidth = 0.9) +
-  geom_line(data = ale, aes(y = .value, colour = "ALE"), linewidth = 0.9,
-            linetype = 2) +
-  facet_wrap(~driver, scales = "free_x") +
-  scale_colour_dgxe("blue", "burgundy") +
-  labs(x = "driver value", y = "effect on growth rate (t/ha/day)") +
-  theme_dgxe() +
-  legend_top()
+    geom_line(aes(colour = "partial dependence"), linewidth = 0.9) +
+    geom_line(
+        data = ale, aes(y = .value, colour = "ALE"), linewidth = 0.9,
+        linetype = 2
+    ) +
+    facet_wrap(~driver, scales = "free_x") +
+    scale_colour_dgxe("blue", "burgundy") +
+    labs(x = "driver value", y = "effect on growth rate (t/ha/day)") +
+    theme_dgxe() +
+    legend_top()
 ```
 
 The two curves differ because of the interactions. Partial dependence also evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a year with high thermal time, whereas ALE does not.

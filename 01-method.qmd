@@ -4,9 +4,7 @@ title: "1 · Method"
 
 ## Growth is dynamic
 
-Crop growth responds to the environment over time. Each day, the weather sets a growth rate through the response of the crop, and the biomass at any day is the accumulation of the daily growth since sowing. Genotypes respond differently, so the same year gives different biomass trajectories, and the ranking of genotypes can change from one year to the next.
-
-The figure below is a toy illustration. Three genotypes have a temperature response with an optimum and an upper limit, and they grow in a year of Narrabri weather. Select one of three contrasting years, move the day, and change the responses to see how the trajectories change. The responses are assumed here; in the workshop they are learned from data.
+Crop growth responds to the environment over time. Furthermore, we know that genotypes differ in their response to the environment. The figure below shows the growth of three genotypes in three years of weather. The best way to understand the differences between genotypes is to look at their response functions, which describe how the growth rate depends on the environment. The goal of this workshop is to learn these response functions from data.
 
 ```{ojs}
 //| echo: false
@@ -83,8 +81,6 @@ toy = {
 }
 ```
 
-The accumulated growth of each genotype follows from its response to the temperature of each day. This chain, from environment through response to growth rate and biomass, is what we want to learn from data, and the mathematical way to describe it is a system of ordinary differential equations.
-
 ## Model
 
 Let $\mathbf{y}(t)$ denote the state of the crop (for example biomass or leaf area index) and $\mathbf{u}(t) = (u_1(t), \dots, u_m(t))$ the environmental drivers. The growth of the crop is described by a system of ordinary differential equations:
@@ -99,19 +95,19 @@ $$
 \frac{dy}{dt} = r(\mathbf{y}, \mathbf{u}) \approx \sum_{j=1}^{K} \xi_j\,\theta_j(\mathbf{y}, \mathbf{u}) = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \boldsymbol{\xi},
 $$
 
-where most coefficients $\xi_j$ are expected to be zero. The library contains candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients $\boldsymbol{\xi}$ are estimated from the data by regression.
+where most coefficients $\xi_j$ are expected to be zero (i.e., not all the candidate functions are necessary to explain the growth rate). The library contains candidate functions (inspired by crop physiology) that may be relevant to explain the growth rate. Furthermore, we can include flexible functions of the drivers, for example splines or polynomials, to capture unknown relationships. The coefficients $\boldsymbol{\xi}$ are estimated from the data by regression.
 
 ![Schematic visualization of the methodology. Environmental drivers $U$ and the crop state $Y$ are measured over time. The estimated growth rate of $Y$ is regressed on a library $\Theta(Y, U)$ of candidate functions; a sparse coefficient matrix $\Xi$ selects the terms of the equation. Figure from our preprint (Verburg, Heinlein, van Eeuwijk and Budko, 2026), [Physiology-Informed Sparse Identification of Dynamic Crop Models](https://arxiv.org/pdf/2610.18920v1).](images/method_overview.png){width=100%}
 
-## Regression
+## From data to a regression problem
 
-Let $y_i = y(t_i)$ be the observation at the end of day $i$, with time step $\Delta t$ (one day). The weather of day $i$ acts during that day, so its growth rate belongs to the middle of the day, $t_{i-1/2} = t_i - \Delta t/2$. It is estimated from the two records enclosing the day,
+Let $y_i = y(t_i)$ be the observation at the end of day $i$, with time step $\Delta t$ (one day). We can estimate the growth rate $\dot y_i$ of the state $y$ in the middle of day $i$ by the slope of the line through the observations at the start and end of day $i$:
 
 $$
 \dot y_i := \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t}.
 $$
 
-The first observation of a trajectory has no earlier observation and gives no growth rate. Routines for this are available in standard packages (`numpy.diff` in Python, `diff` in R).
+Routines for this are available in standard packages (`numpy.diff` in Python, `diff` in R). For noisy data, more advanced methods can be used to estimate the derivative, for example smoothing splines.
 
 ![Observed biomass of one genotype in one year (a). The box is enlarged in (b): the slope of the line through the observations at the start and end of day $i$ estimates $\dot y_i$, the growth rate in the middle of the day. The growth rates of the whole year are shown in (c); the regression is performed on these.](images/concept_derivative.png){width=100%}
 
@@ -142,7 +138,7 @@ $$
 }
 $$
 
-The coefficients enter linearly (recall $\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$), so we just need to solve a linear regression problem to estimate them, for example by least squares:
+Note that this is a linear regression problem (recall $\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$), that can be solved by, e.g., ordinary least squares (OLS) regression: 
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 .
@@ -152,7 +148,7 @@ However, any regression method can be used. We will compare several methods in t
 
 ## Making predictions
 
-Given a fitted vector of coefficients $\hat{\boldsymbol{\xi}}$, the drivers $\mathbf{u}(t)$ of a year and an initial state $\mathbf{y}_0$, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice:
+Given a fitted vector of coefficients $\hat{\boldsymbol{\xi}}$, the drivers $\mathbf{u}(t)$ of a year and an initial state $\mathbf{y}_0$, the state is predicted by solving the ODE with the estimated coefficients, using an ODE solver of our choice (for example `scipy.integrate.solve_ivp` in Python or `deSolve::ode` in R):
 
 $$
 \frac{dy}{dt} = \boldsymbol{\theta}(\mathbf{y}, \mathbf{u})^\top \hat{\boldsymbol{\xi}}, \qquad \mathbf{y}(t_0) = \mathbf{y}_0.
@@ -164,7 +160,7 @@ If the library depends on the drivers only, the solution is the integral of the 
 
 ## Dealing with multiple genotypes
 
-Differences between genotypes are captured by a separate regression for each genotype $g = 1, \dots, G$, on its own growth rates and library values (stacked over the environments),
+We can solve the regression problem for each genotype separately, which gives a vector of coefficients $\hat{\boldsymbol{\xi}}^{(g)}$ for each genotype $g$:
 
 $$
 \hat{\boldsymbol{\xi}}^{(g)} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}}^{(g)} - \boldsymbol{\Theta}^{(g)}\boldsymbol{\xi} \rVert_2^2 .

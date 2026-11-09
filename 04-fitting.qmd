@@ -8,16 +8,13 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv`, `Theta` and `tr`. To start here, load them as described on the [Set up](setup.html) page.
-
-
-For one genotype, the data are the growth rates $\dot{\mathbf{y}}$ and the library values $\boldsymbol{\Theta}$ of step 3, and the unknown is the coefficient vector $\boldsymbol{\xi}$:
+So far, we constructed the library of candidate terms $\boldsymbol{\Theta}$ and the growth rates $\dot{\mathbf{y}}$. The next step is to find the coefficients $\boldsymbol{\xi}$ that best explain the growth rates as a linear combination of the terms:
 
 $$
 \dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 $$
 
-Every method maps $(\boldsymbol{\Theta}, \dot{\mathbf{y}})$ to an estimate $\hat{\boldsymbol{\xi}}$, with the intercept first. A method is therefore a function `fit(Theta, dy)`, and methods can be exchanged freely. Genotype `g001` is used here.
+We are free to choose any method to fit the coefficients,. The methods differ in how they handle correlated terms, and in whether they produce sparse equations (with some coefficients set exactly to zero).
 
 ::: {.panel-tabset group="language"}
 
@@ -49,7 +46,7 @@ design <- make_design(Theta, tr, "g001")
 
 ## Least squares
 
-The reference: all terms are used, so there is no sparsity.
+Reference model. OLS does not impose any sparsity.
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
@@ -67,7 +64,7 @@ show_fun("fit_ols", level = 3)
 
 ## Ridge
 
-Shrinks the coefficients towards zero. Correlated terms share their weight, but none is removed.
+Shrinks the coefficients towards zero. This can help to deal with colinearity, but does not produce a sparse equation.
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
@@ -75,7 +72,7 @@ $$
 
 Hyperparameters:
 
-- $\lambda$: strength of the penalty; shrinks the coefficients of correlated terms, but removes none.
+- $\lambda$: strength of the penalty; shrinks the coefficients.
 
 Closed form, with the penalty scaled as in `glmnet`.
 
@@ -87,7 +84,7 @@ show_fun("fit_ridge", level = 3)
 
 ## Lasso
 
-The $\ell_1$ penalty sets coefficients exactly to zero, which gives a sparse equation.
+The $\ell_1$ penalty shrinks the coefficients and sets some to zero, producing a sparse equation.
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
@@ -95,7 +92,7 @@ $$
 
 Hyperparameters:
 
-- $\lambda$: strength of the penalty; larger values set more coefficients to zero.
+- $\lambda$: strength of the penalty.
 
 R: `glmnet`. Python: scikit-learn `ElasticNet`, with the penalty scaled as in `glmnet`.
 
@@ -116,9 +113,7 @@ $$
 Hyperparameters:
 
 - $\lambda$: strength of the penalty.
-- $\alpha$: mix of the two penalties (here 0.5); keeps groups of correlated terms together more readily than the lasso.
-
-Implementation as for the lasso.
+- $\alpha$: mix ratio of the two penalties (here 0.5).
 
 ```{r}
 #| echo: false
@@ -128,7 +123,7 @@ show_fun("fit_glmnet", "fit_enet", level = 3)
 
 ## Best subset
 
-The best model with exactly $k$ terms, found by searching all subsets.
+The best model with exactly $k$ terms, found by searching all subsets. This is the most expensive method, as the number of subsets grows combinatorially with the number of terms.
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
@@ -139,17 +134,15 @@ Algorithm:
 $$
 \begin{array}{ll}
 \textbf{for each } S \subset \{1, \dots, K\} \textbf{ with } |S| = k: & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the terms in } S \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 \\[2pt]
 \quad \mathrm{RSS}(S) \leftarrow \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\hat{\boldsymbol{\xi}}_S \rVert_2^2 & \\[2pt]
-\textbf{return } \hat{\boldsymbol{\xi}}_{S^*} \text{ with } S^* = \arg\min_S \mathrm{RSS}(S) & \text{coefficients outside } S^* \text{ are zero}
+\textbf{return } \hat{\boldsymbol{\xi}}_{S^*} \text{ with } S^* = \arg\min_{S} \mathrm{RSS}(S) 
 \end{array}
 $$
 
 Hyperparameters:
 
 - $k$: number of terms that are kept.
-
-R: `leaps`, which searches all subsets efficiently. Python: computed from the Gram matrix; with $K = 24$ terms the exhaustive search takes about a second per fit, so it is left out of the comparison below.
 
 ```{r}
 #| echo: false
@@ -163,19 +156,17 @@ A greedy alternative to best subset: start with all terms and repeatedly remove 
 
 $$
 \begin{array}{ll}
-S \leftarrow \{1, \dots, K\} & \text{start with all terms} \\[2pt]
+S \leftarrow \{1, \dots, K\}  \\[2pt]
 \textbf{while } |S| > k: & \\[2pt]
-\quad \Delta_j \leftarrow \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \quad \text{for each } j \in S & \text{increase of the error without term } j \\[2pt]
-\quad S \leftarrow S \setminus \{j^*\}, \quad j^* = \arg\min_{j \in S} \Delta_j & \text{remove the least useful term} \\[2pt]
-\textbf{return } \hat{\boldsymbol{\xi}}_S & \text{least squares on } S
+\quad \Delta_j \leftarrow \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \quad \text{for each } j \in S \\[2pt]
+\quad S \leftarrow S \setminus \{j^*\}, \quad j^* = \arg\min_{j \in S} \Delta_j \\[2pt]
+\textbf{return } \hat{\boldsymbol{\xi}}_S 
 \end{array}
 $$
 
 Hyperparameters:
 
-- $k$: number of terms that are kept; terms are removed one at a time, starting from all $K$ terms, until $k$ remain.
-
-The same function as best subset, called with `method = "backward"`; the cost grows only polynomially with the number of terms.
+- $k$: number of terms that are kept.
 
 ```{r}
 #| echo: false
@@ -189,12 +180,12 @@ Sequential thresholded least squares, the algorithm of the original SINDy method
 
 $$
 \begin{array}{ll}
-S \leftarrow \{1, \dots, K\} & \text{start with all terms} \\[2pt]
+S \leftarrow \{1, \dots, K\} \\[2pt]
 \textbf{repeat:} & \\[2pt]
-\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 & \text{least squares on the active terms} \\[2pt]
-\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\dot{\mathbf{y}}\bigr) & \text{keep the terms above the threshold} \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2  \\[2pt]
+\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\dot{\mathbf{y}}\bigr)  \\[2pt]
 \quad \textbf{if } S' = S \text{ or } S' = \emptyset \textbf{ then stop, else } S \leftarrow S' & \\[2pt]
-\textbf{return } \hat{\boldsymbol{\xi}}_S & \text{coefficients outside } S \text{ are zero}
+\textbf{return } \hat{\boldsymbol{\xi}}_S 
 \end{array}
 $$
 
@@ -202,7 +193,6 @@ Hyperparameters:
 
 - $\tau$: threshold on the scaled coefficient $|\hat{\xi}_j|\,s_j$.
 
-Least squares on the active set $S$, so there is no shrinkage.
 
 ```{r}
 #| echo: false
@@ -244,7 +234,7 @@ fits <- sapply(fit_methods, function(fit) fit(design$Theta, design$dy))
 round(fits, 3)
 ```
 
-Each bar is a coefficient, scaled to a common size (coefficient times the standard deviation of the term, relative to that of the growth rate). Terms that a method removed have no bar.
+We visualise the coefficients of the terms for each method on the same scale.
 
 ::: {.panel-tabset group="language"}
 
@@ -285,35 +275,47 @@ fig.tight_layout()
 #| out-width: 600px
 size <- apply(design$Theta, 2, sd) / sd(design$dy)
 effect <- fits[-1, ] * size
-effects <- data.frame(term = factor(rownames(effect), rownames(effect)),
-                   method = factor(rep(colnames(effect), each = nrow(effect)),
-                                   colnames(effect)),
-                   effect = as.vector(effect))
+effects <- data.frame(
+    term = factor(rownames(effect), rownames(effect)),
+    method = factor(
+        rep(colnames(effect), each = nrow(effect)),
+        colnames(effect)
+    ),
+    effect = as.vector(effect)
+)
 effects <- effects[effects$effect != 0, ]
 
 ggplot(effects, aes(term, effect, fill = effect > 0)) +
-  geom_col(width = 0.7) +
-  geom_hline(yintercept = 0, linewidth = 0.3) +
-  scale_fill_manual(values = c(`TRUE` = dgxe[["blue"]],
-                               `FALSE` = dgxe[["burgundy"]]),
-                    guide = "none") +
-  scale_x_discrete(drop = FALSE) +
-  scale_y_continuous(breaks = c(-0.5, 0, 0.5)) +
-  facet_wrap(~method, ncol = 1) +
-  labs(x = NULL, y = "scaled coefficient") +
-  theme_dgxe() +
-  theme(strip.text = element_text(size = 8),
-        axis.text.x = element_text(size = 7, angle = 90, hjust = 1,
-                                   vjust = 0.5))
+    geom_col(width = 0.7) +
+    geom_hline(yintercept = 0, linewidth = 0.3) +
+    scale_fill_manual(
+        values = c(
+            `TRUE` = dgxe[["blue"]],
+            `FALSE` = dgxe[["burgundy"]]
+        ),
+        guide = "none"
+    ) +
+    scale_x_discrete(drop = FALSE) +
+    scale_y_continuous(breaks = c(-0.5, 0, 0.5)) +
+    facet_wrap(~method, ncol = 1) +
+    labs(x = NULL, y = "scaled coefficient") +
+    theme_dgxe() +
+    theme(
+        strip.text = element_text(size = 8),
+        axis.text.x = element_text(
+            size = 7, angle = 90, hjust = 1,
+            vjust = 0.5
+        )
+    )
 ```
 
 :::
 
-The coefficients of correlated terms are not determined individually (powers of one driver, and thermal time and day length, are strongly correlated), so the selected terms differ between methods. The methods are compared by prediction on unseen years in step 5.
+Due to the different ways the methods handle correlated terms, they produce different equations.
 
 ## Exploring a method
 
-Each method has one hyperparameter. Switch genotypes on and off to compare their coefficients (top); the lower panel shows the held-out error for all settings, as the mean over 20 genotypes.
+Here we compare some of the approaches. Switch genotypes on and off to compare their coefficients (top); the lower panel shows the held-out error for all settings, as the mean over 20 genotypes.
 
 ```{ojs}
 //| echo: false

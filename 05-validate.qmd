@@ -8,12 +8,18 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv`, `Theta` and `tr`. To start here, load them as described on the [Set up](setup.html) page.
 
 
 ## Solution
 
-The fitted equation is solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. All years are integrated in one call, each with its own coefficients. The solver needs the drivers at arbitrary times. Biomass is recorded at the end of a day, so the weather of day $j$ drives the interval between observations $j-1$ and $j$. With $t$ counted from the first observation, the value of day $j$ is placed in the middle of that interval, $t = j - \tfrac{3}{2}$, and values in between are interpolated linearly.
+The fitted coefficients $\hat{\boldsymbol{\xi}}$ can be used to predict the biomass trajectory of a genotype in a year, given the drivers of that year:
+
+\begin{align*}
+\dfrac{d\hat y}{dt} &= \boldsymbol{\theta}\bigl(\mathbf{u}(t)\bigr)^\top \hat{\boldsymbol{\xi}},
+\quad \hat y(t_0) = y_0
+\end{align*}
+
+This equation can be solved with a standard ODE solver: `deSolve::ode` (LSODA) in R and `scipy.integrate.solve_ivp` (LSODA) in Python. 
 
 ```{r}
 #| echo: false
@@ -36,7 +42,7 @@ $$
 \end{array}
 $$
 
-Only the drivers of the left-out year enter the prediction. The error is the root-mean-square error (RMSE, t/ha) over whole trajectories, on a fixed day, and at maturity.
+Only the drivers of the left-out year enter the prediction. The error is the root-mean-square error (RMSE, t/ha) over whole trajectories and at maturity.
 
 ```{r}
 #| echo: false
@@ -164,25 +170,37 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 4
 #| fig-width: 5
-last <- cbind(as.vector(row(tr$nend)), as.vector(col(tr$nend)),
-              as.vector(tr$nend) + 1)
-maturity <- data.frame(obs = tr$Y[last], pred = P[last],
-                       year = tr$years[as.vector(col(tr$nend))])
+last <- cbind(
+    as.vector(row(tr$nend)), as.vector(col(tr$nend)),
+    as.vector(tr$nend) + 1
+)
+maturity <- data.frame(
+    obs = tr$Y[last], pred = P[last],
+    year = tr$years[as.vector(col(tr$nend))]
+)
 rmse <- sqrt(mean((maturity$obs - maturity$pred)^2))
 
 ggplot(maturity, aes(obs, pred, colour = year)) +
-  geom_abline(colour = dgxe[["grey"]], linewidth = 0.4) +
-  geom_point(size = 0.7, alpha = 0.5) +
-  annotate("text", x = min(maturity$obs), y = max(maturity$pred), hjust = 0, vjust = 1,
-           size = 3.4, label = sprintf("RMSE %.2f t/ha", rmse)) +
-  scale_colour_gradientn(colours = c(dgxe[["blue"]], dgxe[["cyan"]],
-                                     dgxe[["burgundy"]]),
-                         name = "year") +
-  coord_equal() +
-  labs(x = "APSIM biomass at maturity (t/ha)",
-       y = "predicted biomass (t/ha)") +
-  theme_dgxe() +
-  theme(legend.position = "right")
+    geom_abline(colour = dgxe[["grey"]], linewidth = 0.4) +
+    geom_point(size = 0.7, alpha = 0.5) +
+    annotate("text",
+        x = min(maturity$obs), y = max(maturity$pred), hjust = 0, vjust = 1,
+        size = 3.4, label = sprintf("RMSE %.2f t/ha", rmse)
+    ) +
+    scale_colour_gradientn(
+        colours = c(
+            dgxe[["blue"]], dgxe[["cyan"]],
+            dgxe[["burgundy"]]
+        ),
+        name = "year"
+    ) +
+    coord_equal() +
+    labs(
+        x = "APSIM biomass at maturity (t/ha)",
+        y = "predicted biomass (t/ha)"
+    ) +
+    theme_dgxe() +
+    theme(legend.position = "right")
 ```
 
 ## Comparison of fitting methods
@@ -214,7 +232,7 @@ print(scores.round(3))
 #| eval: false
 #| include: false
 scores <- t(sapply(fit_methods, function(fit) {
-  evaluate(cross_validate(Theta, tr, fit), tr)
+    evaluate(cross_validate(Theta, tr, fit), tr)
 }))
 round(scores, 3)
 ```
@@ -223,7 +241,7 @@ round(scores, 3)
 #| label: 05-6-run
 #| echo: false
 scores <- cached("cv_methods.rds", t(sapply(fit_methods, function(fit) {
-  evaluate(cross_validate(Theta, tr, fit), tr)
+    evaluate(cross_validate(Theta, tr, fit), tr)
 })))
 round(scores, 3)
 ```
@@ -271,8 +289,8 @@ genotypes <- tr$genotypes[seq(1, 199, by = 20)]
 ks <- c(4, 8, 12, 16, 24, 36, 60, 108)
 
 by_k <- data.frame(k = ks, rmse = sapply(ks, function(k) {
-  fit <- function(Theta, dy) fit_subset(Theta, dy, k, "backward")
-  evaluate(cross_validate(Theta2, tr, fit, genotypes), tr)[[1]]
+    fit <- function(Theta, dy) fit_subset(Theta, dy, k, "backward")
+    evaluate(cross_validate(Theta2, tr, fit, genotypes), tr)[[1]]
 }))
 ```
 
@@ -284,8 +302,8 @@ genotypes <- tr$genotypes[seq(1, 199, by = 20)]
 ks <- c(4, 8, 12, 16, 24, 36, 60, 108)
 
 by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k) {
-  fit <- function(Theta, dy) fit_subset(Theta, dy, k, "backward")
-  evaluate(cross_validate(Theta2, tr, fit, genotypes), tr)[[1]]
+    fit <- function(Theta, dy) fit_subset(Theta, dy, k, "backward")
+    evaluate(cross_validate(Theta2, tr, fit, genotypes), tr)[[1]]
 })))
 ```
 
@@ -317,9 +335,11 @@ fig.tight_layout()
 #| fig-height: 2.8
 #| fig-width: 5
 ggplot(by_k, aes(k, rmse)) +
-  geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
-  geom_point(colour = dgxe[["blue"]], size = 2) +
-  labs(x = "number of terms (108-term library)",
-       y = "held-out trajectory RMSE (t/ha)") +
-  theme_dgxe()
+    geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
+    geom_point(colour = dgxe[["blue"]], size = 2) +
+    labs(
+        x = "number of terms (108-term library)",
+        y = "held-out trajectory RMSE (t/ha)"
+    ) +
+    theme_dgxe()
 ```

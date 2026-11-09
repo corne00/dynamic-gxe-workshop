@@ -83,7 +83,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-918b06923b7691ebdedce6ce200dfec3.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-1647d6df89813745f8a474c86079a57d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-9088ff574c0dff7a49483a0e1a1bc527.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -312,7 +312,7 @@ window.Quarto = {
 </div>
 <section id="drivers" class="level2">
 <h2 class="anchored" data-anchor-id="drivers">Drivers</h2>
-<p>The library is built from all eight variables of step 2, <code>Tmin</code>, <code>Tmax</code>, <code>Rain</code>, <code>RAD</code>, <code>VP</code>, <code>DL</code>, <code>TT</code> and <code>RAW</code>, standardised to mean 0 and standard deviation 1. They are denoted <span class="math inline">\(u_1, \dots, u_8\)</span>. A subset can be chosen with the argument <code>drivers</code> of <code>make_drivers</code>. The response does not enter this step.</p>
+<p>The library is built from all eight variables of step 2, <code>Tmin</code>, <code>Tmax</code>, <code>Rain</code>, <code>RAD</code>, <code>VP</code>, <code>DL</code>, <code>TT</code> and <code>RAW</code>, standardised to mean 0 and standard deviation 1. They are here denoted as <span class="math inline">\(u_1, \dots, u_8\)</span>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
@@ -552,7 +552,7 @@ u_1(t_N) &amp; u_1^2(t_N) &amp; u_1^3(t_N) &amp; \cdots &amp; u_8(t_N) &amp; u_8
 </section>
 <section id="design-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="design-matrix">Design matrix</h2>
-<p>For one genotype, the rows of <span class="math inline">\(\boldsymbol{\Theta}\)</span> are the days of all years (all except the first record of each year) and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day <span class="math inline">\(i\)</span> drives the change from observation <span class="math inline">\(i-1\)</span> to <span class="math inline">\(i\)</span>. The vector <span class="math inline">\(\dot{\mathbf{y}}\)</span> holds the growth rate in the middle of each day, estimated as in step 1 by the one-day difference (<code>numpy.diff</code> in Python, <code>diff</code> in R),</p>
+<p>For one genotype, the rows of <span class="math inline">\(\boldsymbol{\Theta}\)</span> are the days of all years and the columns are the library terms. Biomass is recorded at the end of a day, so the weather of day <span class="math inline">\(i\)</span> drives the change from observation <span class="math inline">\(i-1\)</span> to <span class="math inline">\(i\)</span>. The vector <span class="math inline">\(\dot{\mathbf{y}}\)</span> holds the growth rate estimates for days <span class="math inline">\(i\)</span>:</p>
 <p><span class="math display">\[
 \dot y_i = \frac{dy}{dt}(t_{i-1/2}) \approx \frac{y_i - y_{i-1}}{\Delta t},
 \]</span></p>
