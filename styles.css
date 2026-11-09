@@ -88,9 +88,7 @@ figure img, .cell-output-display img { max-width: 100%; }
 
 /* Partner logos at the bottom of the sidebar */
 #quarto-sidebar .quarto-sidebar-footer { margin-top: auto; }
-.sidebar-logos { padding: 18px 4px 14px 4px; border-top: 1px solid #E5E7EB; margin-top: 16px; }
-.sidebar-logos > p { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; margin: 0; }
-.sidebar-logos img { display: block; height: auto; }
-.sidebar-logos .logo-aagi { width: 96px; }
-.sidebar-logos .logo-tudelft { width: 104px; }
-.sidebar-logos .logo-cropxr { width: 116px; }
+.sidebar-logos { padding: 8px 4px 6px 4px; border-top: 1px solid #E5E7EB; margin-top: 8px; }
+.sidebar-logos > p { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
+.sidebar-logos img { display: block; height: auto; max-height: 26px; width: auto; max-width: 30%; object-fit: contain; }
+.sidebar-logos .logo-aagi, .sidebar-logos .logo-tudelft, .sidebar-logos .logo-cropxr { width: auto; }
