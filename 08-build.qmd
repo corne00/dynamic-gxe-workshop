@@ -430,5 +430,3 @@ html`<pre class="sourceCode python"><code>${code.py}</code></pre>`
 ```
 
 :::
-
-Best subset is offered only for libraries with a small number of subsets; backward elimination approximates it for larger libraries. With one modelled state and no feedback, the other state may enter the right-hand side as a measured input; the prediction of a held-out year then uses its measured values, so this is not a forecast. With both states modelled, nothing measured is used beyond the initial values.
