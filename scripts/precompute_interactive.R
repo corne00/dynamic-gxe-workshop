@@ -33,10 +33,36 @@ grid <- list(
                        values = 1:24),
   backward = list(param = "terms", path = path_subset("backward"),
                   values = 1:24))
+## Held-out trajectories (leave-one-year-out) of a few genotypes and years for
+## every value of a method, every second day, to show next to the error curve.
+contrast <- c("g181", "g171", "g021", "g141", "g151")
+traj_years <- c(1984, 1998, 2008)
+step <- 2
+year_index <- match(traj_years, tr$years)
+days_kept <- function(g, s) seq(1, tr$nend[g, s] + 1, by = step)
+held_out <- function(m, name) {
+  g <- match(name, tr$genotypes); S <- length(tr$years)
+  d <- make_design(Theta, tr, name)
+  folds <- lapply(seq_len(S), function(v) {
+    train <- d$year != v
+    m$path(d$Theta[train, ], d$dy[train], m$values)
+  })
+  y0 <- (sum(tr$Y[g, , 1]) - tr$Y[g, , 1]) / (S - 1)
+  lapply(seq_along(m$values), function(i) {
+    P <- t(simulate(t(sapply(folds, `[[`, i)), Theta, y0))
+    lapply(year_index, function(s) {
+      p <- P[s, days_kept(g, s)]
+      p[!is.finite(p) | abs(p) > 50] <- NA
+      round(p, 2)
+    })
+  })
+}
 methods <- lapply(grid, function(m) {
   fits <- lapply(designs, function(d) m$path(d$Theta, d$dy, m$values))
+  held <- lapply(contrast, function(name) held_out(m, name))
+  pred <- lapply(seq_along(m$values), function(i) lapply(held, `[[`, i))
   i_val <- seq_along(m$values); i_gen <- seq_along(designs)
-  list(param = m$param, values = m$values,
+  list(param = m$param, values = m$values, pred = pred,
        effect = lapply(i_val, function(i) lapply(i_gen, function(g) {
          unname(fits[[g]][[i]][-1] * sd_x[[g]] / sd_y[g])
        })),
@@ -52,8 +78,14 @@ methods <- lapply(grid, function(m) {
        rmse = if (is.null(m$mpath)) cv_rmse_path(Theta, tr, m$path, m$values, cv_genotypes)
                else cv_moments(Theta, tr, m$mpath, m$values, cv_genotypes))
 })
+observed <- lapply(match(contrast, tr$genotypes), function(g) {
+  lapply(year_index, function(s) round(tr$Y[g, s, days_kept(g, s)], 2))
+})
 out(list(terms = colnames(designs[[1]]$Theta), genotypes = cv_genotypes,
-         methods = methods), "hyper.json", 5)
+         methods = methods,
+         trajectories = list(genotypes = contrast, years = traj_years,
+                             das0 = tr$das0, step = step,
+                             observed = observed)), "hyper.json", 5)
 
 ## 2. Held-out trajectories of the sparse model -------------------------------
 P <- readRDS("precomputed/cv_stlsq.rds")
