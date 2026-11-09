@@ -119,6 +119,65 @@ ggplot(rates, aes(das, rate, group = year)) +
     legend_top()
 ```
 
+Solving the equation with the drivers of each year gives the biomass trajectory it implies, here starting from the observed initial biomass of each year (all years are used for fitting; the held-out predictions are in step 5):
+
+::: {.panel-tabset group="language"}
+
+## R
+
+```{r}
+#| label: 06-2b
+#| ref.label: 06-2b-run
+#| eval: false
+```
+
+## Python
+
+```python
+i = list(tr.genotypes).index("g114")
+solution = simulate(np.tile(b, (len(tr.years), 1)), Theta.array, tr.Y[i, :, 0])
+solution = solution[:, :tr.nend.max()]
+
+fig, ax = plt.subplots(figsize=(7, 2.8))
+ax.plot(das, solution.T, color=GREY, lw=0.3)
+for year, colour in zip([1984, 1998, 2008], [BLUE, CYAN, BURGUNDY]):
+    ax.plot(das, solution[list(tr.years).index(year)], color=colour, lw=1.2,
+            label=year)
+ax.legend(frameon=False)
+ax.set_xlabel("days after sowing")
+ax.set_ylabel("biomass (t/ha)")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 06-2b-run
+#| echo: false
+#| fig-height: 2.8
+solution <- simulate(
+    matrix(coefs[, "g114"], length(tr$years), nrow(coefs), byrow = TRUE),
+    Theta, tr$Y["g114", , 1]
+)
+trajectories <- data.frame(
+    das = rep(1:n_days + tr$das0 - 1, length(tr$years)),
+    year = rep(tr$years, each = n_days),
+    biomass = as.vector(solution)
+)
+trajectories <- trajectories[
+    trajectories$das <= tr$das0 + tr$nend["g114", match(trajectories$year, tr$years)],
+]
+shown <- trajectories[trajectories$year %in% c(1984, 1998, 2008), ]
+
+ggplot(trajectories, aes(das, biomass, group = year)) +
+    geom_line(colour = "#D1D5DB", linewidth = 0.3) +
+    geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.8) +
+    scale_colour_dgxe("blue", "cyan", "burgundy") +
+    labs(x = "days after sowing", y = "biomass (t/ha)") +
+    theme_dgxe() +
+    legend_top()
+```
+
 For this additive library the rate is a sum of one function per driver, so its contributions can be separated. For year 1998:
 
 ::: {.panel-tabset group="language"}
