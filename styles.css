@@ -92,3 +92,15 @@ figure img, .cell-output-display img { max-width: 100%; }
 .sidebar-logos > p { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
 .sidebar-logos img { display: block; height: auto; max-height: 26px; width: auto; max-width: 30%; object-fit: contain; }
 .sidebar-logos .logo-aagi, .sidebar-logos .logo-tudelft, .sidebar-logos .logo-cropxr { width: auto; }
+
+/* code switch */
+.code-switch { display: flex; align-items: center; gap: 4px; padding: 8px 4px 0 4px; border-top: 1px solid #E5E7EB; margin-top: 8px; font-size: 0.8rem; }
+.code-switch span { color: #6B7280; margin-right: 4px; }
+.code-switch button { border: 1px solid #D1D5DB; background: #fff; color: #374151; border-radius: 4px; padding: 1px 8px; font: inherit; cursor: pointer; }
+.code-switch button.active { background: #0C2340; border-color: #0C2340; color: #fff; }
+.code-switch + .sidebar-logos { border-top: none; margin-top: 0; padding-top: 10px; }
+html.code-off div.sourceCode,
+html.code-off .code-copy-outer-scaffold,
+html.code-off .panel-tabset[data-group="language"],
+html.code-off .tabset-margin-container { display: none; }
+html.code-on .panel-tabset[data-group="language"] > ul.nav-tabs { display: none !important; }
