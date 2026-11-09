@@ -112,8 +112,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
-<script type="module" src="site_libs/quarto-ojs/quarto-ojs-runtime.js"></script>
-<link href="site_libs/quarto-ojs/quarto-ojs.css" rel="stylesheet">
 <script src="js/d3.min.js?v=7"></script>
 <script src="js/plot.umd.min.js?v=06"></script>
 <script src="js/controls.js?v=20261108h"></script>
@@ -268,7 +266,6 @@ window.Quarto = {
   <li><a href="#fitted-equations" id="toc-fitted-equations" class="nav-link active" data-scroll-target="#fitted-equations">Fitted equations</a></li>
   <li><a href="#growth-rate-over-the-year" id="toc-growth-rate-over-the-year" class="nav-link" data-scroll-target="#growth-rate-over-the-year">Growth rate over the year</a></li>
   <li><a href="#effect-of-a-single-driver" id="toc-effect-of-a-single-driver" class="nav-link" data-scroll-target="#effect-of-a-single-driver">Effect of a single driver</a></li>
-  <li><a href="#interactions-and-partial-dependence" id="toc-interactions-and-partial-dependence" class="nav-link" data-scroll-target="#interactions-and-partial-dependence">Interactions and partial dependence</a></li>
   </ul>
 <div class="toc-actions"><ul class="collapse"><li><a href="https://github.com/corne00/dynamic-gxe-workshop/blob/main/06-reading.qmd" class="toc-action"><i class="bi bi-github"></i>View source</a></li></ul></div></nav>
     </div>
@@ -455,81 +452,6 @@ window.Quarto = {
 </div>
 </div>
 </div>
-<p>The growth rate (total) is the sum of the eight contributions and the constant term (not shown).</p>
-<p>The same decomposition for any genotype and year:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb8" data-startfrom="197" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 196;"><span id="cb8-197"><a href="#cb8-197" aria-hidden="true" tabindex="-1"></a>d3 <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">d3</span></span>
-<span id="cb8-198"><a href="#cb8-198" aria-hidden="true" tabindex="-1"></a>Plot <span class="op">=</span> <span class="bu">window</span><span class="op">.</span><span class="at">Plot</span></span>
-<span id="cb8-199"><a href="#cb8-199" aria-hidden="true" tabindex="-1"></a>contrib <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/contrib.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
-<span id="cb8-200"><a href="#cb8-200" aria-hidden="true" tabindex="-1"></a>viewof genotype2 <span class="op">=</span> <span class="fu">select</span>(<span class="st">"Genotype"</span><span class="op">,</span> contrib<span class="op">.</span><span class="at">genotypes</span><span class="op">,</span> <span class="st">"g114"</span>)</span>
-<span id="cb8-201"><a href="#cb8-201" aria-hidden="true" tabindex="-1"></a>viewof year2 <span class="op">=</span> <span class="fu">slider</span>(<span class="st">"Year"</span><span class="op">,</span> contrib<span class="op">.</span><span class="at">years</span><span class="op">,</span> contrib<span class="op">.</span><span class="at">years</span><span class="op">.</span><span class="fu">indexOf</span>(<span class="dv">1998</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-1-1" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-1-2" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-1-3" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-1-4" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-1-5" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb9" data-startfrom="205" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 204;"><span id="cb9-205"><a href="#cb9-205" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb9-206"><a href="#cb9-206" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> g <span class="op">=</span> contrib<span class="op">.</span><span class="at">genotypes</span><span class="op">.</span><span class="fu">indexOf</span>(genotype2)<span class="op">;</span></span>
-<span id="cb9-207"><a href="#cb9-207" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> b <span class="op">=</span> contrib<span class="op">.</span><span class="at">coefs</span>[g]<span class="op">;</span></span>
-<span id="cb9-208"><a href="#cb9-208" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> days <span class="op">=</span> contrib<span class="op">.</span><span class="at">nend</span>[g][year2] <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb9-209"><a href="#cb9-209" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> theta <span class="op">=</span> contrib<span class="op">.</span><span class="at">theta</span>[year2]<span class="op">.</span><span class="fu">slice</span>(<span class="dv">0</span><span class="op">,</span> days)<span class="op">;</span></span>
-<span id="cb9-210"><a href="#cb9-210" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> parts <span class="op">=</span> contrib<span class="op">.</span><span class="at">drivers</span><span class="op">.</span><span class="fu">map</span>(name <span class="kw">=&gt;</span> {</span>
-<span id="cb9-211"><a href="#cb9-211" aria-hidden="true" tabindex="-1"></a>    <span class="kw">const</span> cols <span class="op">=</span> contrib<span class="op">.</span><span class="at">terms</span><span class="op">.</span><span class="fu">map</span>((t<span class="op">,</span> j) <span class="kw">=&gt;</span> t<span class="op">.</span><span class="fu">startsWith</span>(name) <span class="op">?</span> j <span class="op">:</span> <span class="op">-</span><span class="dv">1</span>)<span class="op">.</span><span class="fu">filter</span>(j <span class="kw">=&gt;</span> j <span class="op">&gt;=</span> <span class="dv">0</span>)<span class="op">;</span></span>
-<span id="cb9-212"><a href="#cb9-212" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> theta<span class="op">.</span><span class="fu">map</span>((row<span class="op">,</span> i) <span class="kw">=&gt;</span> ({</span>
-<span id="cb9-213"><a href="#cb9-213" aria-hidden="true" tabindex="-1"></a>      <span class="dt">das</span><span class="op">:</span> contrib<span class="op">.</span><span class="at">das0</span> <span class="op">+</span> i<span class="op">,</span> <span class="dt">part</span><span class="op">:</span> name<span class="op">,</span></span>
-<span id="cb9-214"><a href="#cb9-214" aria-hidden="true" tabindex="-1"></a>      <span class="dt">value</span><span class="op">:</span> d3<span class="op">.</span><span class="fu">sum</span>(cols<span class="op">,</span> j <span class="kw">=&gt;</span> b[<span class="dv">1</span> <span class="op">+</span> j] <span class="op">*</span> row[j])}))<span class="op">;</span></span>
-<span id="cb9-215"><a href="#cb9-215" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
-<span id="cb9-216"><a href="#cb9-216" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> total <span class="op">=</span> theta<span class="op">.</span><span class="fu">map</span>((row<span class="op">,</span> i) <span class="kw">=&gt;</span> ({<span class="dt">das</span><span class="op">:</span> contrib<span class="op">.</span><span class="at">das0</span> <span class="op">+</span> i<span class="op">,</span> <span class="dt">part</span><span class="op">:</span> <span class="st">"total"</span><span class="op">,</span></span>
-<span id="cb9-217"><a href="#cb9-217" aria-hidden="true" tabindex="-1"></a>    <span class="dt">value</span><span class="op">:</span> b[<span class="dv">0</span>] <span class="op">+</span> d3<span class="op">.</span><span class="fu">sum</span>(parts<span class="op">,</span> p <span class="kw">=&gt;</span> p[i]<span class="op">.</span><span class="at">value</span>)}))<span class="op">;</span></span>
-<span id="cb9-218"><a href="#cb9-218" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> colours <span class="op">=</span> [<span class="st">"#014E81"</span><span class="op">,</span> <span class="st">"#00A6D6"</span><span class="op">,</span> <span class="st">"#8B1E3F"</span><span class="op">,</span> <span class="st">"#469C2A"</span><span class="op">,</span> <span class="st">"#6F1D77"</span><span class="op">,</span> <span class="st">"#EF60A3"</span><span class="op">,</span> <span class="st">"#00A390"</span><span class="op">,</span> <span class="st">"#9CA3AF"</span><span class="op">,</span> <span class="st">"#1F2937"</span>]<span class="op">;</span></span>
-<span id="cb9-219"><a href="#cb9-219" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
-<span id="cb9-220"><a href="#cb9-220" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">640</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">55</span><span class="op">,</span></span>
-<span id="cb9-221"><a href="#cb9-221" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"days after sowing"</span>}<span class="op">,</span></span>
-<span id="cb9-222"><a href="#cb9-222" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"contribution to growth rate (t/ha/day)"</span>}<span class="op">,</span></span>
-<span id="cb9-223"><a href="#cb9-223" aria-hidden="true" tabindex="-1"></a>    <span class="dt">color</span><span class="op">:</span> {<span class="dt">domain</span><span class="op">:</span> [<span class="op">...</span>contrib<span class="op">.</span><span class="at">drivers</span><span class="op">,</span> <span class="st">"total"</span>]<span class="op">,</span> <span class="dt">range</span><span class="op">:</span> colours<span class="op">,</span> <span class="dt">legend</span><span class="op">:</span> <span class="kw">true</span>}<span class="op">,</span></span>
-<span id="cb9-224"><a href="#cb9-224" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">ruleY</span>([<span class="dv">0</span>]<span class="op">,</span> {<span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span>})<span class="op">,</span></span>
-<span id="cb9-225"><a href="#cb9-225" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>([<span class="op">...</span>parts<span class="op">.</span><span class="fu">flat</span>()<span class="op">,</span> <span class="op">...</span>total]<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"das"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"value"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"part"</span><span class="op">,</span></span>
-<span id="cb9-226"><a href="#cb9-226" aria-hidden="true" tabindex="-1"></a>              <span class="dt">strokeWidth</span><span class="op">:</span> d <span class="kw">=&gt;</span> d<span class="op">.</span><span class="at">part</span> <span class="op">===</span> <span class="st">"total"</span> <span class="op">?</span> <span class="fl">2.5</span> <span class="op">:</span> <span class="fl">1.3</span>})]</span>
-<span id="cb9-227"><a href="#cb9-227" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
-<span id="cb9-228"><a href="#cb9-228" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-display">
-<div id="ojs-cell-2" data-nodetype="expression">
-
-</div>
-</div>
-</div>
 </section>
 <section id="effect-of-a-single-driver" class="level2">
 <h2 class="anchored" data-anchor-id="effect-of-a-single-driver">Effect of a single driver</h2>
@@ -539,13 +461,13 @@ window.Quarto = {
 <div class="tab-content" data-group="language">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">observed_points</span>(drv, tr))</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cor</span>(observed), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>observed <span class="ot">&lt;-</span> <span class="fu">as.data.frame</span>(<span class="fu">observed_points</span>(drv, tr))</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">cor</span>(observed), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>observed <span class="op">=</span> observed_points(drv, tr)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(observed.corr().<span class="bu">round</span>(<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>observed <span class="op">=</span> observed_points(drv, tr)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(observed.corr().<span class="bu">round</span>(<span class="dv">2</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -566,57 +488,57 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <p><span class="math display">\[
 \mathrm{ALE}_j(z) = \int_{z_0}^{z} \mathbb{E}\!\left[\frac{\partial f(\mathbf{u})}{\partial u_j} \,\middle|\, u_j = v\right] dv - c,
 \]</span></p>
-<p>where <span class="math inline">\(z_0\)</span> is the smallest observed value and the constant <span class="math inline">\(c\)</span> centres the curve at mean zero over the data. The expectation is estimated over the observations in each interval of a grid (24 intervals here). The <code>iml</code> package computes ALE curves for any model that provides a prediction function; here the model is the growth rate of a genotype.</p>
+<p>where <span class="math inline">\(z_0\)</span> is the smallest observed value and the constant <span class="math inline">\(c\)</span> centres the curve at mean zero over the data.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
 <ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
 <div class="tab-content" data-group="language">
 <div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>predictor <span class="ot">&lt;-</span> <span class="cf">function</span>(coef, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    rate <span class="ot">&lt;-</span> <span class="cf">function</span>(model, newdata) {</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>        Theta_new <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(<span class="fu">as.matrix</span>(newdata), <span class="at">pairs =</span> pairs)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.vector</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, Theta_new) <span class="sc">%*%</span> model)</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    Predictor<span class="sc">$</span><span class="fu">new</span>(coef, <span class="at">data =</span> observed, <span class="at">predict.function =</span> rate)</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>natural <span class="ot">&lt;-</span> <span class="cf">function</span>(z, j) z <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j]</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>ale_genotype <span class="ot">&lt;-</span> <span class="cf">function</span>(g, j) {</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    effect <span class="ot">&lt;-</span> FeatureEffect<span class="sc">$</span><span class="fu">new</span>(<span class="fu">predictor</span>(coefs[, g]), drv<span class="sc">$</span>drivers[j],</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">method =</span> <span class="st">"ale"</span>, <span class="at">grid.size =</span> <span class="dv">24</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>results</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">genotype =</span> g, <span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers),</span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="fu">natural</span>(effect[[drv<span class="sc">$</span>drivers[j]]], j), <span class="at">effect =</span> effect<span class="sc">$</span>.value</span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>grid_cells <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">g =</span> tr<span class="sc">$</span>genotypes, <span class="at">j =</span> <span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers),</span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">Map</span>(ale_genotype, grid_cells<span class="sc">$</span>g, grid_cells<span class="sc">$</span>j))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>predictor <span class="ot">&lt;-</span> <span class="cf">function</span>(coef, <span class="at">pairs =</span> <span class="cn">FALSE</span>) {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    rate <span class="ot">&lt;-</span> <span class="cf">function</span>(model, newdata) {</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>        Theta_new <span class="ot">&lt;-</span> <span class="fu">library_matrix</span>(<span class="fu">as.matrix</span>(newdata), <span class="at">pairs =</span> pairs)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>        <span class="fu">as.vector</span>(<span class="fu">cbind</span>(<span class="dv">1</span>, Theta_new) <span class="sc">%*%</span> model)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    Predictor<span class="sc">$</span><span class="fu">new</span>(coef, <span class="at">data =</span> observed, <span class="at">predict.function =</span> rate)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>natural <span class="ot">&lt;-</span> <span class="cf">function</span>(z, j) z <span class="sc">*</span> drv<span class="sc">$</span>scale[j] <span class="sc">+</span> drv<span class="sc">$</span>center[j]</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>ale_genotype <span class="ot">&lt;-</span> <span class="cf">function</span>(g, j) {</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    effect <span class="ot">&lt;-</span> FeatureEffect<span class="sc">$</span><span class="fu">new</span>(<span class="fu">predictor</span>(coefs[, g]), drv<span class="sc">$</span>drivers[j],</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>        <span class="at">method =</span> <span class="st">"ale"</span>, <span class="at">grid.size =</span> <span class="dv">24</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    )<span class="sc">$</span>results</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">genotype =</span> g, <span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers),</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="fu">natural</span>(effect[[drv<span class="sc">$</span>drivers[j]]], j), <span class="at">effect =</span> effect<span class="sc">$</span>.value</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>grid_cells <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    <span class="at">g =</span> tr<span class="sc">$</span>genotypes, <span class="at">j =</span> <span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers),</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>curves <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">Map</span>(ale_genotype, grid_cells<span class="sc">$</span>g, grid_cells<span class="sc">$</span>j))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> PyALE <span class="im">import</span> ale</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>logging.getLogger().setLevel(logging.WARNING)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> natural(z, j):</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> z <span class="op">*</span> drv.scale[j] <span class="op">+</span> drv.center[j]</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ale_genotype(g, j):</span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    rate <span class="op">=</span> GrowthRate(coefs[g].to_numpy())</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    effect <span class="op">=</span> ale(observed, rate, [drv.drivers[j]], grid_size<span class="op">=</span><span class="dv">24</span>,</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                 include_CI<span class="op">=</span><span class="va">False</span>, plot<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame({<span class="st">"genotype"</span>: g, <span class="st">"driver"</span>: drv.drivers[j],</span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"x"</span>: natural(effect.index.to_numpy(), j),</span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"effect"</span>: effect[<span class="st">"eff"</span>].to_numpy()})</span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>curves <span class="op">=</span> pd.concat(ale_genotype(g, j)</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">for</span> g <span class="kw">in</span> tr.genotypes <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(drv.drivers)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> logging</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> PyALE <span class="im">import</span> ale</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>logging.getLogger().setLevel(logging.WARNING)</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> natural(z, j):</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> z <span class="op">*</span> drv.scale[j] <span class="op">+</span> drv.center[j]</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> ale_genotype(g, j):</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    rate <span class="op">=</span> GrowthRate(coefs[g].to_numpy())</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    effect <span class="op">=</span> ale(observed, rate, [drv.drivers[j]], grid_size<span class="op">=</span><span class="dv">24</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>                 include_CI<span class="op">=</span><span class="va">False</span>, plot<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.DataFrame({<span class="st">"genotype"</span>: g, <span class="st">"driver"</span>: drv.drivers[j],</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"x"</span>: natural(effect.index.to_numpy(), j),</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>                         <span class="st">"effect"</span>: effect[<span class="st">"eff"</span>].to_numpy()})</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>curves <span class="op">=</span> pd.concat(ale_genotype(g, j)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>                   <span class="cf">for</span> g <span class="kw">in</span> tr.genotypes <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(drv.drivers)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -626,49 +548,49 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 <div class="tab-content" data-group="language">
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>highlighted <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>) <span class="co"># lowest, median, highest final biomass</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>rug <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j) {</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers), <span class="at">x =</span> <span class="fu">natural</span>(observed[, j], j))</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>}))</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(x, effect, <span class="at">group =</span> genotype)) <span class="sc">+</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">"#9CA3AF"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(</span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> curves[curves<span class="sc">$</span>genotype <span class="sc">%in%</span> highlighted, ],</span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">aes</span>(<span class="at">colour =</span> genotype), <span class="at">linewidth =</span> <span class="fl">0.8</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_rug</span>(</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> rug, <span class="fu">aes</span>(<span class="at">x =</span> x), <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>, <span class="at">sides =</span> <span class="st">"b"</span>,</span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">alpha =</span> <span class="fl">0.03</span></span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"cyan"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="st">"driver value (original units)"</span>,</span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span></span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>highlighted <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>) <span class="co"># lowest, median, highest final biomass</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>rug <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(<span class="fu">seq_along</span>(drv<span class="sc">$</span>drivers), <span class="cf">function</span>(j) {</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">data.frame</span>(<span class="at">driver =</span> <span class="fu">factor</span>(drv<span class="sc">$</span>drivers[j], drv<span class="sc">$</span>drivers), <span class="at">x =</span> <span class="fu">natural</span>(observed[, j], j))</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>}))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(curves, <span class="fu">aes</span>(x, effect, <span class="at">group =</span> genotype)) <span class="sc">+</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_hline</span>(<span class="at">yintercept =</span> <span class="dv">0</span>, <span class="at">colour =</span> <span class="st">"#9CA3AF"</span>, <span class="at">linewidth =</span> <span class="fl">0.3</span>) <span class="sc">+</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="at">colour =</span> <span class="st">"#D1D5DB"</span>, <span class="at">linewidth =</span> <span class="fl">0.25</span>) <span class="sc">+</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> curves[curves<span class="sc">$</span>genotype <span class="sc">%in%</span> highlighted, ],</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        <span class="fu">aes</span>(<span class="at">colour =</span> genotype), <span class="at">linewidth =</span> <span class="fl">0.8</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_rug</span>(</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> rug, <span class="fu">aes</span>(<span class="at">x =</span> x), <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>, <span class="at">sides =</span> <span class="st">"b"</span>,</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">alpha =</span> <span class="fl">0.03</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">ncol =</span> <span class="dv">2</span>, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_dgxe</span>(<span class="st">"burgundy"</span>, <span class="st">"cyan"</span>, <span class="st">"blue"</span>) <span class="sc">+</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>        <span class="at">x =</span> <span class="st">"driver value (original units)"</span>,</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>        <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 <div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>highlighted <span class="op">=</span> [<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>]    <span class="co"># lowest, median, highest final biomass</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">4</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="fl">7.2</span>, <span class="dv">9</span>))</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j, (ax, name) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(axes.flat, drv.drivers)):</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">=</span> curves[curves[<span class="st">"driver"</span>] <span class="op">==</span> name]</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g, c <span class="kw">in</span> sub.groupby(<span class="st">"genotype"</span>):</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        ax.plot(c[<span class="st">"x"</span>], c[<span class="st">"effect"</span>], color<span class="op">=</span>GREY, lw<span class="op">=</span><span class="fl">0.25</span>)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g, colour <span class="kw">in</span> <span class="bu">zip</span>(highlighted, [BURGUNDY, CYAN, BLUE]):</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        c <span class="op">=</span> sub[sub[<span class="st">"genotype"</span>] <span class="op">==</span> g]</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        ax.plot(c[<span class="st">"x"</span>], c[<span class="st">"effect"</span>], color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">1.2</span>, label<span class="op">=</span>g)</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    ax.plot(natural(observed[name], j), np.full(<span class="bu">len</span>(observed), ax.get_ylim()[<span class="dv">0</span>]), <span class="st">"|"</span>,</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>            color<span class="op">=</span><span class="st">"k"</span>, alpha<span class="op">=</span><span class="fl">0.03</span>)</span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    ax.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">"#9CA3AF"</span>, lw<span class="op">=</span><span class="fl">0.5</span>)</span>
-<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    ax.set_title(name, loc<span class="op">=</span><span class="st">"left"</span>)</span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>, <span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>, fontsize<span class="op">=</span><span class="dv">7</span>)</span>
-<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>fig.supylabel(<span class="st">"effect on growth rate (t/ha/day)"</span>)</span>
-<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>highlighted <span class="op">=</span> [<span class="st">"g194"</span>, <span class="st">"g114"</span>, <span class="st">"g048"</span>]    <span class="co"># lowest, median, highest final biomass</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">4</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="fl">7.2</span>, <span class="dv">9</span>))</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j, (ax, name) <span class="kw">in</span> <span class="bu">enumerate</span>(<span class="bu">zip</span>(axes.flat, drv.drivers)):</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    sub <span class="op">=</span> curves[curves[<span class="st">"driver"</span>] <span class="op">==</span> name]</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g, c <span class="kw">in</span> sub.groupby(<span class="st">"genotype"</span>):</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        ax.plot(c[<span class="st">"x"</span>], c[<span class="st">"effect"</span>], color<span class="op">=</span>GREY, lw<span class="op">=</span><span class="fl">0.25</span>)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> g, colour <span class="kw">in</span> <span class="bu">zip</span>(highlighted, [BURGUNDY, CYAN, BLUE]):</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        c <span class="op">=</span> sub[sub[<span class="st">"genotype"</span>] <span class="op">==</span> g]</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        ax.plot(c[<span class="st">"x"</span>], c[<span class="st">"effect"</span>], color<span class="op">=</span>colour, lw<span class="op">=</span><span class="fl">1.2</span>, label<span class="op">=</span>g)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    ax.plot(natural(observed[name], j), np.full(<span class="bu">len</span>(observed), ax.get_ylim()[<span class="dv">0</span>]), <span class="st">"|"</span>,</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>            color<span class="op">=</span><span class="st">"k"</span>, alpha<span class="op">=</span><span class="fl">0.03</span>)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    ax.axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">"#9CA3AF"</span>, lw<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    ax.set_title(name, loc<span class="op">=</span><span class="st">"left"</span>)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>, <span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>, fontsize<span class="op">=</span><span class="dv">7</span>)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>fig.supylabel(<span class="st">"effect on growth rate (t/ha/day)"</span>)</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </div>
 </div>
@@ -681,162 +603,11 @@ RAW  -0.24 -0.59  0.11 -0.58 -0.03 -0.67 -0.65  1.00</code></pre>
 </div>
 </div>
 </div>
-<p>The rug marks show where data exist. Thermal time is accumulated from sowing, so its curve describes the dependence of growth on the stage of the year, not a response to temperature. Thermal time and day length are correlated at 0.97 and are best read together.</p>
-<p>Response curve of one genotype (red) among all 199 genotypes (grey), for each driver:</p>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb17" data-startfrom="419" data-source-offset="-0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 418;"><span id="cb17-419"><a href="#cb17-419" aria-hidden="true" tabindex="-1"></a>ale <span class="op">=</span> <span class="fu">FileAttachment</span>(<span class="st">"data/interactive/ale.json"</span>)<span class="op">.</span><span class="fu">json</span>()</span>
-<span id="cb17-420"><a href="#cb17-420" aria-hidden="true" tabindex="-1"></a>viewof driver <span class="op">=</span> <span class="fu">select</span>(<span class="st">"Driver"</span><span class="op">,</span> ale<span class="op">.</span><span class="at">drivers</span><span class="op">,</span> <span class="st">"DL"</span>)</span>
-<span id="cb17-421"><a href="#cb17-421" aria-hidden="true" tabindex="-1"></a>viewof highlight <span class="op">=</span> <span class="fu">select</span>(<span class="st">"Genotype"</span><span class="op">,</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">keys</span>(ale<span class="op">.</span><span class="at">curves</span><span class="op">.</span><span class="at">TT</span>)<span class="op">,</span> <span class="st">"g114"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-3-1" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-3-2" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-<div class="cell-output cell-output-display">
-<div>
-<div id="ojs-cell-3-3" data-nodetype="declaration">
-
-</div>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code hidden" id="cb18" data-startfrom="425" data-source-offset="0"><pre class="sourceCode js code-with-copy"><code class="sourceCode javascript" style="counter-reset: source-line 424;"><span id="cb18-425"><a href="#cb18-425" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb18-426"><a href="#cb18-426" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> curves <span class="op">=</span> ale<span class="op">.</span><span class="at">curves</span>[driver]<span class="op">;</span></span>
-<span id="cb18-427"><a href="#cb18-427" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> rows <span class="op">=</span> <span class="bu">Object</span><span class="op">.</span><span class="fu">entries</span>(curves)<span class="op">.</span><span class="fu">flatMap</span>(([g<span class="op">,</span> c]) <span class="kw">=&gt;</span></span>
-<span id="cb18-428"><a href="#cb18-428" aria-hidden="true" tabindex="-1"></a>    c<span class="op">.</span><span class="at">x</span><span class="op">.</span><span class="fu">map</span>((x<span class="op">,</span> i) <span class="kw">=&gt;</span> ({g<span class="op">,</span> x<span class="op">,</span> <span class="dt">effect</span><span class="op">:</span> c<span class="op">.</span><span class="at">effect</span>[i]})))<span class="op">;</span></span>
-<span id="cb18-429"><a href="#cb18-429" aria-hidden="true" tabindex="-1"></a>  <span class="kw">const</span> marked <span class="op">=</span> rows<span class="op">.</span><span class="fu">filter</span>(d <span class="kw">=&gt;</span> d<span class="op">.</span><span class="at">g</span> <span class="op">===</span> highlight)<span class="op">;</span></span>
-<span id="cb18-430"><a href="#cb18-430" aria-hidden="true" tabindex="-1"></a>  <span class="cf">return</span> Plot<span class="op">.</span><span class="fu">plot</span>({</span>
-<span id="cb18-431"><a href="#cb18-431" aria-hidden="true" tabindex="-1"></a>    <span class="dt">width</span><span class="op">:</span> <span class="dv">640</span><span class="op">,</span> <span class="dt">height</span><span class="op">:</span> <span class="dv">320</span><span class="op">,</span> <span class="dt">marginLeft</span><span class="op">:</span> <span class="dv">55</span><span class="op">,</span></span>
-<span id="cb18-432"><a href="#cb18-432" aria-hidden="true" tabindex="-1"></a>    <span class="dt">x</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> driver}<span class="op">,</span></span>
-<span id="cb18-433"><a href="#cb18-433" aria-hidden="true" tabindex="-1"></a>    <span class="dt">y</span><span class="op">:</span> {<span class="dt">label</span><span class="op">:</span> <span class="st">"effect on growth rate (t/ha/day)"</span>}<span class="op">,</span></span>
-<span id="cb18-434"><a href="#cb18-434" aria-hidden="true" tabindex="-1"></a>    <span class="dt">marks</span><span class="op">:</span> [Plot<span class="op">.</span><span class="fu">ruleY</span>([<span class="dv">0</span>]<span class="op">,</span> {<span class="dt">stroke</span><span class="op">:</span> <span class="st">"#9CA3AF"</span>})<span class="op">,</span></span>
-<span id="cb18-435"><a href="#cb18-435" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(rows<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"x"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"effect"</span><span class="op">,</span> <span class="dt">z</span><span class="op">:</span> <span class="st">"g"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"#D1D5DB"</span><span class="op">,</span> <span class="dt">strokeWidth</span><span class="op">:</span> <span class="fl">0.6</span>})<span class="op">,</span></span>
-<span id="cb18-436"><a href="#cb18-436" aria-hidden="true" tabindex="-1"></a>            Plot<span class="op">.</span><span class="fu">line</span>(marked<span class="op">,</span> {<span class="dt">x</span><span class="op">:</span> <span class="st">"x"</span><span class="op">,</span> <span class="dt">y</span><span class="op">:</span> <span class="st">"effect"</span><span class="op">,</span> <span class="dt">stroke</span><span class="op">:</span> <span class="st">"#8B1E3F"</span><span class="op">,</span> <span class="dt">strokeWidth</span><span class="op">:</span> <span class="fl">2.5</span>})]</span>
-<span id="cb18-437"><a href="#cb18-437" aria-hidden="true" tabindex="-1"></a>  })<span class="op">;</span></span>
-<span id="cb18-438"><a href="#cb18-438" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-display">
-<div id="ojs-cell-4" data-nodetype="expression">
-
-</div>
-</div>
-</div>
-</section>
-<section id="interactions-and-partial-dependence" class="level2">
-<h2 class="anchored" data-anchor-id="interactions-and-partial-dependence">Interactions and partial dependence</h2>
-<p>The library of powers is additive in the drivers: the effect of one driver does not depend on the others, and ALE and partial dependence coincide. With products of pairs of drivers (108 terms, backward elimination to 20 terms) they differ. For <code>g114</code>, partial dependence averages the growth rate over all observed days while one driver is set to each value in turn.</p>
-<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Python</a></li></ul>
-<div class="tab-content" data-group="language">
-<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="ot">&lt;-</span> <span class="fu">make_library</span>(drv, <span class="at">pairs =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>design2 <span class="ot">&lt;-</span> <span class="fu">make_design</span>(Theta2, tr, <span class="st">"g114"</span>)</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>pred2 <span class="ot">&lt;-</span> <span class="fu">predictor</span>(<span class="fu">fit_subset</span>(design2<span class="sc">$</span>Theta, design2<span class="sc">$</span>dy, <span class="at">k =</span> <span class="dv">20</span>, <span class="at">method =</span> <span class="st">"backward"</span>), <span class="cn">TRUE</span>)</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>effects <span class="ot">&lt;-</span> <span class="cf">function</span>(j) {</span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    feature <span class="ot">&lt;-</span> drv<span class="sc">$</span>drivers[j]</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    ale <span class="ot">&lt;-</span> FeatureEffect<span class="sc">$</span><span class="fu">new</span>(pred2, feature, <span class="st">"ale"</span>, <span class="at">grid.size =</span> <span class="dv">24</span>)<span class="sc">$</span>results</span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    pdp <span class="ot">&lt;-</span> FeatureEffect<span class="sc">$</span><span class="fu">new</span>(pred2, feature, <span class="st">"pdp"</span>, <span class="at">grid.size =</span> <span class="dv">24</span>)<span class="sc">$</span>results</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    pdp<span class="sc">$</span>x <span class="ot">&lt;-</span> <span class="fu">natural</span>(pdp[[feature]], j)</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    pdp<span class="sc">$</span>driver <span class="ot">&lt;-</span> <span class="fu">factor</span>(feature, drv<span class="sc">$</span>drivers)</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    pdp<span class="sc">$</span>.value <span class="ot">&lt;-</span> pdp<span class="sc">$</span>.value <span class="sc">-</span> <span class="fu">mean</span>(pdp<span class="sc">$</span>.value)</span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>    ale<span class="sc">$</span>x <span class="ot">&lt;-</span> <span class="fu">natural</span>(ale[[feature]], j)</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>    ale<span class="sc">$</span>driver <span class="ot">&lt;-</span> pdp<span class="sc">$</span>driver[<span class="dv">1</span>]</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    pdp[[feature]] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    ale[[feature]] <span class="ot">&lt;-</span> <span class="cn">NULL</span></span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list</span>(<span class="at">pdp =</span> pdp, <span class="at">ale =</span> ale)</span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>parts <span class="ot">&lt;-</span> <span class="fu">lapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, effects)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>Theta2 <span class="op">=</span> make_library(drv, pairs<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>design2 <span class="op">=</span> make_design(Theta2, tr, <span class="st">"g114"</span>)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>rate2 <span class="op">=</span> GrowthRate(fit_subset(design2.Theta, design2.dy, k<span class="op">=</span><span class="dv">20</span>, method<span class="op">=</span><span class="st">"backward"</span>), pairs<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> effects(feature):</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    j <span class="op">=</span> drv.drivers.index(feature)</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    a <span class="op">=</span> ale(observed, rate2, [feature], grid_size<span class="op">=</span><span class="dv">24</span>, include_CI<span class="op">=</span><span class="va">False</span>, plot<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    grid <span class="op">=</span> np.linspace(observed[feature].<span class="bu">min</span>(), observed[feature].<span class="bu">max</span>(), <span class="dv">24</span>)</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    pdp <span class="op">=</span> np.array([rate2.predict(observed.assign(<span class="op">**</span>{feature: v})).mean()</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">for</span> v <span class="kw">in</span> grid])</span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (natural(grid, j), pdp <span class="op">-</span> pdp.mean(),</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>            natural(a.index.to_numpy(), j), a[<span class="st">"eff"</span>].to_numpy())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
-<div class="tabset-margin-container"></div><div class="panel-tabset" data-group="language">
-<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li></ul>
-<div class="tab-content" data-group="language">
-<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
-<div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>bind <span class="ot">&lt;-</span> <span class="cf">function</span>(name) <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(parts, <span class="st">`</span><span class="at">[[</span><span class="st">`</span>, name))</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>pdp <span class="ot">&lt;-</span> <span class="fu">bind</span>(<span class="st">"pdp"</span>)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>ale <span class="ot">&lt;-</span> <span class="fu">bind</span>(<span class="st">"ale"</span>)</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(pdp, <span class="fu">aes</span>(x, .value)) <span class="sc">+</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">colour =</span> <span class="st">"partial dependence"</span>), <span class="at">linewidth =</span> <span class="fl">0.9</span>) <span class="sc">+</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_line</span>(</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> ale, <span class="fu">aes</span>(<span class="at">y =</span> .value, <span class="at">colour =</span> <span class="st">"ALE"</span>), <span class="at">linewidth =</span> <span class="fl">0.9</span>,</span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">linetype =</span> <span class="dv">2</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">+</span></span>
-<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">facet_wrap</span>(<span class="sc">~</span>driver, <span class="at">scales =</span> <span class="st">"free_x"</span>) <span class="sc">+</span></span>
-<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scale_colour_dgxe</span>(<span class="st">"blue"</span>, <span class="st">"burgundy"</span>) <span class="sc">+</span></span>
-<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"driver value"</span>, <span class="at">y =</span> <span class="st">"effect on growth rate (t/ha/day)"</span>) <span class="sc">+</span></span>
-<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_dgxe</span>() <span class="sc">+</span></span>
-<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">legend_top</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">3</span>))</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax, feature <span class="kw">in</span> <span class="bu">zip</span>(axes, [<span class="st">"TT"</span>, <span class="st">"DL"</span>]):</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    x, pdp, xa, a <span class="op">=</span> effects(feature)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    ax.plot(x, pdp, color<span class="op">=</span>BURGUNDY, lw<span class="op">=</span><span class="fl">1.5</span>, label<span class="op">=</span><span class="st">"partial dependence"</span>)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    ax.plot(xa, a, <span class="st">"--"</span>, color<span class="op">=</span>BLUE, lw<span class="op">=</span><span class="fl">1.5</span>, label<span class="op">=</span><span class="st">"ALE"</span>)</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    ax.set_title(feature, loc<span class="op">=</span><span class="st">"left"</span>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>fig.supxlabel(<span class="st">"driver value"</span>)</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>fig.supylabel(<span class="st">"effect on growth rate (t/ha/day)"</span>)</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</div>
-</div>
-</div>
-<div class="cell">
-<div class="cell-output-display">
-<div>
-<figure class="figure">
-<p><img src="06-reading_files/figure-html/06-8-run-1.png" class="img-fluid figure-img" width="1036"></p>
-</figure>
-</div>
-</div>
-</div>
-<p>The two curves differ because of the interactions. Partial dependence also evaluates the model at combinations of drivers that do not occur in the data, for example a short day late in a year with high thermal time, whereas ALE does not.</p>
 
 
 </section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
-<script type="ojs-module-contents">
-eyJjb250ZW50cyI6W3sibWV0aG9kTmFtZSI6ImludGVycHJldCIsImNlbGxOYW1lIjoib2pzLWNlbGwtMSIsImlubGluZSI6ZmFsc2UsInNvdXJjZSI6ImQzID0gd2luZG93LmQzXG5QbG90ID0gd2luZG93LlBsb3RcbmNvbnRyaWIgPSBGaWxlQXR0YWNobWVudChcImRhdGEvaW50ZXJhY3RpdmUvY29udHJpYi5qc29uXCIpLmpzb24oKVxudmlld29mIGdlbm90eXBlMiA9IHNlbGVjdChcIkdlbm90eXBlXCIsIGNvbnRyaWIuZ2Vub3R5cGVzLCBcImcxMTRcIilcbnZpZXdvZiB5ZWFyMiA9IHNsaWRlcihcIlllYXJcIiwgY29udHJpYi55ZWFycywgY29udHJpYi55ZWFycy5pbmRleE9mKDE5OTgpKVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0IiwiY2VsbE5hbWUiOiJvanMtY2VsbC0yIiwiaW5saW5lIjpmYWxzZSwic291cmNlIjoie1xuICBjb25zdCBnID0gY29udHJpYi5nZW5vdHlwZXMuaW5kZXhPZihnZW5vdHlwZTIpO1xuICBjb25zdCBiID0gY29udHJpYi5jb2Vmc1tnXTtcbiAgY29uc3QgZGF5cyA9IGNvbnRyaWIubmVuZFtnXVt5ZWFyMl0gKyAxO1xuICBjb25zdCB0aGV0YSA9IGNvbnRyaWIudGhldGFbeWVhcjJdLnNsaWNlKDAsIGRheXMpO1xuICBjb25zdCBwYXJ0cyA9IGNvbnRyaWIuZHJpdmVycy5tYXAobmFtZSA9PiB7XG4gICAgY29uc3QgY29scyA9IGNvbnRyaWIudGVybXMubWFwKCh0LCBqKSA9PiB0LnN0YXJ0c1dpdGgobmFtZSkgPyBqIDogLTEpLmZpbHRlcihqID0+IGogPj0gMCk7XG4gICAgcmV0dXJuIHRoZXRhLm1hcCgocm93LCBpKSA9PiAoe1xuICAgICAgZGFzOiBjb250cmliLmRhczAgKyBpLCBwYXJ0OiBuYW1lLFxuICAgICAgdmFsdWU6IGQzLnN1bShjb2xzLCBqID0+IGJbMSArIGpdICogcm93W2pdKX0pKTtcbiAgfSk7XG4gIGNvbnN0IHRvdGFsID0gdGhldGEubWFwKChyb3csIGkpID0+ICh7ZGFzOiBjb250cmliLmRhczAgKyBpLCBwYXJ0OiBcInRvdGFsXCIsXG4gICAgdmFsdWU6IGJbMF0gKyBkMy5zdW0ocGFydHMsIHAgPT4gcFtpXS52YWx1ZSl9KSk7XG4gIGNvbnN0IGNvbG91cnMgPSBbXCIjMDE0RTgxXCIsIFwiIzAwQTZENlwiLCBcIiM4QjFFM0ZcIiwgXCIjNDY5QzJBXCIsIFwiIzZGMUQ3N1wiLCBcIiNFRjYwQTNcIiwgXCIjMDBBMzkwXCIsIFwiIzlDQTNBRlwiLCBcIiMxRjI5MzdcIl07XG4gIHJldHVybiBQbG90LnBsb3Qoe1xuICAgIHdpZHRoOiA2NDAsIGhlaWdodDogMzIwLCBtYXJnaW5MZWZ0OiA1NSxcbiAgICB4OiB7bGFiZWw6IFwiZGF5cyBhZnRlciBzb3dpbmdcIn0sXG4gICAgeToge2xhYmVsOiBcImNvbnRyaWJ1dGlvbiB0byBncm93dGggcmF0ZSAodC9oYS9kYXkpXCJ9LFxuICAgIGNvbG9yOiB7ZG9tYWluOiBbLi4uY29udHJpYi5kcml2ZXJzLCBcInRvdGFsXCJdLCByYW5nZTogY29sb3VycywgbGVnZW5kOiB0cnVlfSxcbiAgICBtYXJrczogW1Bsb3QucnVsZVkoWzBdLCB7c3Ryb2tlOiBcIiM5Q0EzQUZcIn0pLFxuICAgICAgICAgICAgUGxvdC5saW5lKFsuLi5wYXJ0cy5mbGF0KCksIC4uLnRvdGFsXSwge3g6IFwiZGFzXCIsIHk6IFwidmFsdWVcIiwgc3Ryb2tlOiBcInBhcnRcIixcbiAgICAgICAgICAgICAgc3Ryb2tlV2lkdGg6IGQgPT4gZC5wYXJ0ID09PSBcInRvdGFsXCIgPyAyLjUgOiAxLjN9KV1cbiAgfSk7XG59XG4ifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXQiLCJjZWxsTmFtZSI6Im9qcy1jZWxsLTMiLCJpbmxpbmUiOmZhbHNlLCJzb3VyY2UiOiJhbGUgPSBGaWxlQXR0YWNobWVudChcImRhdGEvaW50ZXJhY3RpdmUvYWxlLmpzb25cIikuanNvbigpXG52aWV3b2YgZHJpdmVyID0gc2VsZWN0KFwiRHJpdmVyXCIsIGFsZS5kcml2ZXJzLCBcIkRMXCIpXG52aWV3b2YgaGlnaGxpZ2h0ID0gc2VsZWN0KFwiR2Vub3R5cGVcIiwgT2JqZWN0LmtleXMoYWxlLmN1cnZlcy5UVCksIFwiZzExNFwiKVxuIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0IiwiY2VsbE5hbWUiOiJvanMtY2VsbC00IiwiaW5saW5lIjpmYWxzZSwic291cmNlIjoie1xuICBjb25zdCBjdXJ2ZXMgPSBhbGUuY3VydmVzW2RyaXZlcl07XG4gIGNvbnN0IHJvd3MgPSBPYmplY3QuZW50cmllcyhjdXJ2ZXMpLmZsYXRNYXAoKFtnLCBjXSkgPT5cbiAgICBjLngubWFwKCh4LCBpKSA9PiAoe2csIHgsIGVmZmVjdDogYy5lZmZlY3RbaV19KSkpO1xuICBjb25zdCBtYXJrZWQgPSByb3dzLmZpbHRlcihkID0+IGQuZyA9PT0gaGlnaGxpZ2h0KTtcbiAgcmV0dXJuIFBsb3QucGxvdCh7XG4gICAgd2lkdGg6IDY0MCwgaGVpZ2h0OiAzMjAsIG1hcmdpbkxlZnQ6IDU1LFxuICAgIHg6IHtsYWJlbDogZHJpdmVyfSxcbiAgICB5OiB7bGFiZWw6IFwiZWZmZWN0IG9uIGdyb3d0aCByYXRlICh0L2hhL2RheSlcIn0sXG4gICAgbWFya3M6IFtQbG90LnJ1bGVZKFswXSwge3N0cm9rZTogXCIjOUNBM0FGXCJ9KSxcbiAgICAgICAgICAgIFBsb3QubGluZShyb3dzLCB7eDogXCJ4XCIsIHk6IFwiZWZmZWN0XCIsIHo6IFwiZ1wiLCBzdHJva2U6IFwiI0QxRDVEQlwiLCBzdHJva2VXaWR0aDogMC42fSksXG4gICAgICAgICAgICBQbG90LmxpbmUobWFya2VkLCB7eDogXCJ4XCIsIHk6IFwiZWZmZWN0XCIsIHN0cm9rZTogXCIjOEIxRTNGXCIsIHN0cm9rZVdpZHRoOiAyLjV9KV1cbiAgfSk7XG59XG4ifSx7Im1ldGhvZE5hbWUiOiJpbnRlcnByZXRRdWlldCIsInNvdXJjZSI6InNoaW55SW5wdXQoJ2dlbm90eXBlMicpIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCd5ZWFyMicpIn0seyJtZXRob2ROYW1lIjoiaW50ZXJwcmV0UXVpZXQiLCJzb3VyY2UiOiJzaGlueUlucHV0KCdkcml2ZXInKSJ9LHsibWV0aG9kTmFtZSI6ImludGVycHJldFF1aWV0Iiwic291cmNlIjoic2hpbnlJbnB1dCgnaGlnaGxpZ2h0JykifV19
-</script>
-<script type="module">
-if (window.location.protocol === "file:") { alert("The OJS runtime does not work with file:// URLs. Please use a web server to view this document."); }
-window._ojs.paths.runtimeToDoc = "../..";
-window._ojs.paths.runtimeToRoot = "../..";
-window._ojs.paths.docToRoot = "";
-window._ojs.selfContained = false;
-window._ojs.runtime.interpretFromScriptTags();
-</script>
 <script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
     const icon = "";

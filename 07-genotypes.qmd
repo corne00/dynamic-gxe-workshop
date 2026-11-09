@@ -8,12 +8,11 @@ source("R/page_setup.R")
 source("R/pipeline.R")
 ```
 
-This page continues from steps 2 and 3 and uses their objects `wx`, `traj`, `drv`, `Theta` and `tr`. To start here, load them as described on the [Set up](setup.html) page.
 
 
 ## Equations of different genotypes
 
-Each genotype has its own equation, with coefficients estimated from the 31 trajectories of that genotype. The sparse models (STLSQ) of all genotypes, fitted to all years, give genotype-specific growth rates. Growth rate along the mean weather path, for every genotype (grey) and for the genotypes with the lowest, median and highest final biomass:
+Each genotype has its own equation, with coefficients estimated from the 31 trajectories of that genotype. The sparse models (STLSQ) of all genotypes, fitted to all years, give genotype-specific growth coefficients $\hat{\boldsymbol{\xi}}_g$. Growth rate along the mean weather path, for every genotype (grey) and for the genotypes with the lowest, median and highest final biomass:
 
 ::: {.panel-tabset group="language"}
 
@@ -42,8 +41,8 @@ coefs = pd.DataFrame({g: fit_genotype(g) for g in tr.genotypes},
 #| label: 07-1-run
 #| echo: false
 fit_genotype <- function(g) {
-  design <- make_design(Theta, tr, g)
-  fit_stlsq(design$Theta, design$dy)
+    design <- make_design(Theta, tr, g)
+    fit_stlsq(design$Theta, design$dy)
 }
 coefs <- sapply(tr$genotypes, fit_genotype)
 ```
@@ -84,130 +83,28 @@ fig.tight_layout()
 #| label: 07-2-run
 #| echo: false
 #| fig-height: 2.8
-highlighted <- c("g194", "g114", "g048")  # lowest, median, highest final biomass
+highlighted <- c("g194", "g114", "g048") # lowest, median, highest final biomass
 mean_path <- cbind(1, apply(Theta, c(2, 3), mean))
 das <- 1:nrow(mean_path) + tr$das0 - 1
-rates <- data.frame(das = rep(das, ncol(coefs)),
-                    genotype = rep(colnames(coefs), each = length(das)),
-                    rate = as.vector(mean_path %*% coefs))
+rates <- data.frame(
+    das = rep(das, ncol(coefs)),
+    genotype = rep(colnames(coefs), each = length(das)),
+    rate = as.vector(mean_path %*% coefs)
+)
 rates <- rates[rates$das <= 155, ]
 
 ggplot(rates, aes(das, rate, group = genotype)) +
-  geom_line(colour = "#D1D5DB", linewidth = 0.2) +
-  geom_line(data = rates[rates$genotype %in% highlighted, ],
-            aes(colour = genotype), linewidth = 0.8) +
-  scale_colour_dgxe("burgundy", "cyan", "blue") +
-  labs(x = "days after sowing", y = "growth rate (t/ha/day)") +
-  theme_dgxe() +
-  legend_top()
+    geom_line(colour = "#D1D5DB", linewidth = 0.2) +
+    geom_line(
+        data = rates[rates$genotype %in% highlighted, ],
+        aes(colour = genotype), linewidth = 0.8
+    ) +
+    scale_colour_dgxe("burgundy", "cyan", "blue") +
+    labs(x = "days after sowing", y = "growth rate (t/ha/day)") +
+    theme_dgxe() +
+    legend_top()
 ```
 
-## Ranking genotypes
-
-For each year, the predicted and APSIM biomass of the 199 genotypes on a fixed day are compared by the Spearman correlation and by the overlap of the top 10%.
-
-```{r}
-#| echo: false
-#| results: asis
-show_fun("rank_scores")
-```
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```{r}
-#| label: 07-3
-#| ref.label: [07-3-show, 07-3-run]
-#| eval: false
-```
-
-## Python
-
-```python
-P = cross_validate(Theta, tr, fit_stlsq)
-days = [49, 64, 77, 98, 113]                       # days after sowing
-
-def scores(day):
-    i = day - tr.das0
-    rho, top = rank_scores(P[:, :, i], tr.Y[:, :, i])
-    return day, rho.mean().round(3), top.mean().round(3)
-
-ranking = pd.DataFrame([scores(day) for day in days],
-                       columns=["das", "rho", "top10"])
-print(ranking)
-```
-
-:::
-
-```{r}
-#| label: 07-3-show
-#| eval: false
-#| include: false
-P <- cross_validate(Theta, tr, fit_stlsq)
-```
-
-```{r}
-#| label: 07-3-exec
-#| echo: false
-P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
-```
-
-```{r}
-#| label: 07-3-run
-#| echo: false
-days <- c(35, 50, 63, 84, 99)       # array index; day after sowing = index + 14
-
-scores <- function(i) {
-  s <- rank_scores(P[, , i], tr$Y[, , i])
-  data.frame(das = i + tr$das0 - 1, rho = mean(s$rho), top10 = mean(s$top))
-}
-ranking <- do.call(rbind, lapply(days, scores))
-ranking[, c("rho", "top10")] <- round(ranking[, c("rho", "top10")], 3)
-ranking
-```
-
-::: {.panel-tabset group="language"}
-
-## R
-
-```{r}
-#| label: 07-4
-#| ref.label: 07-4-run
-#| eval: false
-```
-
-## Python
-
-```python
-fig, axes = plt.subplots(1, 2, figsize=(8, 2.8))
-for ax, column, title in zip(axes, ["rho", "top10"],
-                             ["Spearman correlation", "top-10% overlap"]):
-    ax.plot(ranking["das"], ranking[column], "o-", color=BLUE)
-    ax.set_title(title, loc="left")
-fig.supxlabel("days after sowing")
-fig.tight_layout()
-```
-
-:::
-
-```{r}
-#| label: 07-4-run
-#| echo: false
-#| fig-height: 2.8
-scores_long <- rbind(
-  data.frame(das = ranking$das, metric = "Spearman correlation", score = ranking$rho),
-  data.frame(das = ranking$das, metric = "top-10% overlap", score = ranking$top10))
-
-ggplot(scores_long, aes(das, score)) +
-  geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
-  geom_point(colour = dgxe[["blue"]], size = 1.8) +
-  facet_wrap(~metric, scales = "free_y") +
-  labs(x = "days after sowing", y = NULL) +
-  theme_dgxe()
-```
-
-The ranking improves as the year progresses, when the weather has had more effect on the order of the genotypes. These results are for genotypes whose trajectories in other years are available for fitting.
 
 ## Exploring the ranking
 
