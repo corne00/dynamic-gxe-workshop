@@ -33,6 +33,16 @@ traj = pd.read_csv("data/narrabri_biomass.csv.gz")
 :::
 
 
+## Recap
+
+We estimate the growth rate of biomass as a linear combination of candidate functions of the drivers,
+
+$$
+\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
+$$
+
+Here $\dot{\mathbf{y}}$ holds the growth rates of all days, the library matrix $\boldsymbol{\Theta}$ holds the candidate functions evaluated on those days, and $\boldsymbol{\xi}$ are the unknown coefficients. Regression can only find $\boldsymbol{\xi}$ once $\boldsymbol{\Theta}$ and $\dot{\mathbf{y}}$ are given as numbers, so this step constructs both from the weather and the biomass data.
+
 ## Drivers
 
 The library is built from all eight variables of step 2, `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT` and `RAW`, standardised to mean 0 and standard deviation 1. They are here denoted as $u_1, \dots, u_8$. 
