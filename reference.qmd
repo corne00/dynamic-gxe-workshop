@@ -52,3 +52,6 @@ APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes,
 - Friedman, J., Hastie, T. and Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. *Journal of Statistical Software* 33(1), 1–22 (`glmnet`).
 - Lumley, T. and Miller, A. `leaps`: regression subset selection. R package.
 - Apley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. *Journal of the Royal Statistical Society B* 82(4), 1059–1086.
+- de Silva, B. M., Champion, K., Quade, M., Loiseau, J.-C., Kutz, J. N. and Brunton, S. L. (2020). PySINDy: a Python package for the sparse identification of nonlinear dynamical systems from data. *Journal of Open Source Software* 5(49), 2104 (`pysindy`).
+- Kaptanoglu, A. A. et al. (2022). PySINDy: a comprehensive Python package for robust sparse system identification. *Journal of Open Source Software* 7(69), 3994.
+- Dale, R. and Bhat, H. S. `sindyr`: Sparse identification of nonlinear dynamics. R package version 0.2.4 (2024). <https://CRAN.R-project.org/package=sindyr>.

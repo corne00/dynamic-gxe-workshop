@@ -39,4 +39,4 @@ Pages 1 and 4–8 contain sliders and menus (Observable JS, with `d3` and Observ
 
 ## Data
 
-The data are APSIM simulation output (199 genotypes × 31 years, Narrabri). The source and licence of the underlying simulations still need to be confirmed before reuse; no licence is granted for the data here.
+The data are APSIM simulation output (199 genotypes × 31 years, Narrabri).
