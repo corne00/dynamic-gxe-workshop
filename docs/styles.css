@@ -83,8 +83,7 @@ figure img, .cell-output-display img { max-width: 100%; }
 .scroll-x img { max-width: none; }
 
 /* QR code to the workshop website, small and unobtrusive in the footer */
-.nav-footer .footer-qr { height: 40px; width: 40px; margin-left: 10px; vertical-align: middle; opacity: 0.5; transition: opacity 0.2s; }
-.nav-footer .footer-qr:hover { opacity: 1; }
+.nav-footer .footer-qr { height: 40px; width: 40px; margin-left: 10px; vertical-align: middle; }
 
 /* Partner logos at the bottom of the sidebar */
 #quarto-sidebar .quarto-sidebar-footer { margin-top: auto; }
@@ -105,3 +104,9 @@ html.code-off .panel-tabset[data-group="language"],
 html.code-off .tabset-margin-container { display: none; }
 html.code-on .panel-tabset[data-group="language"] > ul.nav-tabs { display: none !important; }
 .cell-output-stdout pre, .cell-output-stdout code { font-size: 0.78em; }
+
+/* QR code and link on the Set up page */
+.setup-qr { display: flex; align-items: center; gap: 28px; margin: 12px 0 8px 0; }
+.setup-qr img { width: 220px; height: 220px; flex: none; }
+.setup-qr .setup-url { font-size: 1.35rem; font-weight: 500; word-break: break-all; }
+@media (max-width: 600px) { .setup-qr { flex-direction: column; align-items: flex-start; } }

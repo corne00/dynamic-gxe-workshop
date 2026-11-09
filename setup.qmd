@@ -2,6 +2,13 @@
 title: "Set up"
 ---
 
+## Workshop website
+
+<div class="setup-qr">
+<img src="images/qr.svg" alt="QR code to the workshop website">
+<div class="setup-url"><a href="https://corne00.github.io/dynamic-gxe-workshop/">corne00.github.io/dynamic-gxe-workshop</a></div>
+</div>
+
 ## Files
 
 ```sh

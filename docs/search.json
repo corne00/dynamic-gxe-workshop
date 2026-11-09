@@ -317,7 +317,17 @@
     "href": "setup.html",
     "title": "Set up",
     "section": "",
-    "text": "git clone https://github.com/corne00/dynamic-gxe-workshop.git\ncd dynamic-gxe-workshop\nR/functions.R contains all functions used in the workshop, and python/dgxe.py the same functions in Python. data/ contains the Narrabri weather and the biomass trajectories.",
+    "text": "corne00.github.io/dynamic-gxe-workshop",
+    "crumbs": [
+      "Set up"
+    ]
+  },
+  {
+    "objectID": "setup.html#workshop-website",
+    "href": "setup.html#workshop-website",
+    "title": "Set up",
+    "section": "",
+    "text": "corne00.github.io/dynamic-gxe-workshop",
     "crumbs": [
       "Set up"
     ]
@@ -326,8 +336,8 @@
     "objectID": "setup.html#files",
     "href": "setup.html#files",
     "title": "Set up",
-    "section": "",
-    "text": "git clone https://github.com/corne00/dynamic-gxe-workshop.git\ncd dynamic-gxe-workshop\nR/functions.R contains all functions used in the workshop, and python/dgxe.py the same functions in Python. data/ contains the Narrabri weather and the biomass trajectories.",
+    "section": "Files",
+    "text": "Files\ngit clone https://github.com/corne00/dynamic-gxe-workshop.git\ncd dynamic-gxe-workshop\nR/functions.R contains all functions used in the workshop, and python/dgxe.py the same functions in Python. data/ contains the Narrabri weather and the biomass trajectories.",
     "crumbs": [
       "Set up"
     ]
