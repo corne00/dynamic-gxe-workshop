@@ -104,3 +104,4 @@ html.code-off .code-copy-outer-scaffold,
 html.code-off .panel-tabset[data-group="language"],
 html.code-off .tabset-margin-container { display: none; }
 html.code-on .panel-tabset[data-group="language"] > ul.nav-tabs { display: none !important; }
+.cell-output-stdout pre, .cell-output-stdout code { font-size: 0.78em; }
