@@ -250,7 +250,7 @@ The methods are close to each other. The sparse models use fewer terms for a sim
 
 ## Number of terms
 
-For a library that also contains products of pairs of drivers (`pairs = TRUE`, 108 terms), the held-out error of backward elimination (every twentieth genotype) as a function of the number of terms is:
+For a library that also contains products of pairs of drivers (`pairs = TRUE`, 108 terms), the held-out error of backward elimination (every twentieth genotype) as a function of the number of terms, for every $k$ from 1 to 108, is:
 
 ::: {.panel-tabset group="language"}
 
@@ -267,7 +267,7 @@ For a library that also contains products of pairs of drivers (`pairs = TRUE`, 1
 ```python
 Theta2 = make_library(drv, pairs=True)
 genotypes = tr.genotypes[::20]
-ks = [4, 8, 12, 16, 24, 36, 60, 108]
+ks = range(1, 109)
 
 def rmse_for(k):
     def fit(Theta, dy):
@@ -286,7 +286,7 @@ by_k = pd.DataFrame({"k": ks, "rmse": [rmse_for(k) for k in ks]})
 #| include: false
 Theta2 <- make_library(drv, pairs = TRUE)
 genotypes <- tr$genotypes[seq(1, 199, by = 20)]
-ks <- c(4, 8, 12, 16, 24, 36, 60, 108)
+ks <- 1:108
 
 by_k <- data.frame(k = ks, rmse = sapply(ks, function(k) {
     fit <- function(Theta, dy) fit_subset(Theta, dy, k, "backward")
@@ -299,7 +299,7 @@ by_k <- data.frame(k = ks, rmse = sapply(ks, function(k) {
 #| echo: false
 Theta2 <- make_library(drv, pairs = TRUE)
 genotypes <- tr$genotypes[seq(1, 199, by = 20)]
-ks <- c(4, 8, 12, 16, 24, 36, 60, 108)
+ks <- 1:108
 
 by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k) {
     fit <- function(Theta, dy) fit_subset(Theta, dy, k, "backward")
@@ -321,7 +321,7 @@ by_k <- cached("rmse_vs_k.rds", data.frame(k = ks, rmse = sapply(ks, function(k)
 
 ```python
 fig, ax = plt.subplots(figsize=(5, 2.8))
-ax.plot(by_k["k"], by_k["rmse"], "o-", color=BLUE)
+ax.plot(by_k["k"], by_k["rmse"], color=BLUE)
 ax.set_xlabel("number of terms (108-term library)")
 ax.set_ylabel("held-out trajectory RMSE (t/ha)")
 fig.tight_layout()
@@ -336,7 +336,7 @@ fig.tight_layout()
 #| fig-width: 5
 ggplot(by_k, aes(k, rmse)) +
     geom_line(colour = dgxe[["blue"]], linewidth = 0.8) +
-    geom_point(colour = dgxe[["blue"]], size = 2) +
+    geom_point(colour = dgxe[["blue"]], size = 0.8) +
     labs(
         x = "number of terms (108-term library)",
         y = "held-out trajectory RMSE (t/ha)"

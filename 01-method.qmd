@@ -138,7 +138,7 @@ $$
 }
 $$
 
-Note that this is a linear regression problem (recall $\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$), that can be solved by, e.g., ordinary least squares (OLS) regression: 
+Note that this is a linear regression problem (recall $\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}$) that can be solved by, e.g., ordinary least squares (OLS) regression:
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 .

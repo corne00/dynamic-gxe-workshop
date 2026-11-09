@@ -6,7 +6,7 @@ source("R/pipeline.R")
 source("scripts/helpers.R")
 
 genotypes <- spread_genotypes(tr, 8)
-trl <- make_trajectories(traj, drv, "lai")
+trl <- make_trajectories(traj, drv, "LAI")
 pick <- match(genotypes, tr$genotypes)
 write_json(list(
   drivers = drv$drivers, center = drv$center, scale = drv$scale,

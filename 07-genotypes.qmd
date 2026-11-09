@@ -106,6 +106,97 @@ ggplot(rates, aes(das, rate, group = genotype)) +
 ```
 
 
+## Trajectories of the selected genotypes
+
+Biomass trajectories predicted for the three genotypes in three years, together with the APSIM trajectories. Each year is predicted by the model of the genotype fitted to the other years (leave-one-year-out, step 5).
+
+::: {.panel-tabset group="language"}
+
+## R
+
+```{r}
+#| label: 07-3
+#| ref.label: [07-3-show, 07-3-run]
+#| eval: false
+```
+
+## Python
+
+```python
+P = cross_validate(Theta, tr, fit_stlsq)
+years = [1984, 1998, 2008]
+
+fig, axes = plt.subplots(3, 3, sharex=True, sharey=True, figsize=(7.2, 6))
+for col, (g, colour) in enumerate(zip(highlighted, [BURGUNDY, CYAN, BLUE])):
+    i = list(tr.genotypes).index(g)
+    for row, year in enumerate(years):
+        s = list(tr.years).index(year)
+        n = tr.nend[i, s] + 1
+        days = np.arange(n) + tr.das0
+        ax = axes[row, col]
+        ax.plot(days, tr.Y[i, s, :n], color=colour, lw=3, alpha=0.3,
+                label="APSIM")
+        ax.plot(days, P[i, s, :n], color=colour, lw=1, label="model")
+        if row == 0:
+            ax.set_title(g, loc="left")
+        if col == 0:
+            ax.set_ylabel(year)
+axes[0, 0].legend(frameon=False)
+fig.supxlabel("days after sowing")
+fig.supylabel("biomass (t/ha)")
+fig.tight_layout()
+```
+
+:::
+
+```{r}
+#| label: 07-3-show
+#| eval: false
+#| include: false
+P <- cross_validate(Theta, tr, fit_stlsq)
+```
+
+```{r}
+#| label: 07-3-exec
+#| echo: false
+P <- cached("cv_stlsq.rds", cross_validate(Theta, tr, fit_stlsq))
+```
+
+```{r}
+#| label: 07-3-run
+#| echo: false
+#| fig-height: 5.6
+years <- c(1984, 1998, 2008)
+trajectories <- do.call(rbind, lapply(highlighted, function(g) {
+    i <- match(g, tr$genotypes)
+    do.call(rbind, lapply(years, function(year) {
+        s <- match(year, tr$years)
+        n <- tr$nend[i, s] + 1
+        data.frame(
+            genotype = g, year = year, das = 1:n + tr$das0 - 1,
+            source = rep(c("APSIM", "model"), each = n),
+            biomass = c(tr$Y[i, s, 1:n], P[i, s, 1:n])
+        )
+    }))
+}))
+trajectories$genotype <- factor(trajectories$genotype, highlighted)
+
+ggplot(
+    trajectories,
+    aes(das, biomass, colour = genotype, linewidth = source, alpha = source)
+) +
+    geom_line() +
+    facet_grid(year ~ genotype) +
+    scale_colour_dgxe("burgundy", "cyan", "blue") +
+    scale_linewidth_manual(values = c(APSIM = 2.2, model = 0.6)) +
+    scale_alpha_manual(values = c(APSIM = 0.35, model = 1)) +
+    guides(colour = "none") +
+    labs(x = "days after sowing", y = "biomass (t/ha)") +
+    theme_dgxe() +
+    legend_top()
+```
+
+
 ## Exploring the ranking
 
 Predicted against APSIM biomass of the 199 genotypes in one year on one day, for the sparse model. Red points are the true top 10%.

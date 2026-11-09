@@ -14,7 +14,7 @@ highlights = [1983, 1998, 2008]
 highlightColours = ["#8B1E3F", "#014E81", "#00A6D6"]
 info = ({
   biomass: {label: "biomass", short: "B", unit: "t/ha", series: builder.Y, peak: false},
-  lai: {label: "LAI", short: "LAI", unit: "m²/m²", series: builder.L, peak: true}})
+  LAI: {label: "LAI", short: "LAI", unit: "m²/m²", series: builder.L, peak: true}})
 lhs = state => `\\frac{d\\,\\mathrm{${info[state].short}}}{dt}`
 ```
 
@@ -26,12 +26,12 @@ The data of one genotype are used: its biomass and LAI trajectories in 31 years 
 //| echo: false
 viewof genotype = select("Genotype", builder.genotypes, builder.genotypes[0])
 viewof stateName = select("Modelled states", ["biomass", "LAI", "both (coupled)"], "biomass")
-stateList = stateName === "both (coupled)" ? ["biomass", "lai"] : [stateName === "LAI" ? "lai" : "biomass"]
-traitKey = stateList[0] === "lai" ? "biomass" : "lai"
+stateList = stateName === "both (coupled)" ? ["biomass", "LAI"] : [stateName === "LAI" ? "LAI" : "biomass"]
+traitKey = stateList[0] === "LAI" ? "biomass" : "LAI"
 viewof feedbackChoice = buttons("State feedback on the right-hand side", ["no", "yes"], "no")
 feedback = feedbackChoice === "yes"
 viewof chosen = toggles("Drivers", builder.drivers, builder.drivers.map(() => "#014E81"), builder.drivers)
-viewof measured = buttons(stateList.length > 1 ? "Measured input (one modelled state only)" : traitKey === "lai" ? "Measured LAI as input" : "Measured biomass as input", ["no", "yes"], "no")
+viewof measured = buttons(stateList.length > 1 ? "Measured input (one modelled state only)" : traitKey === "LAI" ? "Measured LAI as input" : "Measured biomass as input", ["no", "yes"], "no")
 traitName = measured === "yes" && stateList.length === 1 ? traitKey : null
 drivers = traitName ? [...chosen, traitName] : chosen
 g = builder.genotypes.indexOf(genotype)
@@ -91,15 +91,15 @@ examples = [
   {label: "temperature × water", line: "TW = Tmean * RAW"},
   {label: "lagged Tmax", line: "lag3 = lag(Tmax, 3)"},
   {label: "yearly cycle", line: "cycle = sin(2 * pi * das / 365)"},
-  {label: "canopy light (measured LAI)", line: "canopy = lai * RAD"},
-  {label: "LAI, 5 days (measured LAI)", line: "lai5 = roll(lai, 5)"}]
+  {label: "canopy light (measured LAI)", line: "canopy = LAI * RAD"},
+  {label: "LAI, 5 days (measured LAI)", line: "LAI5 = roll(LAI, 5)"}]
 viewof extraText = expressions("Extra terms", examples)
 parsed = Builder.parseExtras(extraText, traitName ? [traitName] : [])
 extras = parsed.terms
 html`${parsed.errors.map(e => html`<p class="interactive-note">Line ${e.line}: ${e.message}</p>`)}`
 ```
 
-Extra terms are functions of the raw weather. Each line adds one term to the library, standardised like the drivers: write `name = expression`, or click an example. The variables are `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT`, `RAW`, `Tmean`, `VPD` (vapour pressure deficit, from `Tmax` and `VP`), `das` (days after sowing) and, with the measured input switched on, `lai` or `biomass`. The operators are `+ - * / ^`, and the functions are `exp`, `log`, `sqrt`, `abs`, `sin`, `cos`, `tan`, `tanh`, `min` and `max` (elementwise), `roll(x, k)` (mean of the last `k` days), `cum(x)` and `lag(x, k)`.
+Extra terms are functions of the raw weather. Each line adds one term to the library, standardised like the drivers: write `name = expression`, or click an example. The variables are `Tmin`, `Tmax`, `Rain`, `RAD`, `VP`, `DL`, `TT`, `RAW`, `Tmean`, `VPD` (vapour pressure deficit, from `Tmax` and `VP`), `das` (days after sowing) and, with the measured input switched on, `LAI` or `biomass`. The operators are `+ - * / ^`, and the functions are `exp`, `log`, `sqrt`, `abs`, `sin`, `cos`, `tan`, `tanh`, `min` and `max` (elementwise), `roll(x, k)` (mean of the last `k` days), `cum(x)` and `lag(x, k)`.
 
 ```{ojs}
 //| echo: false
@@ -243,7 +243,7 @@ result.error ? html`<p class="interactive-note">${result.error}</p>` : html`<div
 //| echo: false
 result.error ? html`` : html`<div>
   ${result.equations.map(eq => Equation.element(Equation.latex(eq.terms, eq.intercept, eq.coef, lhs(eq.state))))}
-  <p class="interactive-note">The fit for all years of genotype ${genotype}. The terms are functions of the standardised drivers${traitName ? `, with the measured ${traitName === "lai" ? "LAI" : "biomass"} as an additional driver` : ""}${result.scales.length ? `; the states are standardised as (${result.scales.map(d => `${info[d.state].short} − ${d.center.toPrecision(3)}) / ${d.scale.toPrecision(3)}`).join(", (")}` : ""}.</p></div>`
+  <p class="interactive-note">The fit for all years of genotype ${genotype}. The terms are functions of the standardised drivers${traitName ? `, with the measured ${traitName === "LAI" ? "LAI" : "biomass"} as an additional driver` : ""}${result.scales.length ? `; the states are standardised as (${result.scales.map(d => `${info[d.state].short} − ${d.center.toPrecision(3)}) / ${d.scale.toPrecision(3)}`).join(", (")}` : ""}.</p></div>`
 ```
 
 ```{ojs}
@@ -379,7 +379,7 @@ viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
 
 ## The same model in R and Python
 
-The choices of steps 1 to 4 correspond to the following calls, with `wx` and `traj` loaded as in step 2.
+The choices of steps 1 to 4 correspond to the following calls, with `weather` and `traj` loaded as in step 2.
 
 ```{ojs}
 //| echo: false
@@ -400,12 +400,12 @@ code = {
   const pyDrivers = `[${drivers.map(d => `"${d}"`).join(", ")}]`;
   const pairs = products === "yes";
   const tr = traitName ? `"${traitName}"` : null;
-  const rLoad = tr ? `wg <- with_traits(wx, traj, "${genotype}", ${tr})\n` : "";
-  const pyLoad = tr ? `wg = with_traits(wx, traj, "${genotype}", [${tr}])\n` : "";
-  const W = tr ? "wg" : "wx";
+  const rLoad = tr ? `wg <- with_traits(weather, traj, "${genotype}", ${tr})\n` : "";
+  const pyLoad = tr ? `wg = with_traits(weather, traj, "${genotype}", [${tr}])\n` : "";
+  const W = tr ? "wg" : "weather";
   const single = stateList.length === 1 && !feedback;
-  const rTarget = stateList[0] === "lai" ? `, "lai"` : "";
-  const pyTarget = stateList[0] === "lai" ? `, "lai"` : "";
+  const rTarget = stateList[0] === "LAI" ? `, "LAI"` : "";
+  const pyTarget = stateList[0] === "LAI" ? `, "LAI"` : "";
   const F = feedback ? "TRUE" : "FALSE", PF = feedback ? "True" : "False";
   const P = pairs ? "TRUE" : "FALSE", PP = pairs ? "True" : "False";
   const rTrs = `trs <- list(${stateList.map(k => `${k} = make_trajectories(traj, drv, "${k}")`).join(",\n            ")})`;

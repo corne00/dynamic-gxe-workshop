@@ -67,12 +67,12 @@ class CrossValidation:
 
 
 # ---- Drivers: array U[year, day, driver], standardised -------------------
-def make_drivers(wx, drivers=DRIVERS):
-    years = np.sort(wx["year"].unique())
-    das0 = wx["das"].min()
-    U = np.full((len(years), wx["das"].max() - das0 + 1, len(drivers)), np.nan)
-    y = np.searchsorted(years, wx["year"])
-    U[y, (wx["das"] - das0).to_numpy(), :] = wx[drivers].to_numpy()
+def make_drivers(weather, drivers=DRIVERS):
+    years = np.sort(weather["year"].unique())
+    das0 = weather["das"].min()
+    U = np.full((len(years), weather["das"].max() - das0 + 1, len(drivers)), np.nan)
+    y = np.searchsorted(years, weather["year"])
+    U[y, (weather["das"] - das0).to_numpy(), :] = weather[drivers].to_numpy()
     for s in range(len(years)):                  # years end on different days
         for j in range(len(drivers)):            # pad with the last value
             u = U[s, :, j]
@@ -114,13 +114,13 @@ def make_library(drv, degree=3, pairs=False):
 
 # ---- Extra terms: functions of the raw weather, standardised like the drivers
 # exprs: dict name -> expression in Python syntax (^ is accepted for powers).
-# Available are the columns of wx, Tmean, VPD (hPa) and das, and the functions
+# Available are the columns of weather, Tmean, VPD (hPa) and das, and the functions
 # roll(x, k) (mean of the last k days), cum(x) and lag(x, k); max and min act
 # elementwise.
-def extra_terms(wx, exprs, years=None):
-    years = sorted(wx["year"].unique()) if years is None else years
-    das0 = wx["das"].min()
-    nd = wx["das"].max() - das0 + 1
+def extra_terms(weather, exprs, years=None):
+    years = sorted(weather["year"].unique()) if years is None else years
+    das0 = weather["das"].min()
+    nd = weather["das"].max() - das0 + 1
 
     def roll(x, k):
         run = np.concatenate([[0.0], np.cumsum(x)])
@@ -134,7 +134,7 @@ def extra_terms(wx, exprs, years=None):
                 lag=lambda x, k: x[np.maximum(np.arange(len(x)) - k, 0)])
     X = np.full((len(years), nd, len(exprs)), np.nan)
     for s, year in enumerate(years):
-        w = wx[wx["year"] == year]
+        w = weather[weather["year"] == year]
         v = {c: pd.Series(w[c].to_numpy(), index=w["das"].to_numpy() - das0)
                   .reindex(range(nd)).ffill().to_numpy()    # repeat the last value
              for c in w.columns if c not in ("year", "das")}
@@ -155,21 +155,21 @@ def bind_terms(Theta, extra):
 
 
 # ---- Measured traits as drivers --------------------------------------------
-# Adds measured states of one genotype (columns of traj, for example "lai") to
+# Adds measured states of one genotype (columns of traj, for example "LAI") to
 # the weather table, as the mean of the records at the start and end of a day.
-def with_traits(wx, traj, genotype, vars=("lai",)):
-    wx = wx.copy()
+def with_traits(weather, traj, genotype, vars=("LAI",)):
+    weather = weather.copy()
     t = traj[traj["genotype"] == genotype]
     for v in vars:
-        wx[v] = np.nan
+        weather[v] = np.nan
         for year, r in t.groupby("year"):
             r = r.sort_values("das")
             x = r[v].to_numpy()
             day = pd.Series(np.concatenate([[x[0]], (x[1:] + x[:-1]) / 2]),
                             index=r["das"].to_numpy())
-            i = (wx["year"] == year).to_numpy()
-            wx.loc[i, v] = day.reindex(wx.loc[i, "das"]).to_numpy()
-    return wx
+            i = (weather["year"] == year).to_numpy()
+            weather.loc[i, v] = day.reindex(weather.loc[i, "das"]).to_numpy()
+    return weather
 
 
 # ---- Trajectories: array Y[genotype, year, day], NaN after maturity ------

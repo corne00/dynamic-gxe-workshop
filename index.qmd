@@ -3,7 +3,7 @@ title: "Sparse identification of crop growth dynamics"
 subtitle: "Workshop, AAGI 2026 Symposium"
 ---
 
-This workshop is based on our preprint (Verburg, Heinlein, van Eeuwijk and Budko, 2026), [Physiology-Informed Sparse Identification of Dynamic Crop Models](https://arxiv.org/pdf/2610.18920v1). The idea behind this work is to use sparse regression to identify a system of ordinary differential equations (ODEs) that describe the dynamics of crop growth. Instead of starting from a mechanistic model, we start from using the data to identify the model structure.
+This workshop is based on our preprint (Verburg, Heinlein, van Eeuwijk and Budko, 2026), [Physiology-Informed Sparse Identification of Dynamic Crop Models](https://arxiv.org/pdf/2610.18920v1). The idea behind this work is to use sparse regression to identify a system of ordinary differential equations (ODEs) that describes the dynamics of crop growth. Instead of starting from a mechanistic model, we use the data to identify the model structure.
 
 The data used to illustrate the method are [APSIM simulations](https://figshare.com/articles/dataset/24843705), containing 199 genotypes, 31 years (1983 to 2013), on daily resolution. The structure of the workshop is as follows:
 

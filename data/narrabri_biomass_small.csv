@@ -1,4 +1,4 @@
-genotype,year,das,biomass,lai
+genotype,year,das,biomass,LAI
 g001,1983,15,0.0164,0.039
 g001,1983,16,0.019,0.043
 g001,1983,17,0.0228,0.049

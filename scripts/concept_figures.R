@@ -220,7 +220,7 @@ year_rows <- traj_long(function(k) {
 genotype_rows <- traj_long(function(k) {
   y <- tr$Y[gm, k, ]; y[!is.na(y)]
 }, seq_along(tr$years))
-w98 <- wx[wx$year == 1998, ]
+w98 <- weather[weather$year == 1998, ]
 data_theme <- theme_dgxe(10) +
   theme(plot.title = element_text(hjust = 0, size = 10, colour = "#1F2937"))
 d1 <- ggplot(w98, aes(das)) +
@@ -232,10 +232,10 @@ d1 <- ggplot(w98, aes(das)) +
   data_theme
 final98 <- tr$Y[cbind(seq_along(tr$genotypes), v, tr$nend[, v] + 1)]
 ends <- c(which.min(final98), which.max(final98))   # lowest and highest
-three_rows <- year_rows[year_rows$id %in% c(ends, gm), ]
+selected_rows <- year_rows[year_rows$id %in% c(ends, gm), ]
 d2 <- ggplot(year_rows, aes(das, y, group = id)) +
   geom_line(colour = grey, linewidth = 0.2) +
-  geom_line(data = three_rows, aes(colour = factor(id)), linewidth = 0.8) +
+  geom_line(data = selected_rows, aes(colour = factor(id)), linewidth = 0.8) +
   scale_colour_manual(values = setNames(c(bur, blue, cyan),
                                         c(ends, gm))) +
   labs(title = "(b) 199 genotypes, year 1998", x = "days after sowing",

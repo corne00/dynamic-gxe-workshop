@@ -1,0 +1,374 @@
+---
+title: "4 · Fitting"
+---
+
+```{r}
+#| echo: false
+source("R/page_setup.R")
+source("R/pipeline.R")
+```
+
+So far, we constructed the library of candidate terms $\boldsymbol{\Theta}$ and the growth rates $\dot{\mathbf{y}}$. The next step is to find the coefficients $\boldsymbol{\xi}$ that best explain the growth rates as a linear combination of the terms:
+
+$$
+\dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
+$$
+
+We are free to choose any method to fit the coefficients. The methods differ in how they handle correlated terms, and in whether they produce sparse equations (with some coefficients set exactly to zero).
+
+::: {.panel-tabset group="language"}
+
+## R
+
+```{r}
+#| label: 04-1
+#| ref.label: 04-1-run
+#| eval: false
+```
+
+## Python
+
+```python
+design = make_design(Theta, tr, "g001")
+```
+
+:::
+
+```{r}
+#| label: 04-1-run
+#| echo: false
+design <- make_design(Theta, tr, "g001")
+```
+
+## Methods
+
+::: {.panel-tabset}
+
+## Least squares
+
+Reference model. OLS does not impose any sparsity.
+
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+$$
+
+Hyperparameters: none.
+
+R: `lm.fit`. Python: `numpy.linalg.lstsq`.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_ols", level = 3)
+```
+
+## Ridge
+
+Shrinks the coefficients towards zero. This can help to deal with collinearity, but does not produce a sparse equation.
+
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
+$$
+
+Hyperparameters:
+
+- $\lambda$: strength of the penalty; shrinks the coefficients.
+
+Closed form, with the penalty scaled as in `glmnet`.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_ridge", level = 3)
+```
+
+## Lasso
+
+The $\ell_1$ penalty shrinks the coefficients and sets some to zero, producing a sparse equation.
+
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_1
+$$
+
+Hyperparameters:
+
+- $\lambda$: strength of the penalty.
+
+R: `glmnet`. Python: scikit-learn `ElasticNet`, with the penalty scaled as in `glmnet`.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_glmnet", "fit_lasso", level = 3)
+```
+
+## Elastic net
+
+A mix of ridge and lasso: sparse like the lasso, but more stable for correlated terms.
+
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \Bigl( \tfrac{1 - \alpha}{2} \lVert \boldsymbol{\xi} \rVert_2^2 + \alpha \lVert \boldsymbol{\xi} \rVert_1 \Bigr)
+$$
+
+Hyperparameters:
+
+- $\lambda$: strength of the penalty.
+- $\alpha$: mix ratio of the two penalties (here 0.5).
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_glmnet", "fit_enet", level = 3)
+```
+
+## Best subset
+
+The best model with exactly $k$ terms, found by searching all subsets. This is the most expensive method, as the number of subsets grows combinatorially with the number of terms.
+
+$$
+\hat{\boldsymbol{\xi}} = \arg\min_{\lVert \boldsymbol{\xi} \rVert_0 \le k} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2
+$$
+
+Algorithm:
+
+$$
+\begin{array}{ll}
+\textbf{for each } S \subset \{1, \dots, K\} \textbf{ with } |S| = k: & \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2 \\[2pt]
+\quad \mathrm{RSS}(S) \leftarrow \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\hat{\boldsymbol{\xi}}_S \rVert_2^2 & \\[2pt]
+\textbf{return } \hat{\boldsymbol{\xi}}_{S^*} \text{ with } S^* = \arg\min_{S} \mathrm{RSS}(S) 
+\end{array}
+$$
+
+Hyperparameters:
+
+- $k$: number of terms that are kept.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_subset", level = 3)
+```
+
+## Backward elimination
+
+A greedy alternative to best subset: start with all terms and repeatedly remove the one that increases the residual error least.
+
+$$
+\begin{array}{ll}
+S \leftarrow \{1, \dots, K\}  \\[2pt]
+\textbf{while } |S| > k: & \\[2pt]
+\quad \Delta_j \leftarrow \mathrm{RSS}(S \setminus \{j\}) - \mathrm{RSS}(S) \quad \text{for each } j \in S \\[2pt]
+\quad S \leftarrow S \setminus \{j^*\}, \quad j^* = \arg\min_{j \in S} \Delta_j \\[2pt]
+\textbf{return } \hat{\boldsymbol{\xi}}_S 
+\end{array}
+$$
+
+Hyperparameters:
+
+- $k$: number of terms that are kept.
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_subset", level = 3)
+```
+
+## STLSQ
+
+Sequential thresholded least squares, the algorithm of the original SINDy method.
+
+$$
+\begin{array}{ll}
+S \leftarrow \{1, \dots, K\} \\[2pt]
+\textbf{repeat:} & \\[2pt]
+\quad \hat{\boldsymbol{\xi}}_S \leftarrow \arg\min_{\boldsymbol{\xi}} \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}_S\boldsymbol{\xi} \rVert_2^2  \\[2pt]
+\quad S' \leftarrow \bigl\{ j \in S : |\hat{\xi}_j|\, s_j \ge \tau \bigr\}, \quad s_j = \mathrm{sd}(\boldsymbol{\Theta}_j) / \mathrm{sd}\bigl(\dot{\mathbf{y}}\bigr)  \\[2pt]
+\quad \textbf{if } S' = S \text{ or } S' = \emptyset \textbf{ then stop, else } S \leftarrow S' & \\[2pt]
+\textbf{return } \hat{\boldsymbol{\xi}}_S 
+\end{array}
+$$
+
+Hyperparameters:
+
+- $\tau$: threshold on the scaled coefficient $|\hat{\xi}_j|\,s_j$.
+
+
+```{r}
+#| echo: false
+#| results: asis
+show_fun("fit_stlsq", level = 3)
+```
+
+:::
+
+## Comparison
+
+The methods fitted to the same data:
+
+::: {.panel-tabset group="language"}
+
+## R
+
+```{r}
+#| label: 04-2
+#| ref.label: 04-2-run
+#| eval: false
+```
+
+## Python
+
+```python
+fits = pd.DataFrame({name: fit(design.Theta, design.dy)
+                     for name, fit in fit_methods.items()},
+                    index=["1"] + design.terms)
+print(fits.round(3))
+```
+
+:::
+
+```{r}
+#| label: 04-2-run
+#| echo: false
+fits <- sapply(fit_methods, function(fit) fit(design$Theta, design$dy))
+round(fits, 3)
+```
+
+We visualise the coefficients of the terms for each method on the same scale.
+
+::: {.panel-tabset group="language"}
+
+## R
+
+```{r}
+#| label: 04-3
+#| ref.label: 04-3-run
+#| eval: false
+```
+
+## Python
+
+```python
+size = design.Theta.std(axis=0, ddof=1) / design.dy.std(ddof=1)
+effect = fits.iloc[1:].mul(size, axis=0)
+
+fig, axes = plt.subplots(effect.shape[1], 1, sharex=True, sharey=True,
+                         figsize=(6.2, 6.2))
+for ax, (name, column) in zip(axes, effect.items()):
+    ax.bar(column.index, column, color=np.where(column > 0, BLUE, BURGUNDY))
+    ax.axhline(0, color="black", lw=0.8)
+    ax.set_title(name, fontsize=8, loc="left")
+axes[-1].tick_params(axis="x", rotation=90)
+fig.supylabel("scaled coefficient")
+fig.tight_layout()
+```
+
+:::
+
+::: {.scroll-x}
+
+```{r}
+#| label: 04-3-run
+#| echo: false
+#| fig-height: 6.2
+#| fig-width: 6.2
+#| out-width: 600px
+size <- apply(design$Theta, 2, sd) / sd(design$dy)
+effect <- fits[-1, ] * size
+effects <- data.frame(
+    term = factor(rownames(effect), rownames(effect)),
+    method = factor(
+        rep(colnames(effect), each = nrow(effect)),
+        colnames(effect)
+    ),
+    effect = as.vector(effect)
+)
+effects <- effects[effects$effect != 0, ]
+
+ggplot(effects, aes(term, effect, fill = effect > 0)) +
+    geom_col(width = 0.7) +
+    geom_hline(yintercept = 0, linewidth = 0.3) +
+    scale_fill_manual(
+        values = c(
+            `TRUE` = dgxe[["blue"]],
+            `FALSE` = dgxe[["burgundy"]]
+        ),
+        guide = "none"
+    ) +
+    scale_x_discrete(drop = FALSE) +
+    scale_y_continuous(breaks = c(-0.5, 0, 0.5)) +
+    facet_wrap(~method, ncol = 1) +
+    labs(x = NULL, y = "scaled coefficient") +
+    theme_dgxe() +
+    theme(
+        strip.text = element_text(size = 8),
+        axis.text.x = element_text(
+            size = 7, angle = 90, hjust = 1,
+            vjust = 0.5
+        )
+    )
+```
+
+:::
+
+Due to the different ways the methods handle correlated terms, they produce different equations.
+
+## Exploring a method
+
+Here we compare some of the approaches. Switch genotypes on and off to compare their coefficients (top); the lower panel shows the held-out error for all settings, as the mean over 20 genotypes.
+
+```{ojs}
+//| echo: false
+d3 = window.d3
+Plot = window.Plot
+hyper = FileAttachment("data/interactive/hyper.json").json()
+contrast = ["g181", "g171", "g021", "g141", "g151"]
+shades = ["#8B1E3F", "#014E81", "#00A6D6", "#6D8B1E", "#6B7280"]
+viewof method = select("Method", Object.keys(hyper.methods), "STLSQ")
+spec = hyper.methods[method]
+viewof shown = toggles("Genotypes", contrast, shades)
+viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2), v => (+v).toPrecision(2))
+```
+
+```{ojs}
+//| echo: false
+{
+  const all = Object.values(hyper.methods);
+  const reach = d3.max(all.flatMap(m => m.effect.flat(2).map(Math.abs)));
+  const rmse = [d3.min(all.flatMap(m => m.rmse)), 0.8];   // cap: very large penalties are off scale
+  const band = 5, n = shown.length;
+  const key = (term, name) => term + "|" + name;
+  const domain = hyper.terms.flatMap(term => [...shown.map(name => key(term, name)), key(term, "")]);
+  const middle = hyper.terms.map(term => key(term, shown[Math.floor(n / 2)]));
+  const rows = shown.flatMap(name => {
+    const g = hyper.genotypes.indexOf(name);
+    return hyper.terms.map((term, i) => ({name, band: key(term, name), effect: spec.effect[step][g][i]}));
+  });
+  const coefficients = Plot.plot({
+    width: 56 + band * domain.length, height: 250, marginLeft: 56, marginBottom: 60,
+    y: {domain: [-reach, reach], label: "scaled coefficient", ticks: 4},
+    x: {domain, ticks: middle, tickFormat: d => d.split("|")[0], tickRotate: -90, label: null, padding: 0},
+    color: {domain: contrast, range: shades},
+    marks: [Plot.barY(rows, {x: "band", y: "effect", fill: "name"}), Plot.ruleY([0])]
+  });
+  const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
+  const scale = spec.param === "terms" ? "linear" : "log";
+  const error = Plot.plot({
+    width: 520, height: 220,
+    x: {type: scale, label: spec.param, tickFormat: ".2~g"},
+    y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE (t/ha)"},
+    marks: [Plot.line(curve, {x: "value", y: "rmse", stroke: "#9CA3AF", clip: true}),
+            Plot.dot(curve, {x: "value", y: "rmse", fill: "#9CA3AF", r: 3, clip: true}),
+            Plot.dot([curve[step]], {x: "value", y: "rmse", fill: "#8B1E3F", r: 6, clip: true})]
+  });
+  return html`<div><div class="scroll-x">${coefficients}</div>${error}</div>`;
+}
+```
+
+```{ojs}
+//| echo: false
+shown.length ? html`<div>
+  <p class="interactive-note">Fitted equation for genotype ${shown[0]} (${method}, ${spec.param} ${(+spec.values[step]).toPrecision(2)}, ${spec.nterms[step][hyper.genotypes.indexOf(shown[0])]} terms kept); the terms are functions of the standardised drivers.</p>
+  ${Equation.element(Equation.latex(hyper.terms, spec.intercept[step][hyper.genotypes.indexOf(shown[0])], spec.coef[step][hyper.genotypes.indexOf(shown[0])]))}</div>` : html``
+```
+

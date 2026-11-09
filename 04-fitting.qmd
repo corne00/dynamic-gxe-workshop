@@ -14,7 +14,7 @@ $$
 \dot{\mathbf{y}} \approx \boldsymbol{\Theta}\boldsymbol{\xi}.
 $$
 
-We are free to choose any method to fit the coefficients,. The methods differ in how they handle correlated terms, and in whether they produce sparse equations (with some coefficients set exactly to zero).
+We are free to choose any method to fit the coefficients. The methods differ in how they handle correlated terms, and in whether they produce sparse equations (with some coefficients set exactly to zero).
 
 ::: {.panel-tabset group="language"}
 
@@ -64,7 +64,7 @@ show_fun("fit_ols", level = 3)
 
 ## Ridge
 
-Shrinks the coefficients towards zero. This can help to deal with colinearity, but does not produce a sparse equation.
+Shrinks the coefficients towards zero. This can help to deal with collinearity, but does not produce a sparse equation.
 
 $$
 \hat{\boldsymbol{\xi}} = \arg\min_{\boldsymbol{\xi}} \; \lVert \dot{\mathbf{y}} - \boldsymbol{\Theta}\boldsymbol{\xi} \rVert_2^2 + \lambda \lVert \boldsymbol{\xi} \rVert_2^2
@@ -368,6 +368,6 @@ viewof step = slider(spec.param, spec.values, Math.floor(spec.values.length / 2)
 ```{ojs}
 //| echo: false
 shown.length ? html`<div>
-  <p class="interactive-note">Fitted equation for genotype ${shown[0]} (${method}, ${spec.param} ${(+spec.values[step]).toPrecision(2)}); the terms are functions of the standardised drivers.</p>
+  <p class="interactive-note">Fitted equation for genotype ${shown[0]} (${method}, ${spec.param} ${(+spec.values[step]).toPrecision(2)}, ${spec.nterms[step][hyper.genotypes.indexOf(shown[0])]} terms kept); the terms are functions of the standardised drivers.</p>
   ${Equation.element(Equation.latex(hyper.terms, spec.intercept[step][hyper.genotypes.indexOf(shown[0])], spec.coef[step][hyper.genotypes.indexOf(shown[0])]))}</div>` : html``
 ```

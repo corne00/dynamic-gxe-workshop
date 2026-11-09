@@ -10,16 +10,16 @@
 ## =============================================================================
 
 ## ---- Drivers: array U[year, day, driver], standardised -------------------
-make_drivers <- function(wx, drivers = c("Tmin", "Tmax", "Rain", "RAD", "VP", "DL",
+make_drivers <- function(weather, drivers = c("Tmin", "Tmax", "Rain", "RAD", "VP", "DL",
                                           "TT", "RAW")) {
-  years <- sort(unique(wx$year))
-  das0 <- min(wx$das)
-  nd <- max(wx$das) - das0 + 1
+  years <- sort(unique(weather$year))
+  das0 <- min(weather$das)
+  nd <- max(weather$das) - das0 + 1
   U <- array(NA_real_, c(length(years), nd, length(drivers)),
              dimnames = list(years, NULL, drivers))
   for (j in seq_along(drivers)) {
-    i <- cbind(match(wx$year, years), wx$das - das0 + 1, j)
-    U[i] <- wx[[drivers[j]]]
+    i <- cbind(match(weather$year, years), weather$das - das0 + 1, j)
+    U[i] <- weather[[drivers[j]]]
   }
   # pad years that end early with their last value
   for (y in seq_along(years)) {
@@ -67,11 +67,11 @@ make_library <- function(drv, degree = 3, pairs = FALSE) {
 }
 
 ## ---- Extra terms: functions of the raw weather, standardised like the drivers
-## exprs: named character vector in R syntax. Available are the columns of wx,
+## exprs: named character vector in R syntax. Available are the columns of weather,
 ## Tmean, VPD (hPa) and das, and the functions roll(x, k) (mean of the last k
 ## days), cum(x) and lag(x, k); max and min act elementwise.
-extra_terms <- function(wx, exprs, years = sort(unique(wx$year))) {
-  das0 <- min(wx$das); nd <- max(wx$das) - das0 + 1
+extra_terms <- function(weather, exprs, years = sort(unique(weather$year))) {
+  das0 <- min(weather$das); nd <- max(weather$das) - das0 + 1
   fun <- new.env(parent = baseenv())
   fun$max <- pmax; fun$min <- pmin; fun$cum <- cumsum
   fun$roll <- function(x, k) {
@@ -81,7 +81,7 @@ extra_terms <- function(wx, exprs, years = sort(unique(wx$year))) {
   X <- array(NA_real_, c(length(years), nd, length(exprs)),
              dimnames = list(years, NULL, names(exprs)))
   for (y in seq_along(years)) {
-    w <- wx[wx$year == years[y], ]
+    w <- weather[weather$year == years[y], ]
     v <- lapply(w[setdiff(names(w), c("year", "das"))], function(x) {
       x <- c(x, rep(NA, nd - length(x)))
       x[is.na(x)] <- tail(x[!is.na(x)], 1)     # later days repeat the last value
@@ -107,21 +107,21 @@ bind_terms <- function(Theta, extra) {
 }
 
 ## ---- Measured traits as drivers ---------------------------------------------
-## Adds measured states of one genotype (columns of traj, for example "lai") to
+## Adds measured states of one genotype (columns of traj, for example "LAI") to
 ## the weather table, as the mean of the records at the start and end of a day.
-with_traits <- function(wx, traj, genotype, vars = "lai") {
+with_traits <- function(weather, traj, genotype, vars = "LAI") {
   t <- traj[traj$genotype == genotype, ]
   for (v in vars) {
-    wx[[v]] <- NA_real_
-    for (y in unique(wx$year)) {
+    weather[[v]] <- NA_real_
+    for (y in unique(weather$year)) {
       r <- t[t$year == y, ]
       r <- r[order(r$das), ]
       day <- c(r[[v]][1], (r[[v]][-1] + r[[v]][-nrow(r)]) / 2)
-      i <- wx$year == y
-      wx[[v]][i] <- day[match(wx$das[i], r$das)]
+      i <- weather$year == y
+      weather[[v]][i] <- day[match(weather$das[i], r$das)]
     }
   }
-  wx
+  weather
 }
 
 ## ---- Trajectories: array Y[genotype, year, day], NA after maturity --------

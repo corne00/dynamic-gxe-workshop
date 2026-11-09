@@ -20,10 +20,10 @@ cd dynamic-gxe-workshop
 ```r
 source("R/functions.R")
 
-wx <- read.csv("data/narrabri_weather.csv")
+weather <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 
-drv <- make_drivers(wx)
+drv <- make_drivers(weather)
 Theta <- make_library(drv)
 tr <- make_trajectories(traj, drv)
 
@@ -37,10 +37,10 @@ round(evaluate(P, tr), 3)
 import pandas as pd
 from dgxe import *
 
-wx = pd.read_csv("data/narrabri_weather.csv")
+weather = pd.read_csv("data/narrabri_weather.csv")
 traj = pd.read_csv("data/narrabri_biomass.csv.gz")
 
-drv = make_drivers(wx)
+drv = make_drivers(weather)
 Theta = make_library(drv)
 tr = make_trajectories(traj, drv)
 
@@ -54,7 +54,7 @@ The result is the root-mean-square error (t/ha) of 20 genotypes on years that we
 
 ## Loading the data for the steps
 
-The pages from step 4 on continue from the objects of steps 2 and 3 (`wx`, `traj`, `drv`, `Theta`, `tr`). One line creates them, for example to start at a later page:
+The pages from step 4 on continue from the objects of steps 2 and 3 (`weather`, `traj`, `drv`, `Theta`, `tr`). One line creates them, for example to start at a later page:
 
 ::: {.panel-tabset group="language"}
 

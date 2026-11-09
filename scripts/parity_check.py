@@ -11,9 +11,9 @@ from dgxe import (
     make_trajectories,
 )
 
-wx = pd.read_csv("data/narrabri_weather.csv")
+weather = pd.read_csv("data/narrabri_weather.csv")
 traj = pd.read_csv("data/narrabri_biomass.csv.gz")
-drv = make_drivers(wx)
+drv = make_drivers(weather)
 Theta = make_library(drv)
 tr = make_trajectories(traj, drv)
 

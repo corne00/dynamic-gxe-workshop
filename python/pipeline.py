@@ -8,8 +8,8 @@ import numpy as np  # noqa: F401
 import pandas as pd
 from dgxe import *  # noqa: F403
 
-wx = pd.read_csv("data/narrabri_weather.csv")
+weather = pd.read_csv("data/narrabri_weather.csv")
 traj = pd.read_csv("data/narrabri_biomass.csv.gz")
-drv = make_drivers(wx)  # noqa: F405
+drv = make_drivers(weather)  # noqa: F405
 Theta = make_library(drv)  # noqa: F405
 tr = make_trajectories(traj, drv)  # noqa: F405

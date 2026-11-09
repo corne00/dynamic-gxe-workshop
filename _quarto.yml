@@ -59,7 +59,7 @@ website:
         href: reference.qmd
   page-footer:
     left: "AAGI Symposium 2026"
-    right: "C. Verburg · TU Delft · CropXR"
+    right: "C. Verburg · TU Delft · CropXR [![QR code to the workshop website](images/qr.svg){.footer-qr}](https://corne00.github.io/dynamic-gxe-workshop/)"
 
 format:
   html:

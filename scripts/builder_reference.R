@@ -2,7 +2,7 @@
 ## js/builder.js (run: Rscript scripts/builder_reference.R; node scripts/builder_check.js).
 library(jsonlite)
 source("R/functions.R")
-wx <- read.csv("data/narrabri_weather.csv"); traj <- read.csv("data/narrabri_biomass.csv.gz")
+weather <- read.csv("data/narrabri_weather.csv"); traj <- read.csv("data/narrabri_biomass.csv.gz")
 all8 <- c("Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW")
 configs <- list(
   list(drivers = all8, degree = 3, pairs = FALSE, method = "OLS", value = NULL),
@@ -17,36 +17,36 @@ configs <- list(
   list(drivers = c("Tmax", "RAD", "RAW"), degree = 1, pairs = FALSE, method = "lasso", value = 1e-3),
   ## measured trait on the right-hand side, and LAI as the modelled state
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "STLSQ", value = 0.03,
-       target = "biomass", trait = "lai"),
+       target = "biomass", trait = "LAI"),
   list(drivers = all8, degree = 3, pairs = FALSE, method = "lasso", value = 3e-4,
-       target = "biomass", trait = "lai"),
+       target = "biomass", trait = "LAI"),
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "ridge", value = 1e-3,
-       target = "lai"),
+       target = "LAI"),
   list(drivers = c("TT", "RAD", "DL"), degree = 2, pairs = TRUE, method = "backward", value = 8,
-       target = "lai", trait = "biomass"),
+       target = "LAI", trait = "biomass"),
   list(drivers = c("TT", "DL", "RAW"), degree = 1, pairs = FALSE, method = "OLS", value = NULL,
-       target = "biomass", trait = "lai", extras = c(canopy = "lai * RAD", wet = "roll(lai, 5) - RAW")))
+       target = "biomass", trait = "LAI", extras = c(canopy = "LAI * RAD", wet = "roll(LAI, 5) - RAW")))
 ## coupled models and state feedback: states, feedback
 configs <- c(configs, list(
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "STLSQ", value = 0.03,
-       states = c("biomass", "lai"), feedback = FALSE),
+       states = c("biomass", "LAI"), feedback = FALSE),
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "STLSQ", value = 0.03,
-       states = c("biomass", "lai"), feedback = TRUE),
+       states = c("biomass", "LAI"), feedback = TRUE),
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "STLSQ", value = 0.03,
        states = "biomass", feedback = TRUE),
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "ridge", value = 1e-3,
-       states = "lai", feedback = TRUE),
+       states = "LAI", feedback = TRUE),
   list(drivers = c("TT", "RAD"), degree = 2, pairs = TRUE, method = "backward", value = 8,
-       states = c("biomass", "lai"), feedback = TRUE),
+       states = c("biomass", "LAI"), feedback = TRUE),
   list(drivers = c("TT", "DL", "RAW"), degree = 2, pairs = FALSE, method = "lasso", value = 1e-3,
-       states = "biomass", feedback = TRUE, trait = "lai"),
+       states = "biomass", feedback = TRUE, trait = "LAI"),
   list(drivers = c("TT", "DL", "RAW", "RAD"), degree = 2, pairs = FALSE, method = "lasso", value = 3e-3,
-       states = c("biomass", "lai"), feedback = TRUE),
+       states = c("biomass", "LAI"), feedback = TRUE),
   list(drivers = c("TT", "RAD", "RAW"), degree = 2, pairs = TRUE, method = "ridge", value = 0.1,
-       states = c("biomass", "lai"), feedback = TRUE),
+       states = c("biomass", "LAI"), feedback = TRUE),
   list(drivers = c("TT", "DL", "RAW"), degree = 3, pairs = TRUE, method = "backward", value = 10),
   list(drivers = c("TT", "RAD", "RAW"), degree = 3, pairs = TRUE, method = "ridge", value = 0.1,
-       states = c("biomass", "lai"), feedback = TRUE)))
+       states = c("biomass", "LAI"), feedback = TRUE)))
 fitter <- function(m, v) switch(m,
   OLS = fit_ols, ridge = function(X, dy) fit_ridge(X, dy, v),
   lasso = function(X, dy) fit_lasso(X, dy, v), `elastic net` = function(X, dy) fit_enet(X, dy, v),
@@ -59,7 +59,7 @@ out <- lapply(configs, function(cf) {
   g <- genotypes[c(1, 5)]
   if (!is.null(cf$states)) {
     res <- lapply(g, function(gg) {
-      wg <- if (is.null(cf$trait)) wx else with_traits(wx, traj, gg, cf$trait)
+      wg <- if (is.null(cf$trait)) weather else with_traits(weather, traj, gg, cf$trait)
       all <- c(cf$drivers, cf$trait)
       drv <- make_drivers(wg, all); Theta <- make_library(drv, cf$degree, cf$pairs)
       trs <- setNames(lapply(cf$states, function(st) make_trajectories(traj, drv, st)), cf$states)
@@ -72,7 +72,7 @@ out <- lapply(configs, function(cf) {
     return(c(cf, list(results = res)))
   }
   res <- lapply(g, function(gg) {
-    wg <- if (is.null(cf$trait)) wx else with_traits(wx, traj, gg, cf$trait)
+    wg <- if (is.null(cf$trait)) weather else with_traits(weather, traj, gg, cf$trait)
     drv <- make_drivers(wg, c(cf$drivers, cf$trait)); Theta <- make_library(drv, cf$degree, cf$pairs)
     if (!is.null(cf$extras)) Theta <- bind_terms(Theta, extra_terms(wg, cf$extras))
     tr <- make_trajectories(traj, drv, target)

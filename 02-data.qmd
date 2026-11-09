@@ -29,9 +29,9 @@ import numpy as np
 import pandas as pd
 from dgxe import *
 
-wx = pd.read_csv("data/narrabri_weather.csv")
+weather = pd.read_csv("data/narrabri_weather.csv")
 traj = pd.read_csv("data/narrabri_biomass.csv.gz")
-print(wx.head(3))
+print(weather.head(3))
 print(traj.head(3))
 ```
 
@@ -40,9 +40,9 @@ print(traj.head(3))
 ```{r}
 #| label: 02-1-run
 #| echo: false
-wx <- read.csv("data/narrabri_weather.csv")
+weather <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
-head(wx, 3)
+head(weather, 3)
 head(traj, 3)
 ```
 
@@ -88,19 +88,26 @@ Two further variables in the table are constructed from the weather variables: t
 </div>
 ```
 
-Thermal time is a measure for the development of the plant, and is computed as the sum of the daily mean temperature, here with base temperature 0$^\circ$C, over the days since sowing:
+Thermal time is a measure of the development of the plant, and is computed as the sum of the daily mean temperature, here with base temperature 0$^\circ$C, over the days since sowing:
 
 $$
 \mathrm{TT}_t = \sum_{s \le t} \max\left(\frac{T_{\min,s} + T_{\max,s}}{2},\, 0\right).
 $$
 
-Relative available water is approximated by a simple soil moisture model: rain adds water and a fraction $k$ of the reference evapotranspiration $\mathrm{ET}_0$ removes it, up to the capacity $W_{\max}$ of the soil,
+Relative available water is approximated by a simple soil moisture model: rain $P_t$ adds water and a fraction $k$ of the reference evapotranspiration $\mathrm{ET}_0$ removes it, up to the capacity $W_{\max}$ of the soil,
 
 $$
-W_t = \min\bigl(\max(W_{t-1} + P_t - k\,\mathrm{ET}_{0,t},\, 0),\, W_{\max}\bigr), \qquad \mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
+W_t =
+\begin{cases}
+0 & \text{if } W_{t-1} + P_t - k\,\mathrm{ET}_{0,t} < 0, \\
+W_{\max} & \text{if } W_{t-1} + P_t - k\,\mathrm{ET}_{0,t} > W_{\max}, \\
+W_{t-1} + P_t - k\,\mathrm{ET}_{0,t} & \text{otherwise,}
+\end{cases}
+\qquad
+\mathrm{RAW}_t = \frac{W_t}{W_{\max}}.
 $$
 
-The maximum available water capacity $W_{\max} = 217.5$ mm is a property of the soil, and the initial available water $W_0 = 175$ mm is a property of the season. In this formula. Furthermore, $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and $k = 0.8$.
+The maximum available water capacity $W_{\max} = 217.5$ mm is a property of the soil, and the initial available water $W_0 = 175$ mm is a property of the season. Furthermore, $\mathrm{ET}_0$ is the FAO-56 Penman–Monteith reference evapotranspiration, computed from the weather variables of the table, and $k = 0.8$.
 
 So, in total we use eight variables: the six weather variables and the two constructed ones. All of them are candidates for the library.
 
@@ -125,10 +132,10 @@ VARS = ["Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW"]
 years = [1984, 1998, 2008]
 fig, axes = plt.subplots(2, 4, figsize=(10, 4.5), sharex=True)
 for ax, name in zip(axes.flat, VARS):
-    for year, g in wx.groupby("year"):
+    for year, g in weather.groupby("year"):
         ax.plot(g["das"], g[name], color=GREY, lw=0.25)
     for year, colour in zip(years, [BLUE, CYAN, BURGUNDY]):
-        g = wx[wx["year"] == year]
+        g = weather[weather["year"] == year]
         ax.plot(g["das"], g[name], color=colour, lw=0.9, label=year)
     ax.set_title(name, loc="left")
 axes[0, 0].legend(frameon=False)
@@ -143,14 +150,14 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 4.6
 vars <- c("Tmin", "Tmax", "Rain", "RAD", "VP", "DL", "TT", "RAW")
-weather <- data.frame(
-    year = wx$year, das = wx$das,
-    variable = factor(rep(vars, each = nrow(wx)), vars),
-    value = unlist(wx[vars])
+weather_long <- data.frame(
+    year = weather$year, das = weather$das,
+    variable = factor(rep(vars, each = nrow(weather)), vars),
+    value = unlist(weather[vars])
 )
-shown <- weather[weather$year %in% c(1984, 1998, 2008), ]
+shown <- weather_long[weather_long$year %in% c(1984, 1998, 2008), ]
 
-ggplot(weather, aes(das, value, group = year)) +
+ggplot(weather_long, aes(das, value, group = year)) +
     geom_line(colour = "#D1D5DB", linewidth = 0.25) +
     geom_line(data = shown, aes(colour = factor(year)), linewidth = 0.7) +
     facet_wrap(~variable, scales = "free_y", nrow = 2) +
@@ -181,7 +188,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from scipy.stats import gaussian_kde
 
 colours = LinearSegmentedColormap.from_list("dgxe", [BURGUNDY, "white", BLUE])
-standardised = (wx[VARS] - wx[VARS].mean()) / wx[VARS].std()
+standardised = (weather[VARS] - weather[VARS].mean()) / weather[VARS].std()
 corr = standardised.corr()
 sample = standardised.sample(600, random_state=1)
 grid = np.linspace(-3.5, 3.5, 200)
@@ -203,7 +210,7 @@ for i in range(8):
         else:
             rho = corr.iloc[i, j]
             ax.set_facecolor(colours((rho + 1) / 2))
-            ax.text(0, 0, f"{rho:.2f}", ha="center", va="center", fontsize=7)
+            ax.text(0, 0, f"{rho:.2f}", ha="center", va="center", fontsize=9)
         if i == 0:
             ax.set_title(VARS[j], fontsize=9, pad=3)
         if j == 0:
@@ -220,8 +227,8 @@ fig.subplots_adjust(wspace=0.04, hspace=0.04)
 #| fig-height: 5.6
 #| fig-width: 5.6
 #| warning: false
-standardised <- as.data.frame(scale(wx[vars]))
-corr <- cor(wx[vars])
+standardised <- as.data.frame(scale(weather[vars]))
+corr <- cor(weather[vars])
 panel <- expand.grid(row = seq_along(vars), col = seq_along(vars))
 label <- function(i) factor(vars[i], vars)
 set.seed(1)
@@ -256,7 +263,7 @@ ggplot() +
     ) +
     geom_text(
         data = lower, aes(label = sprintf("%.2f", rho)), x = 0, y = 0,
-        size = 2.6
+        size = 3.4
     ) +
     geom_point(
         data = upper, aes(x, y), size = 0.15, alpha = 0.4,
@@ -306,7 +313,7 @@ In this workshop, we focus on biomass as the trait of interest. The biomass traj
 ## Python
 
 ```python
-drv = make_drivers(wx)
+drv = make_drivers(weather)
 tr = make_trajectories(traj, drv)
 highlighted = ["g194", "g114", "g048"]    # lowest, median, highest final biomass
 days = np.arange(tr.Y.shape[2]) + tr.das0
@@ -332,7 +339,7 @@ fig.tight_layout()
 #| echo: false
 #| fig-height: 3
 #| warning: false
-drv <- make_drivers(wx)
+drv <- make_drivers(weather)
 tr <- make_trajectories(traj, drv)
 highlighted <- c("g194", "g114", "g048") # lowest, median, highest final biomass
 years <- traj[traj$year %in% c(1984, 1990, 1998, 2008), ]

@@ -5,7 +5,7 @@ title: "3 · Library and design matrix"
 ```{r}
 #| echo: false
 source("R/page_setup.R")
-wx <- read.csv("data/narrabri_weather.csv")
+weather <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
@@ -14,7 +14,7 @@ traj <- read.csv("data/narrabri_biomass.csv.gz")
 ## R
 
 ```r
-wx <- read.csv("data/narrabri_weather.csv")
+weather <- read.csv("data/narrabri_weather.csv")
 traj <- read.csv("data/narrabri_biomass.csv.gz")
 ```
 
@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 from dgxe import *
 
-wx = pd.read_csv("data/narrabri_weather.csv")
+weather = pd.read_csv("data/narrabri_weather.csv")
 traj = pd.read_csv("data/narrabri_biomass.csv.gz")
 ```
 
@@ -56,7 +56,7 @@ show_fun("make_drivers")
 ## Python
 
 ```python
-drv = make_drivers(wx)
+drv = make_drivers(weather)
 print(drv.U.shape)
 ```
 
@@ -65,7 +65,7 @@ print(drv.U.shape)
 ```{r}
 #| label: 03-1-run
 #| echo: false
-drv <- make_drivers(wx)
+drv <- make_drivers(weather)
 dim(drv$U)
 ```
 
