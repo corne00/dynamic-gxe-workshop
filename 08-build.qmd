@@ -267,59 +267,6 @@ result.error ? html`` : html`<div>
 }
 ```
 
-### Comparison of methods
-
-The same library and genotype fitted with each method over a range of its parameter. The horizontal axis is the number of terms that remain in the equation, the vertical axis the held-out RMSE of the first modelled state over whole trajectories. The ring marks the choice above; ridge keeps all terms. Lasso and elastic net are evaluated at every other parameter value, and are left out for libraries of more than 60 terms; best subset is not included.
-
-```{ojs}
-//| echo: false
-sweep = {
-  const out = [];
-  const M = Builder.methods(K);
-  const order = ["OLS", "ridge", "STLSQ", "backward", "lasso", "elastic net"];
-  const thin = (m, vals) => (m === "lasso" || m === "elastic net" ? vals.filter((_, i) => i % 2 === 0)
-    : K > 60 && m === "backward" ? vals.filter((_, i) => i % 3 === 0) : vals);
-  let stop = false;
-  invalidation.then(() => { stop = true; });
-  yield {points: [], done: false};
-  await new Promise(r => setTimeout(r, 30));
-  for (const m of order) {
-    if (!M[m] || (K > 60 && (m === "lasso" || m === "elastic net"))) continue;
-    for (const v of thin(m, M[m].values)) {
-      if (stop) return;
-      try {
-        const r = Builder.runModel(builder, g, {...baseConfig, method: m, value: v});
-        const eq = r.equations[0];
-        if (Number.isFinite(eq.rmse)) out.push({method: m, value: v, terms: eq.nterms, rmse: eq.rmse});
-      } catch (e) { /* skip */ }
-      yield {points: out.slice(), done: false};
-      await new Promise(r => setTimeout(r, 0));
-    }
-  }
-  yield {points: out.slice(), done: true};
-}
-```
-
-```{ojs}
-//| echo: false
-{
-  const order = ["OLS", "ridge", "STLSQ", "backward", "lasso", "elastic net"];
-  const pts = sweep.points;
-  const current = result.error ? [] : [{terms: result.equations[0].nterms, rmse: result.equations[0].rmse}];
-  const chart = Plot.plot({
-    width: contentWidth, height: 320, marginLeft: 50,
-    x: {label: "terms retained in the equation", domain: [0, K]},
-    y: {label: `held-out trajectory RMSE (${info[stateList[0]].unit})`, zero: true},
-    color: {domain: order, range: ["#6B7280", "#00A6D6", "#8B1E3F", "#014E81", "#469C2A", "#6F1D77"], legend: true},
-    marks: [
-      Plot.line(pts, {x: "terms", y: "rmse", z: "method", stroke: "method", strokeWidth: 1.4, sort: "terms"}),
-      Plot.dot(pts, {x: "terms", y: "rmse", stroke: "method", fill: "method", r: 2.6}),
-      Plot.dot(current, {x: "terms", y: "rmse", r: 8, stroke: "#111827", strokeWidth: 1.4})]
-  });
-  return html`<div>${chart}<p class="interactive-note">${sweep.done ? "" : "Computing: the curves are added method by method. "}${pts.length} fits shown.</p></div>`;
-}
-```
-
 ## Step 5 · Check
 
 The equation of step 4 is integrated over a year that was not used in the fit, starting from the mean initial value of the other years, and compared with APSIM. Each point in the scatter plot is one held-out year; the bars give the trajectory error of every year.
