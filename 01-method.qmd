@@ -11,6 +11,7 @@ Crop growth responds to the environment over time. Furthermore, we know that gen
 d3 = window.d3
 Plot = window.Plot
 weather = FileAttachment("data/interactive/weather.json").json()
+contentWidth = contentWidthGenerator(Generators)
 viewof year = buttons("Year", [1989, 1998, 2008], 1998)
 viewof day = player("Day", d3.range(150), 60, i => weather.das0 + i)
 viewof genotypes = genotypeControls([
@@ -44,10 +45,11 @@ toy = {
   const {u, das, response, canopy, rmax, runs} = toy;
   const rows = (v, from, to) => d3.range(from, to).map(i => ({das: das[i], v: v[i]}));
   const style = {fontSize: "10px"};
+  const third = Math.floor((contentWidth - 24) / 3);
   const n = u.length, d = Math.min(day, n - 1), last = weather.das0 + 149;
   const ink = "#1F2937", faint = "#D1D5DB";
   const temperature = Plot.plot({
-    width: 200, height: 215, style, marginLeft: 38,
+    width: third, height: 215, style, marginLeft: 38,
     x: {label: "days after sowing", domain: [weather.das0, last]},
     y: {label: "temperature (°C)", domain: [0, 30]},
     marks: [Plot.line(rows(u, 0, n), {x: "das", y: "v", stroke: faint}),
@@ -57,7 +59,7 @@ toy = {
   const grid = d3.range(0, 40.01, 0.25);
   const curve = g => grid.map(x => ({u: x, r: response(x, g.optimum, g.limit)}));
   const responsePlot = Plot.plot({
-    width: 200, height: 215, style, marginLeft: 38,
+    width: third, height: 215, style, marginLeft: 38,
     x: {label: "temperature (°C)", domain: [0, 40]},
     y: {label: "relative response", domain: [0, 1.05]},
     marks: [Plot.ruleX(u, {y1: 0, y2: 0.04, stroke: "#9CA3AF", strokeOpacity: 0.5}),
@@ -67,7 +69,7 @@ toy = {
                                       {x: "u", y: "r", fill: g.colour, r: 4}))]
   });
   const growth = Plot.plot({
-    width: 200, height: 215, style, marginLeft: 38,
+    width: third, height: 215, style, marginLeft: 38,
     x: {label: "days after sowing", domain: [weather.das0, last]},
     y: {label: "biomass (t/ha)", domain: [0, 14]},
     marks: [Plot.ruleX([das[d]], {stroke: ink, strokeOpacity: 0.25}),

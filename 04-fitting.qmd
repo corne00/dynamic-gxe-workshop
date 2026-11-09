@@ -322,6 +322,7 @@ Here we compare some of the approaches. Switch genotypes on and off to compare t
 d3 = window.d3
 Plot = window.Plot
 hyper = FileAttachment("data/interactive/hyper.json").json()
+contentWidth = contentWidthGenerator(Generators)
 contrast = hyper.trajectories.genotypes
 shades = ["#8B1E3F", "#014E81", "#00A6D6", "#6D8B1E", "#6B7280"]
 viewof method = select("Method", Object.keys(hyper.methods), "STLSQ")
@@ -335,6 +336,7 @@ viewof trajYear = buttons("Year of the predicted trajectories", hyper.trajectori
 //| echo: false
 {
   const all = Object.values(hyper.methods);
+  const half = Math.floor((contentWidth - 28) / 2);
   const reach = d3.max(all.flatMap(m => m.effect.flat(2).map(Math.abs)));
   const rmse = d3.extent(all.flatMap(m => m.rmse));
   const band = 5, n = shown.length;
@@ -355,7 +357,7 @@ viewof trajYear = buttons("Year of the predicted trajectories", hyper.trajectori
   const curve = spec.values.map((value, i) => ({value, rmse: spec.rmse[i]}));
   const scale = spec.param === "terms" ? "linear" : "log";
   const error = Plot.plot({
-    width: 320, height: 220, marginLeft: 45,
+    width: half, height: 220, marginLeft: 45,
     x: {type: scale, label: spec.param, tickFormat: ".2~g"},
     y: {domain: [rmse[0] - 0.01, rmse[1] + 0.01], label: "held-out RMSE (t/ha)"},
     marks: [Plot.line(curve, {x: "value", y: "rmse", stroke: "#9CA3AF", clip: true}),
@@ -370,7 +372,7 @@ viewof trajYear = buttons("Year of the predicted trajectories", hyper.trajectori
       values.map((value, k) => ({name, source, das: x(null, k), biomass: value})));
   });
   const trajectories = Plot.plot({
-    width: 320, height: 220, marginLeft: 45,
+    width: half, height: 220, marginLeft: 45,
     x: {label: "days after sowing"},
     y: {domain: [0, 18], label: "biomass (t/ha)"},
     color: {domain: contrast, range: shades},

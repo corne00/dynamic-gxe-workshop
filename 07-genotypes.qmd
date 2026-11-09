@@ -206,6 +206,7 @@ Predicted against APSIM biomass of the 199 genotypes in one year on one day, for
 d3 = window.d3
 Plot = window.Plot
 rank = FileAttachment("data/interactive/ranking.json").json()
+contentWidth = contentWidthGenerator(Generators)
 viewof year3 = slider("Year", rank.years, rank.years.indexOf(1998))
 viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
 ```
@@ -225,6 +226,7 @@ viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
     / ((a.length ** 2 - 1) / 12);
   const top = a => new Set(d3.range(a.length).sort((i, j) => a[j] - a[i])
     .slice(0, Math.round(0.1 * a.length)));
+  const side = Math.min(contentWidth, 480);
   const panel = key => {
     const pred = rank[key][year3][day];
     const best = top(obs), chosen = top(pred);
@@ -232,7 +234,7 @@ viewof day = slider("Day after sowing", rank.days, rank.days.indexOf(113))
     const rows = obs.map((o, i) => ({obs: o, pred: pred[i], best: best.has(i)}));
     const [lo, hi] = d3.extent([...obs, ...pred]);
     const plot = Plot.plot({
-      width: 320, height: 320, marginLeft: 45,
+      width: side, height: side, marginLeft: 45,
       x: {domain: [lo, hi], label: "APSIM biomass (t/ha)"},
       y: {domain: [lo, hi], label: "predicted (t/ha)"},
       marks: [Plot.line([[lo, lo], [hi, hi]], {stroke: "#9CA3AF"}),

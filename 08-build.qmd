@@ -9,6 +9,7 @@ This page repeats steps 2 to 5 on one genotype, with every choice under your con
 d3 = window.d3
 Plot = window.Plot
 builder = FileAttachment("data/interactive/builder.json").json()
+contentWidth = contentWidthGenerator(Generators)
 palette = ["#014E81", "#00A6D6", "#8B1E3F", "#469C2A", "#6F1D77", "#EF60A3", "#00A390", "#6B7280"]
 highlights = [1983, 1998, 2008]
 highlightColours = ["#8B1E3F", "#014E81", "#00A6D6"]
@@ -42,9 +43,10 @@ The drivers are standardised (mean 0, standard deviation 1 over all years). Grey
 ```{ojs}
 //| echo: false
 {
+  const cell = Math.floor((contentWidth - 60) / 4);
   const panel = (label, rows, unit) => html`<figure style="margin:0 0 .3rem 0"><div class="interactive-note" style="margin:0">${label}</div>${
     Plot.plot({
-      width: 185, height: 100, marginLeft: 34, marginRight: 4, marginTop: 6, marginBottom: 28,
+      width: cell, height: 100, marginLeft: 34, marginRight: 4, marginTop: 6, marginBottom: 28,
       style: {fontSize: "9px"},
       x: {label: null, ticks: 4}, y: {label: null, ticks: 4, grid: false},
       color: {domain: highlights, range: highlightColours},
@@ -189,14 +191,14 @@ viewof termChoice = corr.error ? Object.assign(html`<div></div>`, {value: null})
   const {label, unit} = info[stateList[0]];
   const ranked = corr.names.map((name, i) => ({name, r: corr.withY[0][i]})).sort((a, b) => Math.abs(b.r) - Math.abs(a.r)).slice(0, 15);
   const bars = Plot.plot({
-    width: 260, height: 40 + 16 * ranked.length, marginLeft: 70,
+    width: Math.floor(0.45 * (contentWidth - 30)), height: 40 + 16 * ranked.length, marginLeft: 70,
     x: {domain: [-1, 1], label: `correlation with growth rate of ${label}`},
     y: {domain: ranked.map(d => d.name), label: null},
     marks: [Plot.barX(ranked, {x: "r", y: "name", fill: d => d.r > 0 ? "#014E81" : "#8B1E3F"}), Plot.ruleX([0])]
   });
   const pts = Builder.designColumn(builder, g, baseConfig, j);
   const scatter = Plot.plot({
-    width: 310, height: 40 + 16 * ranked.length, marginLeft: 50,
+    width: contentWidth - 30 - Math.floor(0.45 * (contentWidth - 30)), height: 40 + 16 * ranked.length, marginLeft: 50,
     x: {label: `${termChoice} (library column)`}, y: {label: `growth rate (${unit}/day)`},
     marks: [Plot.dot(pts.filter(d => d.year !== designYear), {x: "x", y: "dy", r: 1.4, fill: "#9CA3AF", fillOpacity: 0.4}),
             Plot.dot(pts.filter(d => d.year === designYear), {x: "x", y: "dy", r: 2.4, fill: "#8B1E3F"})]
@@ -255,7 +257,7 @@ result.error ? html`` : html`<div>
     const kept = eq.terms.map((term, i) => ({term, effect: eq.scaled[i]})).filter(d => d.effect !== 0);
     const reach = d3.max(kept, d => Math.abs(d.effect)) || 1;
     return html`<div>${result.equations.length > 1 ? html`<h4>${label}</h4>` : ""}<div class="scroll-x">${Plot.plot({
-      width: Math.max(520, 70 + 16 * kept.length), height: 260, marginLeft: 56, marginBottom: 70,
+      width: Math.max(contentWidth, 70 + 16 * kept.length), height: 260, marginLeft: 56, marginBottom: 70,
       y: {domain: [-reach, reach], label: `scaled coefficient, ${label}`},
       x: {domain: kept.map(d => d.term), tickRotate: -90, label: null},
       marks: [Plot.barY(kept, {x: "term", y: "effect", fill: d => d.effect > 0 ? "#014E81" : "#8B1E3F"}), Plot.ruleY([0])]
@@ -305,7 +307,7 @@ sweep = {
   const pts = sweep.points;
   const current = result.error ? [] : [{terms: result.equations[0].nterms, rmse: result.equations[0].rmse}];
   const chart = Plot.plot({
-    width: 560, height: 320, marginLeft: 50,
+    width: contentWidth, height: 320, marginLeft: 50,
     x: {label: "terms retained in the equation", domain: [0, K]},
     y: {label: `held-out trajectory RMSE (${info[stateList[0]].unit})`, zero: true},
     color: {domain: order, range: ["#6B7280", "#00A6D6", "#8B1E3F", "#014E81", "#469C2A", "#6F1D77"], legend: true},
@@ -338,7 +340,7 @@ viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
     const observed = series[g][s].map((y, i) => ({das: das(i), y}));
     const predicted = (eq.predicted[s] || []).map((y, i) => ({das: das(i), y}));
     const trajectory = Plot.plot({
-      width: 520, height: 260, marginLeft: 50,
+      width: contentWidth, height: 260, marginLeft: 50,
       x: {label: "days after sowing"}, y: {label: `${label} (${unit})`, domain: [0, d3.max([...observed, ...predicted], d => d.y) * 1.05]},
       marks: [Plot.line(observed, {x: "das", y: "y", stroke: "#9CA3AF", strokeWidth: 4}),
               Plot.line(predicted, {x: "das", y: "y", stroke: "#8B1E3F", strokeWidth: 2})]
@@ -349,7 +351,7 @@ viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
       .filter(d => Number.isFinite(d.predicted));
     const [lo, hi] = d3.extent(finals.flatMap(d => [d.observed, d.predicted]));
     const scatter = Plot.plot({
-      width: 520, height: 300, marginLeft: 50,
+      width: contentWidth, height: 300, marginLeft: 50,
       x: {domain: [lo - 0.5, hi + 0.5], label: `APSIM ${peak ? "peak LAI" : "biomass at maturity"} (${unit})`},
       y: {domain: [lo - 0.5, hi + 0.5], label: `predicted (${unit})`},
       color: {type: "linear", scheme: "blues"},
@@ -365,7 +367,7 @@ viewof year = slider("Year", builder.years, builder.years.indexOf(1998))
       return {year: yr, rmse: Math.sqrt(sq / n)};
     }).filter(d => Number.isFinite(d.rmse));
     const bars = Plot.plot({
-      width: 520, height: 210, marginLeft: 50, marginBottom: 46,
+      width: contentWidth, height: 210, marginLeft: 50, marginBottom: 46,
       x: {label: null, tickFormat: d => `${d}`, tickRotate: -90, domain: builder.years},
       y: {label: `RMSE (${unit})`},
       marks: [Plot.barY(errors, {x: "year", y: "rmse", fill: d => d.year === shown ? "#8B1E3F" : "#014E81"})]

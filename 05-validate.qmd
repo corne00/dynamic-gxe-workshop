@@ -95,6 +95,7 @@ Held-out predictions of the sparse model, for genotypes spread over the ranking 
 d3 = window.d3
 Plot = window.Plot
 traj = FileAttachment("data/interactive/trajectories.json").json()
+contentWidth = contentWidthGenerator(Generators)
 shades = ["#8B1E3F", "#00A6D6", "#014E81", "#6D8B1E", "#6B7280"]
 viewof genos = toggles("Genotypes", traj.genotypes, shades, [traj.genotypes[0], traj.genotypes[2], traj.genotypes[4]])
 viewof years = toggles("Years", [1983, 1989, 1998, 2008], ["#374151", "#374151", "#374151", "#374151"], [1989, 1998, 2008])
@@ -109,7 +110,7 @@ viewof years = toggles("Years", [1983, 1989, 1998, 2008], ["#374151", "#374151",
       name, year, source, das: traj.das0 + i, y, rate: i > 0 ? a[i] - a[i - 1] : null})));
   }));
   const panel = (key, label, domain) => Plot.plot({
-    width: 262, height: 70 + 120 * years.length, marginLeft: 42, marginRight: 8,
+    width: Math.floor((contentWidth - 20) / 2), height: 70 + 120 * years.length, marginLeft: 42, marginRight: 8,
     style: {fontSize: "10px"},
     x: {label: "days after sowing"},
     y: {label, domain},

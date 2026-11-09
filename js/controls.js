@@ -240,3 +240,19 @@ function expressions(label, examples) {
   box.value = "";
   return box;
 }
+
+// Width of the page content column, updated on resize, so that a figure can
+// use the full width: contentWidth = contentWidthGenerator(Generators)
+function contentWidthGenerator(Generators) {
+  return Generators.observe(notify => {
+    const el = document.querySelector("#quarto-document-content") || document.body;
+    const read = () => {
+      const style = getComputedStyle(el);
+      notify(Math.floor(el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)));
+    };
+    read();
+    const observer = new ResizeObserver(read);
+    observer.observe(el);
+    return () => observer.disconnect();
+  });
+}
