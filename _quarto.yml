@@ -32,6 +32,12 @@ website:
   sidebar:
     style: docked
     search: false
+    footer: |
+      <div class="sidebar-logos">
+        <img src="images/logo_aagi.png" alt="AAGI, Analytics for the Australian Grains Industry" class="logo-aagi">
+        <img src="images/logo_tudelft.png" alt="TU Delft" class="logo-tudelft">
+        <img src="images/logo_cropxr.png" alt="CropXR" class="logo-cropxr">
+      </div>
     contents:
       - text: "Overview"
         href: index.qmd

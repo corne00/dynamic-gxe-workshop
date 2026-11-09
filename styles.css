@@ -85,3 +85,12 @@ figure img, .cell-output-display img { max-width: 100%; }
 /* QR code to the workshop website, small and unobtrusive in the footer */
 .nav-footer .footer-qr { height: 40px; width: 40px; margin-left: 10px; vertical-align: middle; opacity: 0.5; transition: opacity 0.2s; }
 .nav-footer .footer-qr:hover { opacity: 1; }
+
+/* Partner logos at the bottom of the sidebar */
+#quarto-sidebar .quarto-sidebar-footer { margin-top: auto; }
+.sidebar-logos { padding: 18px 4px 14px 4px; border-top: 1px solid #E5E7EB; margin-top: 16px; }
+.sidebar-logos > p { display: flex; flex-direction: column; align-items: flex-start; gap: 20px; margin: 0; }
+.sidebar-logos img { display: block; height: auto; }
+.sidebar-logos .logo-aagi { width: 96px; }
+.sidebar-logos .logo-tudelft { width: 104px; }
+.sidebar-logos .logo-cropxr { width: 116px; }
