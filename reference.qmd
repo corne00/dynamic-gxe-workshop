@@ -52,5 +52,3 @@ APSIM wheat simulations at Narrabri (New South Wales, Australia): 199 genotypes,
 - Friedman, J., Hastie, T. and Tibshirani, R. (2010). Regularization paths for generalized linear models via coordinate descent. *Journal of Statistical Software* 33(1), 1–22 (`glmnet`).
 - Lumley, T. and Miller, A. `leaps`: regression subset selection. R package.
 - Apley, D. W. and Zhu, J. (2020). Visualizing the effects of predictor variables in black box supervised learning models. *Journal of the Royal Statistical Society B* 82(4), 1059–1086.
-
-The source and licence of the underlying simulations should be confirmed before reuse or redistribution; this repository grants no licence for them.
